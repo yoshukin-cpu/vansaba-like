@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://pickups/xp_gem.gd" id="1"]
+[sub_resource type="CircleShape2D" id="1"]
+radius = 8.0
+
+[node name="XpGem" type="Area2D"]
+collision_layer = 16
+collision_mask = 0
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.3, 1, 0.4, 1)
+polygon = PackedVector2Array(8, 0, 0, 6, -8, 0, 0, -6)

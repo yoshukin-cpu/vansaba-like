@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="1"]
+
+[node name="Goblin" instance=ExtResource("1")]
+max_hp = 25.0
+speed = 100.0
+contact_damage = 10.0
+xp_value = 2
+body_color = Color(0.35, 0.75, 0.3, 1)

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="1"]
+
+[node name="Knight" instance=ExtResource("1")]
+scale = Vector2(1.2, 1.2)
+max_hp = 90.0
+speed = 110.0
+contact_damage = 18.0
+xp_value = 10
+body_color = Color(0.35, 0.25, 0.55, 1)
+behavior = "dasher"
+dash_speed = 380.0
+dash_interval = 4.0

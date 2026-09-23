@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://enemies/boss.gd" id="1"]
+[sub_resource type="CircleShape2D" id="1"]
+radius = 36.0
+
+[node name="VoidEmperor" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1")
+max_hp = 5000.0
+speed = 75.0
+contact_damage = 30.0
+xp_value = 0
+body_color = Color(0.5, 0.2, 0.7, 1)
+behavior = "chase"
+shot_damage = 10.0
+shot_speed = 260.0
+boss_id = "B02"
+boss_name = "Void Emperor"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.5, 0.2, 0.7, 1)
+polygon = PackedVector2Array(36, 0, 18, 20, 25, 25, 0, 36, -25, 25, -18, 20, -36, 0, -18, -20, -25, -25, 0, -36, 25, -25, 18, -20)
+
+[node name="Core" type="Polygon2D" parent="."]
+color = Color(1, 0.3, 0.9, 1)
+polygon = PackedVector2Array(12, 0, 0, 12, -12, 0, 0, -12)
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+
+[node name="HurtboxShape" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("1")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 1
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("1")

@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/title_ui.gd" id="1"]
+
+[node name="TitleUI" type="CanvasLayer"]
+layer = 20
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.02, 0.02, 0.06, 0.94)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Title" type="Label" parent="Center/VBox"]
+theme_override_font_sizes/font_size = 72
+text = "ヴァンサバライク"
+horizontal_alignment = 1
+
+[node name="Sub" type="Label" parent="Center/VBox"]
+theme_override_font_sizes/font_size = 28
+text = "10分生き残れ! (仮題)"
+horizontal_alignment = 1
+
+[node name="Controls" type="Label" parent="Center/VBox"]
+theme_override_font_sizes/font_size = 20
+text = "移動: WASD / 矢印 / 左スティック
+攻撃: 自動 (照準: マウス / 右スティック)
+敵を倒してXPを集め、レベルアップで強化!"
+horizontal_alignment = 1
+
+[node name="StartBtn" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(280, 80)
+theme_override_font_sizes/font_size = 32
+text = "はじめる"
+size_flags_horizontal = 4

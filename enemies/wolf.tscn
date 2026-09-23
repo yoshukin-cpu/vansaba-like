@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="1"]
+
+[node name="Wolf" instance=ExtResource("1")]
+max_hp = 30.0
+speed = 120.0
+contact_damage = 12.0
+xp_value = 3
+body_color = Color(0.55, 0.55, 0.6, 1)
+behavior = "dasher"
+dash_speed = 350.0
+dash_interval = 3.0
