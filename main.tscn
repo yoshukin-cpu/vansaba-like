@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="2"]
-[ext_resource type="Script" path="res://systems/grid_background.gd" id="3"]
+[ext_resource type="Script" path="res://world/world_map.gd" id="3"]
 [ext_resource type="Script" path="res://systems/card_manager.gd" id="4"]
 [ext_resource type="PackedScene" path="res://ui/levelup_ui.tscn" id="5"]
 [ext_resource type="Script" path="res://systems/spawn_director.gd" id="6"]
@@ -14,9 +14,10 @@
 [ext_resource type="Script" path="res://systems/audio_manager.gd" id="12"]
 
 [node name="Main" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1")
 
-[node name="Background" type="Node2D" parent="."]
+[node name="World" type="Node2D" parent="."]
 script = ExtResource("3")
 
 [node name="Player" parent="." instance=ExtResource("2")]
@@ -27,31 +28,36 @@ script = ExtResource("4")
 [node name="SpawnDirector" type="Node" parent="."]
 script = ExtResource("6")
 
-[node name="PoolShots" type="Node" parent="."]
+[node name="PoolShots" type="Node2D" parent="."]
+y_sort_enabled = true
 script = ExtResource("10")
 scene_path = "res://projectiles/projectile.tscn"
 prewarm = 100
 pool_id = "pool_shots"
 
-[node name="PoolHoming" type="Node" parent="."]
+[node name="PoolHoming" type="Node2D" parent="."]
+y_sort_enabled = true
 script = ExtResource("10")
 scene_path = "res://projectiles/homing_projectile.tscn"
 prewarm = 40
 pool_id = "pool_homing"
 
-[node name="PoolEnemyShots" type="Node" parent="."]
+[node name="PoolEnemyShots" type="Node2D" parent="."]
+y_sort_enabled = true
 script = ExtResource("10")
 scene_path = "res://projectiles/enemy_shot.tscn"
 prewarm = 120
 pool_id = "pool_enemy_shots"
 
-[node name="PoolGems" type="Node" parent="."]
+[node name="PoolGems" type="Node2D" parent="."]
+y_sort_enabled = true
 script = ExtResource("10")
 scene_path = "res://pickups/xp_gem.tscn"
 prewarm = 150
 pool_id = "pool_gems"
 
 [node name="CombatFx" type="Node2D" parent="."]
+z_index = 5
 script = ExtResource("11")
 
 [node name="AudioManager" type="Node" parent="."]

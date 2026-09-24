@@ -121,6 +121,7 @@ pause_game={
 2d_physics/layer_3="PlayerProjectile"
 2d_physics/layer_4="EnemyProjectile"
 2d_physics/layer_5="Pickup"
+2d_physics/layer_6="Obstacle"
 
 [physics]
 

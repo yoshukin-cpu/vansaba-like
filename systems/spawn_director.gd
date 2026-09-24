@@ -47,7 +47,12 @@ func _player_pos() -> Vector2:
 	return Vector2.ZERO
 
 func _spawn_pos() -> Vector2:
-	return _player_pos() + Vector2.RIGHT.rotated(randf() * TAU) * spawn_radius
+	var p: Vector2 = _player_pos() + Vector2.RIGHT.rotated(randf() * TAU) * spawn_radius
+	# 障害物の上には湧かせない (SPEC §18.4)
+	var w: Node = get_tree().get_first_node_in_group("world")
+	if w != null and w.has_method("find_free"):
+		return w.call("find_free", p) as Vector2
+	return p
 
 func _spawn_one(path: String, elite: bool) -> void:
 	if not ResourceLoader.exists(path):

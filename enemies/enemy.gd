@@ -6,6 +6,11 @@ const ENEMY_SHOT_SCRIPT := preload("res://projectiles/enemy_shot.gd")
 ## SpriteFrames のアニメ速度の基準 (anim_fps は speed_scale で反映する)
 const BASE_ANIM_FPS := 6.0
 
+## 障害物 (layer 6) との衝突マスク。詰まったら一時的に外して抜け出す (SPEC §18.5)
+const OBSTACLE_MASK: int = 64
+const STUCK_TIME: float = 8.0
+const STUCK_IGNORE_TIME: float = 3.0
+
 @export var max_hp: float = 12.0
 @export var speed: float = 70.0
 @export var contact_damage: float = 8.0
@@ -34,6 +39,10 @@ var dash_dir: Vector2 = Vector2.ZERO
 var strafe_phase: float = 0.0
 var fx: Node = null
 var gem_pool: Node = null
+var stuck_time: float = 0.0
+var stuck_ignore: float = 0.0
+var _prev_pos: Vector2 = Vector2.ZERO
+var _prev_valid: bool = false
 
 @onready var body: AnimatedSprite2D = $Body
 @onready var hitbox: Area2D = $Hitbox
@@ -127,7 +136,33 @@ func _physics_process(delta: float) -> void:
 	velocity = dir * spd + knockback
 	move_and_slide()
 	knockback = knockback.move_toward(Vector2.ZERO, 900.0 * delta)
+	_update_stuck(delta)
 	_check_contact()
+
+## 障害物に引っかかったままの個体を救済する。一定時間ほぼ動けていなければ
+## 障害物との衝突を一時的に外して抜け出させる (SPEC §18.5)。
+func _update_stuck(delta: float) -> void:
+	if not _prev_valid:
+		_prev_valid = true
+		_prev_pos = global_position
+		return
+	if stuck_ignore > 0.0:
+		stuck_ignore -= delta
+		if stuck_ignore <= 0.0:
+			collision_mask = OBSTACLE_MASK
+		_prev_pos = global_position
+		return
+	var moved: float = global_position.distance_to(_prev_pos)
+	_prev_pos = global_position
+	var expect: float = maxf(speed * 0.5, 25.0) * delta
+	if moved < expect:
+		stuck_time += delta
+	else:
+		stuck_time = 0.0
+	if stuck_time >= STUCK_TIME:
+		stuck_time = 0.0
+		stuck_ignore = STUCK_IGNORE_TIME
+		collision_mask = 0
 
 func _fire_shot(dir: Vector2, spd: float = -1.0, dmg: float = -1.0) -> void:
 	var scene: Node = get_tree().current_scene
