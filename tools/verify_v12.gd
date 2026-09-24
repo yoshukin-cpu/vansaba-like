@@ -116,6 +116,11 @@ func _t_item_drop(player: Node2D, director: Node) -> void:
 
 ## 3c) アイテム取得: T02でスコア、爆弾は開封時即時、T09は武器名ポップアップ
 func _t_item_pickup(player: Node2D, director: Node, main: Node) -> void:
+	# 直前の開封テストで出た奇襲の残党を掃除する (プレイヤー押送による非決定的な拾い漏れを防ぐ)
+	for n: Node in get_nodes_in_group("enemies"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
 	# 飛び出し中は取得できない。着地 (約0.5秒) して初めて拾える
 	var it: Node = director.call("spawn_item", "T02", player.global_position, false)
 	player.global_position = (it as Node2D).global_position

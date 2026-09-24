@@ -39,6 +39,7 @@ func _ready() -> void:
 	player.connect("level_up", _on_player_level_up)
 	levelup_ui.connect("choice_selected", _on_card_chosen)
 	title_ui.connect("start_pressed", _on_start)
+	title_ui.connect("quit_pressed", _on_desktop_quit)
 	pause_ui.connect("resume_pressed", _on_resume)
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
@@ -186,6 +187,10 @@ func _on_card_chosen(card_id: String) -> void:
 func _on_start() -> void:
 	audio.call("play", "ui")
 	start_game()
+
+## タイトル「終了」→ デスクトップに戻る (D29)。
+func _on_desktop_quit() -> void:
+	get_tree().quit()
 
 func _on_resume() -> void:
 	pause_ui.call("close")

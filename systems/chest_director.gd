@@ -157,6 +157,21 @@ func apply_item(item_id: String, pos: Vector2) -> String:
 			_fx().call("text_popup", pos, "%s Lv%d!" % [str(CardsDB.get_def(str(wup.get("weapon_id")))["name"]), int(wup.get("weapon_level"))], 24, Color(1.0, 0.6, 0.2))
 			_fx().call("spark", pos, Color(1.0, 0.6, 0.2, 1.0))
 			_audio().call("play", "buff")
+		"T10":
+			var pp: Vector2 = pos
+			if p != null:
+				pp = (p as Node2D).global_position
+			for e: Node in get_tree().get_nodes_in_group("enemies"):
+				if e is Node2D and (e as Node2D).global_position.distance_to(pp) <= 700.0:
+					e.call("take_damage", 80.0, Vector2.ZERO, false)
+			var shot_pool: Node = get_tree().get_first_node_in_group("pool_enemy_shots")
+			if shot_pool != null:
+				for s: Node in (shot_pool as Node).get_children():
+					if bool(s.get("active")):
+						s.call("erase")
+			_fx().call("poof", pp, Color(1, 1, 1, 1), true)
+			_audio().call("play", "explode")
+			_game().call("show_warning", "ノヴァ!")
 		"R_HEAL":
 			if p != null:
 				p.call("heal", float(p.get("max_hp")))

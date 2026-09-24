@@ -189,7 +189,13 @@ res://
 - SPEC §23 との差分を修正
 - **完了条件**: 10分プレイが破綻なく動き、verify 全PASS。v1.2 完了
 
-### P16 バージョンアップ案3 [M15]
+### P16 バージョンアップ案3 [M15] ✅ 完了
+
+- 実装: `items_db` T10重み4 / `chest_director` T10分岐 (700px内80dmg+敵弾全消去+警告) /
+  `item` nova絵対応 / `item_nova.png` 生成・48x48整列 /
+  タイトル終了ボタン→`quit_pressed`→`quit()` / `title_art.png` 生成・最背面配置・Dim 0.55
+- 検証: `verify_v13.gd` 新規15件 ALL PASS (重み・抽選・効果・弾消去・取得発動・終了接続・絵)。
+  回帰 `verify_chests`・`verify_v12` (取得テストの敵掃除で安定化)・`verify_audio` ALL PASS
 
 - `data/items_db.gd`: T10「ノヴァ」重み4を追加 (合計100→104)
 - `systems/chest_director.gd`: `apply_item` に T10 分岐 (画面内700pxに80dmg + 敵弾全消去 + 大poof/explode/警告)

@@ -8,6 +8,7 @@ const ART := {
 	"star": preload("res://objects/sprites/item_star.png"),
 	"magnet": preload("res://objects/sprites/item_magnet.png"),
 	"sword": preload("res://objects/sprites/item_sword.png"),
+	"nova": preload("res://objects/sprites/item_nova.png"),
 	"coin": preload("res://objects/sprites/coin.png"),
 	"bomb": preload("res://objects/sprites/bomb.png"),
 }
@@ -20,6 +21,7 @@ const ART_BY_ID := {
 	"T06": "star",
 	"T07": "magnet",
 	"T09": "sword", "R_WEAPON": "sword",
+	"T10": "nova",
 }
 
 const PICKUP_RADIUS := 26.0
