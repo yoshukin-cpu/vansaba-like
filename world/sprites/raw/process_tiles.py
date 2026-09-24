@@ -138,6 +138,43 @@ def center_trunk(img):
     return out, float(shift)
 
 
+def keep_trunk_component(img):
+    """幹につながる成分だけ残し、隣のセルから食み込んだ他木の切れ端を消す。
+    シード = 最下端の不透明行の中央 x (幹の根元)。戻り値 (画像, 除去px数)。"""
+    from collections import deque
+    w, h = img.size
+    a = img.split()[3]
+    px = a.load()
+    mask = [[1 if px[x, y] >= 96 else 0 for x in range(w)] for y in range(h)]
+    # 最下端の不透明行を探す
+    seed = None
+    for y in range(h - 1, -1, -1):
+        xs = [x for x in range(w) if mask[y][x]]
+        if xs:
+            seed = (sum(xs) // len(xs), y)
+            break
+    if seed is None:
+        return img, 0
+    seen = [[0] * w for _ in range(h)]
+    q = deque([seed])
+    seen[seed[1]][seed[0]] = 1
+    while q:
+        cx, cy = q.popleft()
+        for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+            if 0 <= nx < w and 0 <= ny < h and mask[ny][nx] and not seen[ny][nx]:
+                seen[ny][nx] = 1
+                q.append((nx, ny))
+    out = img.copy()
+    op = out.load()
+    removed = 0
+    for y in range(h):
+        for x in range(w):
+            if mask[y][x] and not seen[y][x]:
+                op[x, y] = (0, 0, 0, 0)
+                removed += 1
+    return out, removed
+
+
 def fit_bottom(img, canvas_w, canvas_h, max_w, max_h, bottom_margin=0, center=False):
     """内容を拡大縮小してキャンバスに収める。既定は下端揃え (足元を合わせる)。"""
     bb = content_bbox(img)
@@ -186,9 +223,17 @@ def main():
     print("ground: 18 tiles ->", WSPR)
 
     # --- 木: 3セル → 48x144 下端揃え + 幹を中央に補正 ---
+    # 中央セル (細い木) は左右セルの樹冠が食み込んでいるため、幹成分だけ残す。
+    # 食み込み除去後は内容が狭くなるので、他木と同程度の高さになる枠 (36x76) に収める。
     t = key_magenta(Image.open(os.path.join(RAW, "tree_sheet.png")))
     for i, c in enumerate(cells(t, 3, 1)):
-        out = fit_bottom(c, TILE, TREE_H, TILE, TREE_H)
+        c, removed = keep_trunk_component(c)
+        if removed:
+            print("tree %d: 隣木の食み込み %dpx を除去" % (i, removed))
+        if i == 1:
+            out = fit_bottom(c, TILE, TREE_H, 36, 76)
+        else:
+            out = fit_bottom(c, TILE, TREE_H, TILE, TREE_H)
         out, shift = center_trunk(out)
         out.save(os.path.join(WSPR, "ob_%d.png" % i))
         print("tree %d: trunk shift %+.0fpx" % (i, shift))
