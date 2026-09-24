@@ -141,7 +141,7 @@ res://
 - `systems/spawn_director.gd`: 8分以降 dmg×1.2→×1.5 (1数値)
 - `enemies/boss.gd`: B02分岐を修正 (B01:+500/B02:+1000 の撃破スコアも追加)
 - `main.gd`: `clear_countdown` (3秒・beep/秒、死亡時はgame over優先)
-- `systems/audio_manager.gd`: `_sweep`/`_noise`/`_seq` + 6種 (item_pickup/chest_open/countdown/fanfare/gem/explode置換)
+- `systems/audio_manager.gd`: `beep` 1音色の追加 (カウントダウン用。D27のヘルパーは作らない)
 - **完了条件**: スピン3本・敵弾消去・3秒カウントダウン付きクリアが動く。キルでスコアが増える
 - 検証: `tools/verify_chests.gd` 回帰 + 新規 `tools/verify_v12.gd` (刃数・消去・射撃抑制・スコア・カウントダウン) + 実機キャプチャ
 
