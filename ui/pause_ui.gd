@@ -20,11 +20,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventJoypadButton and event.pressed:
 		if (event as InputEventJoypadButton).button_index == JOY_BUTTON_A:
+			# 先に handled にする。通知先でシーンが作り直されると
+			# このノードがツリーから外れて get_viewport() が null になるため
+			get_viewport().set_input_as_handled()
 			if focus_idx == 0:
 				resume_pressed.emit()
 			else:
 				quit_pressed.emit()
-			get_viewport().set_input_as_handled()
 
 func open() -> void:
 	visible = true

@@ -47,10 +47,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		var ke: InputEventKey = event as InputEventKey
 		var k: int = int(ke.physical_keycode) if int(ke.physical_keycode) != 0 else int(ke.keycode)
 		if k == KEY_1 or k == KEY_2 or k == KEY_3:
-			_on_btn(int(k - KEY_1))
 			get_viewport().set_input_as_handled()
+			_on_btn(int(k - KEY_1))
 			return
 	if event is InputEventJoypadButton and event.pressed:
 		if (event as InputEventJoypadButton).button_index == JOY_BUTTON_A:
-			_on_btn(focus_idx)
 			get_viewport().set_input_as_handled()
+			_on_btn(focus_idx)

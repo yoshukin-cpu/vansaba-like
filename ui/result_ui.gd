@@ -25,11 +25,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventJoypadButton and event.pressed:
 		if (event as InputEventJoypadButton).button_index == JOY_BUTTON_A:
+			# 先に handled にする (通知先でシーンが作り直されるため)
+			get_viewport().set_input_as_handled()
 			if focus_idx == 0:
 				retry_pressed.emit()
 			else:
 				title_pressed.emit()
-			get_viewport().set_input_as_handled()
 
 func show_result(clear: bool, time_s: String, lv: int, kills: int) -> void:
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
