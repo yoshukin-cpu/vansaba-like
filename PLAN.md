@@ -41,7 +41,11 @@ res://
 
 ## 2. フェーズ計画 (v1.1)
 
-### P8 マップ基盤 [M7]
+### P8 マップ基盤 [M7] ✅ 完了
+
+- 実装: `world/hash_noise.gd` / `world/chunk_gen.gd` / `world/tileset_builder.gd` / `world/world_map.gd`
+- 実測: 生成 0.94 ms/チャンク (LUT 110ms は起動時1回) / 荒野 18.6% / 障害物 2.61% / 実機 60fps
+- 検証: `tools/verify_world.gd` (周期性・密度・生成速度) — PASS
 
 - `world/hash_noise.gd`: 周期対応のハッシュ/値ノイズ (static)
 - `world/chunk_gen.gd`: チャンクデータ (バイオーム・装飾・障害物セル) を返す純関数。周期 288タイル対応
@@ -51,7 +55,12 @@ res://
 - **完了条件**: ゲームを開始して歩き回ると、草原と荒野が途切れず続く。1分歩くと見覚えのある地形に戻る
 - 検証: `tools/verify_world.gd` (ヘッドレス) で「`gen(cx,cy) == gen(cx+9,cy+9)`」「同一セルのハッシュが一致」を assert + 実機キャプチャで見た目確認
 
-### P9 障害物とYソート [M8]
+### P9 障害物とYソート [M8] ✅ 完了
+
+- 実装: layer 6 (Obstacle) / Main の y_sort / プール4ノードの Node2D 化 / スタック検知 / 湧き回避
+- 実測: 木の幹で停止 (x=284.16/理論282)、Yソート境界 y=28 (予測一致)、木の裏で隠れる
+- 検証: `tools/verify_obstacles.gd` / `tools/verify_obstacle_block.gd` / `tools/verify_terrain.gd` — PASS
+- 判明した落とし穴: **衝突ポリゴンはセル中心基準** (セル左上基準で指定すると (24,24) ずれて全部すり抜ける)
 
 - `Obstacles` TileMapLayer を追加 (y_sort_enabled = true, layer 6 = Obstacle)
 - `project.godot` に layer 6 を追加。`player.tscn` / `enemy.tscn` の mask に 64 を追加 (ボス・弾は入れない)
@@ -62,7 +71,11 @@ res://
 - **完了条件**: 木の裏に回ると主人公・敵・弾が隠れ、木の前では隠れない。木に当たって止まる
 - 検証: 木の上/下/左/右にプレイヤーを置いて `capture_frames` で4枚撮影 → vision で遮蔽の向きを確認。`verify_world.gd` に障害物セル回避の assert を追加
 
-### P10 タイル素材 [M9]
+### P10 タイル素材 [M9] ✅ 完了
+
+- 実装: 1min-image (gpt-image-2 / quality low) で3シート生成 → `world/sprites/raw/process_tiles.py` → `world/sprites/ground_0..17.png`, `ob_0..4.png`, `objects/sprites/*.png`
+- 加工の勘所: セル縁のグリッド線を内側に切る / 装飾タイルの下地色を草原の基準色に寄せる / クロマキーは外周連結成分のみ
+- 検証: `tmp_shots/preview_ground.png`・`preview_props.png` を vision 確認、実機キャプチャで破綻なし
 
 - 1min-image (gpt-image-2, quality low) で生成: (1) 地面タイル (草原4+荒野4+砂利4+装飾6) 1シート、(2) 木3種 1シート、(3) 岩2種 + 宝箱 (閉/開) + 爆弾 1シート
 - クロマキー処理 → 48px グリッド整列 (`player/sprites/raw/process_sheet.py` を流用)
