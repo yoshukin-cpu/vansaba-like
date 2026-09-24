@@ -30,10 +30,16 @@ func _ready() -> void:
 	rect.size = Vector2(48, 28)
 	shape.shape = rect
 	blade.add_child(shape)
-	var visual := Polygon2D.new()
-	visual.color = Color(0.4, 0.9, 1.0, 1.0)
-	visual.polygon = PackedVector2Array([Vector2(24, 14), Vector2(-24, 14), Vector2(-24, -14), Vector2(24, -14)])
-	blade.add_child(visual)
+	# 1枚絵の剣スプライト(右向き)を Orbit の回転で振り回す
+	var tex_path := "res://weapons/sprites/spin_sword.png"
+	if ResourceLoader.exists(tex_path):
+		var tex: Texture2D = load(tex_path) as Texture2D
+		if tex != null:
+			var visual := Sprite2D.new()
+			visual.name = "Visual"
+			visual.texture = tex
+			visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			blade.add_child(visual)
 	orbit.add_child(blade)
 	blade.area_entered.connect(_on_blade_area)
 
