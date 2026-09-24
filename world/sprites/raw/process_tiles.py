@@ -110,6 +110,34 @@ def _shift_to(img, target):
     return img.convert("RGB")
 
 
+def _is_trunk(r, g, b):
+    """幹 (茶色) の画素か。樹冠の緑・ハイライトと区別する。"""
+    return r > 90 and 40 < g < 150 and b < 100 and r > b + 20
+
+
+def center_trunk(img):
+    """下端 30px の幹の重心がキャンバス中央 x に来るよう水平シフトする。
+    AI生成の木は樹冠に対して幹が左右に寄っていることがあり、
+    そのままだと衝突位置 (セル中心) と見た目の幹がずれる。"""
+    w, h = img.size
+    px = img.load()
+    tx = []
+    for y in range(h - 30, h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a >= 96 and _is_trunk(r, g, b):
+                tx.append(x)
+    if len(tx) < 8:
+        return img, 0.0
+    shift = round(w / 2.0 - sum(tx) / len(tx))
+    shift = max(-12, min(12, shift))  # 誤検出時の暴走防止
+    if shift == 0:
+        return img, 0.0
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    out.paste(img, (shift, 0), img)
+    return out, float(shift)
+
+
 def fit_bottom(img, canvas_w, canvas_h, max_w, max_h, bottom_margin=0, center=False):
     """内容を拡大縮小してキャンバスに収める。既定は下端揃え (足元を合わせる)。"""
     bb = content_bbox(img)
@@ -157,11 +185,13 @@ def main():
         t.save(os.path.join(WSPR, "ground_%d.png" % i))
     print("ground: 18 tiles ->", WSPR)
 
-    # --- 木: 3セル → 48x144 下端揃え ---
+    # --- 木: 3セル → 48x144 下端揃え + 幹を中央に補正 ---
     t = key_magenta(Image.open(os.path.join(RAW, "tree_sheet.png")))
     for i, c in enumerate(cells(t, 3, 1)):
         out = fit_bottom(c, TILE, TREE_H, TILE, TREE_H)
+        out, shift = center_trunk(out)
         out.save(os.path.join(WSPR, "ob_%d.png" % i))
+        print("tree %d: trunk shift %+.0fpx" % (i, shift))
     print("trees: 3 ->", WSPR)
 
     # --- 小物: 3x2 → 岩2 (ob_3/ob_4) + 宝箱/爆弾/コイン ---

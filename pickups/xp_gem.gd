@@ -3,10 +3,13 @@ extends Area2D
 @export var value: int = 1
 
 const COLLECT_RADIUS := 22.0
-const ATTRACT_SPEED := 600.0
+const ATTRACT_INITIAL_SPEED := 180.0
+const ATTRACT_MAX_SPEED := 600.0
+const ATTRACT_ACCEL := 1500.0
 const FALLBACK_MAGNET_RADIUS := 110.0
 
 var attracted: bool = false
+var attract_speed: float = ATTRACT_INITIAL_SPEED
 var active: bool = true
 var home_pool: Node = null
 
@@ -22,6 +25,7 @@ func activate() -> void:
 	active = true
 	visible = true
 	attracted = false
+	attract_speed = ATTRACT_INITIAL_SPEED
 	set_deferred("monitorable", true)
 	shape_node.set_deferred("disabled", false)
 
@@ -29,6 +33,7 @@ func deactivate() -> void:
 	active = false
 	visible = false
 	attracted = false
+	attract_speed = ATTRACT_INITIAL_SPEED
 	set_deferred("monitorable", false)
 	# プール待機中はコリジョンを無効化する。原点などに重なったまま残すと
 	# マグネット側の重複ペアが古い状態で保持され、再利用時に吸い寄せが
@@ -37,6 +42,7 @@ func deactivate() -> void:
 
 func attract() -> void:
 	attracted = true
+	attract_speed = ATTRACT_INITIAL_SPEED
 
 func _physics_process(delta: float) -> void:
 	if not active:
@@ -50,12 +56,15 @@ func _physics_process(delta: float) -> void:
 		if global_position.distance_squared_to(p.global_position) > _magnet_range_sq(p):
 			return
 		attracted = true
+		attract_speed = ATTRACT_INITIAL_SPEED
 	var d: Vector2 = p.global_position - global_position
 	if d.length() < COLLECT_RADIUS:
 		p.call("add_xp", value)
 		_despawn()
 		return
-	global_position = global_position.move_toward(p.global_position, ATTRACT_SPEED * delta)
+	# 吸い寄せはゆっくり始まって徐々に加速する
+	attract_speed = minf(ATTRACT_MAX_SPEED, attract_speed + ATTRACT_ACCEL * delta)
+	global_position = global_position.move_toward(p.global_position, attract_speed * delta)
 
 func _magnet_range_sq(p: Node) -> float:
 	var r: float = FALLBACK_MAGNET_RADIUS
