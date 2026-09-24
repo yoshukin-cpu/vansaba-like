@@ -8,5 +8,6 @@ speed = 140.0
 contact_damage = 6.0
 xp_value = 1
 body_color = Color(0.7, 0.4, 1, 1)
-sprite_path = "res://enemies/sprites/enemy_bat.png"
+frames_path = "res://enemies/sprites/bat_frames.tres"
+anim_fps = 12.0
 scale = Vector2(0.8, 0.8)

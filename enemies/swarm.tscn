@@ -9,4 +9,5 @@ speed = 160.0
 contact_damage = 5.0
 xp_value = 1
 body_color = Color(0.65, 0.9, 0.25, 1)
-sprite_path = "res://enemies/sprites/enemy_swarm.png"
+frames_path = "res://enemies/sprites/swarm_frames.tres"
+anim_fps = 14.0

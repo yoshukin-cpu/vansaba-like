@@ -3,6 +3,9 @@ extends CharacterBody2D
 const GEM_SCENE: PackedScene = preload("res://pickups/xp_gem.tscn")
 const ENEMY_SHOT_SCRIPT := preload("res://projectiles/enemy_shot.gd")
 
+## SpriteFrames のアニメ速度の基準 (anim_fps は speed_scale で反映する)
+const BASE_ANIM_FPS := 6.0
+
 @export var max_hp: float = 12.0
 @export var speed: float = 70.0
 @export var contact_damage: float = 8.0
@@ -16,7 +19,8 @@ const ENEMY_SHOT_SCRIPT := preload("res://projectiles/enemy_shot.gd")
 @export var dash_speed: float = 350.0
 @export var dash_interval: float = 3.0
 @export var split_scene: String = ""
-@export var sprite_path: String = ""
+@export var frames_path: String = ""
+@export var anim_fps: float = 6.0
 
 var hp: float = 12.0
 var dead: bool = false
@@ -31,7 +35,7 @@ var strafe_phase: float = 0.0
 var fx: Node = null
 var gem_pool: Node = null
 
-@onready var body: Sprite2D = $Body
+@onready var body: AnimatedSprite2D = $Body
 @onready var hitbox: Area2D = $Hitbox
 
 func _ready() -> void:
@@ -43,13 +47,33 @@ func _ready() -> void:
 	dash_cd = dash_interval
 	strafe_phase = randf() * TAU
 
-## sprite_path のテクスチャを Body に適用する (未指定なら何もしない)
+## frames_path の SpriteFrames を Body に適用する (未指定なら何もしない)
 func _apply_sprite() -> void:
-	if sprite_path == "" or not ResourceLoader.exists(sprite_path):
+	if frames_path == "" or not ResourceLoader.exists(frames_path):
 		return
-	var tex: Texture2D = load(sprite_path) as Texture2D
-	if tex != null and body != null:
-		body.texture = tex
+	var frames: SpriteFrames = load(frames_path) as SpriteFrames
+	if frames == null or body == null:
+		return
+	body.sprite_frames = frames
+	body.speed_scale = anim_fps / BASE_ANIM_FPS
+	body.play("down")
+
+## 移動方向で前後2パターンを使い分ける。左右移動は正面絵を反転して使う
+func _update_facing(move: Vector2) -> void:
+	if body == null or body.sprite_frames == null:
+		return
+	if move.length() < 1.0:
+		return
+	var want: String = "down"
+	var flip: bool = false
+	if absf(move.x) > absf(move.y):
+		want = "down"
+		flip = move.x < 0.0
+	else:
+		want = "down" if move.y > 0.0 else "up"
+	if String(body.animation) != want:
+		body.play(want)
+	body.flip_h = flip
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -99,6 +123,7 @@ func _physics_process(delta: float) -> void:
 					dash_phase = 0.4
 					dir = Vector2.ZERO
 					spd = 0.0
+	_update_facing(dir * spd)
 	velocity = dir * spd + knockback
 	move_and_slide()
 	knockback = knockback.move_toward(Vector2.ZERO, 900.0 * delta)

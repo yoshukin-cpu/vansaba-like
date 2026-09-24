@@ -13,4 +13,5 @@ preferred_range = 500.0
 shot_damage = 15.0
 shot_speed = 380.0
 shot_interval = 3.0
-sprite_path = "res://enemies/sprites/enemy_sniper.png"
+frames_path = "res://enemies/sprites/sniper_frames.tres"
+anim_fps = 4.0

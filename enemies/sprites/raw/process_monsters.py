@@ -107,6 +107,7 @@ def main():
     canvas = int(sys.argv[7])
     target = float(sys.argv[8])
     per_sprite = len(sys.argv) > 9 and sys.argv[9] == "each"
+    per_pair = len(sys.argv) > 9 and sys.argv[9] == "pair"
     assert len(names) == cols * rows, "names の数と cols*rows が不一致"
 
     rgba = load_and_key(sheet_path)
@@ -134,14 +135,26 @@ def main():
 
     sizes = [max(c["crop"].shape[0], c["crop"].shape[1]) for c in cells]
     med = float(np.median(sizes))
+    mode = "per-pair" if per_pair else ("per-sprite" if per_sprite else "global")
     print(f"  content sizes: {sizes} (median {med:.1f})")
-    print(f"  normalization: {'per-sprite' if per_sprite else 'global'} (target {target})")
+    print(f"  normalization: {mode} (target {target})")
+
+    # ペア単位の基準サイズ (2フレームを同じ倍率に揃えてアニメのガタつきを防ぐ)
+    pair_base = {}
+    for i in range(0, len(cells), 2):
+        j = min(i + 1, len(sizes) - 1)
+        pair_base[i // 2] = float(max(sizes[i], sizes[j]))
 
     os.makedirs(out_dir, exist_ok=True)
-    for c in cells:
+    for idx, c in enumerate(cells):
         crop = c["crop"]
         own = max(crop.shape[0], crop.shape[1])
-        base = float(own) if per_sprite else med
+        if per_pair:
+            base = pair_base[idx // 2]
+        elif per_sprite:
+            base = float(own)
+        else:
+            base = med
         scale = target / base
         nh = max(1, int(round(crop.shape[0] * scale)))
         nw = max(1, int(round(crop.shape[1] * scale)))

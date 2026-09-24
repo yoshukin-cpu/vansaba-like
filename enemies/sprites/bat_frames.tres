@@ -1,0 +1,31 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_bat_0.png" id="1_n5oeu"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_bat_1.png" id="2_w3eu3"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_bat_b0.png" id="3_6yvfr"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_bat_b1.png" id="4_md2yu"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_n5oeu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_w3eu3")
+}],
+"loop": 1,
+"name": &"down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_6yvfr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_md2yu")
+}],
+"loop": 1,
+"name": &"up",
+"speed": 6.0
+}]

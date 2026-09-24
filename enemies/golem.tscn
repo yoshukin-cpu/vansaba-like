@@ -9,4 +9,5 @@ speed = 45.0
 contact_damage = 20.0
 xp_value = 8
 body_color = Color(0.5, 0.45, 0.4, 1)
-sprite_path = "res://enemies/sprites/enemy_golem.png"
+frames_path = "res://enemies/sprites/golem_frames.tres"
+anim_fps = 2.5

@@ -1,0 +1,31 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_wolf_0.png" id="1_ckyau"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_wolf_1.png" id="2_mq1xn"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_wolf_b0.png" id="3_ks5pm"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_wolf_b1.png" id="4_sa20i"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ckyau")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_mq1xn")
+}],
+"loop": 1,
+"name": &"down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_ks5pm")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_sa20i")
+}],
+"loop": 1,
+"name": &"up",
+"speed": 6.0
+}]

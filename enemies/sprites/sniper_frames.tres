@@ -1,0 +1,31 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_sniper_0.png" id="1_8u04n"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_sniper_1.png" id="2_w2bdm"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_sniper_b0.png" id="3_7o3pt"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_sniper_b1.png" id="4_jv4ro"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_8u04n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_w2bdm")
+}],
+"loop": 1,
+"name": &"down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_7o3pt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_jv4ro")
+}],
+"loop": 1,
+"name": &"up",
+"speed": 6.0
+}]

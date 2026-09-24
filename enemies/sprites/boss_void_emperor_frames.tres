@@ -1,0 +1,31 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://enemies/sprites/boss_void_emperor_f0.png" id="1_prjv6"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/boss_void_emperor_f1.png" id="2_boi0q"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/boss_void_emperor_b0.png" id="3_q3b1c"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/boss_void_emperor_b1.png" id="4_73p58"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_prjv6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_boi0q")
+}],
+"loop": 1,
+"name": &"down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_q3b1c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_73p58")
+}],
+"loop": 1,
+"name": &"up",
+"speed": 6.0
+}]

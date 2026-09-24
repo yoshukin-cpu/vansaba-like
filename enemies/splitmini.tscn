@@ -9,4 +9,5 @@ speed = 150.0
 contact_damage = 6.0
 xp_value = 1
 body_color = Color(0.4, 0.8, 0.75, 1)
-sprite_path = "res://enemies/sprites/enemy_splitter.png"
+frames_path = "res://enemies/sprites/splitter_frames.tres"
+anim_fps = 8.0

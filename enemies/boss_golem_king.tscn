@@ -15,7 +15,8 @@ xp_value = 0
 body_color = Color(0.7, 0.2, 0.2, 1)
 boss_id = "B01"
 boss_name = "Golem King"
-sprite_path = "res://enemies/sprites/boss_golem_king.png"
+frames_path = "res://enemies/sprites/boss_golem_king_frames.tres"
+anim_fps = 2.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")

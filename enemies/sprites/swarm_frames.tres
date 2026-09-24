@@ -1,0 +1,31 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_swarm_0.png" id="1_jq0j8"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_swarm_1.png" id="2_p662m"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_swarm_b0.png" id="3_bvdb0"]
+[ext_resource type="Texture2D" path="res://enemies/sprites/enemy_swarm_b1.png" id="4_kmfgj"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_jq0j8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_p662m")
+}],
+"loop": 1,
+"name": &"down",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_bvdb0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_kmfgj")
+}],
+"loop": 1,
+"name": &"up",
+"speed": 6.0
+}]

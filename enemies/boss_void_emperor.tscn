@@ -18,7 +18,8 @@ shot_damage = 10.0
 shot_speed = 260.0
 boss_id = "B02"
 boss_name = "Void Emperor"
-sprite_path = "res://enemies/sprites/boss_void_emperor.png"
+frames_path = "res://enemies/sprites/boss_void_emperor_frames.tres"
+anim_fps = 3.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
