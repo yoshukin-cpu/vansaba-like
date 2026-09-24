@@ -48,10 +48,10 @@ func _init() -> void:
 	print("   (reused same node: ", d2 == d1, ")")
 	await _expect_collected("D2 re-acquired pooled gem inside  ", player, d2, 45)
 
-	# E: 範囲外(300px)は吸い寄せされない (誤吸引しないこと)
+	# E: 範囲外(300px)は吸い寄せされない (12秒救済廃止後も13秒間動かないこと)
 	var e: Node2D = pool.call("acquire") as Node2D
 	e.global_position = player.global_position + Vector2(300, 0)
-	await _expect_not_collected("E gem outside range stays         ", player, e, 45)
+	await _expect_not_collected("E gem outside range stays         ", player, e, 780)
 	if is_instance_valid(e):
 		pool.call("release", e)
 
@@ -91,11 +91,20 @@ func _expect_collected(label: String, player: Node2D, gem: Node2D, frames: int) 
 
 
 func _expect_not_collected(label: String, player: Node2D, gem: Node2D, frames: int) -> void:
+	var id: int = gem.get_instance_id()
 	for i in frames:
 		await process_frame
-	if is_instance_valid(gem) and bool(gem.get("active")):
-		print("PASS ", label, " dist=",
-			snappedf(gem.global_position.distance_to(player.global_position), 0.1))
+	var obj: Object = instance_from_id(id)
+	if obj == null:
+		failures += 1
+		print("FAIL ", label, " gem was freed unexpectedly")
+		return
+	var g: Node2D = obj as Node2D
+	var attracted: bool = bool(g.get("attracted"))
+	var dist: float = g.global_position.distance_to(player.global_position)
+	if bool(g.get("active")) and not attracted and absf(dist - 300.0) < 1.0:
+		print("PASS ", label, " %.0f秒後も未吸引のまま dist=%.1f" % [float(frames) / 60.0, dist])
 	else:
 		failures += 1
-		print("FAIL ", label, " gem was collected unexpectedly")
+		print("FAIL ", label, " active=", g.get("active"),
+			" attracted=", attracted, " dist=", dist)

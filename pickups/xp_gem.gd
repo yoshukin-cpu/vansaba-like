@@ -4,13 +4,11 @@ extends Area2D
 
 const COLLECT_RADIUS := 22.0
 const ATTRACT_SPEED := 600.0
-const IDLE_RESCUE_SEC := 12.0
 const FALLBACK_MAGNET_RADIUS := 110.0
 
 var attracted: bool = false
 var active: bool = true
 var home_pool: Node = null
-var idle_age: float = 0.0
 
 @onready var shape_node: CollisionShape2D = $CollisionShape2D
 
@@ -24,7 +22,6 @@ func activate() -> void:
 	active = true
 	visible = true
 	attracted = false
-	idle_age = 0.0
 	set_deferred("monitorable", true)
 	shape_node.set_deferred("disabled", false)
 
@@ -47,16 +44,12 @@ func _physics_process(delta: float) -> void:
 	var p: Node2D = _find_player()
 	if p == null:
 		return
+	# 吸い寄せは取得範囲(マグネット半径)内に入ったときのみ。
+	# 範囲外に落ちたジェムはその場に残る(取りに行かないと回収できない)。
 	if not attracted:
-		idle_age += delta
-		if idle_age > IDLE_RESCUE_SEC:
-			# 真空救済: 長時間未回収なら無条件で引き寄せる
-			attracted = true
-		elif global_position.distance_squared_to(p.global_position) <= _magnet_range_sq(p):
-			# 磁石範囲内なら自分で吸い寄せ開始 (物理イベントに依存しない)
-			attracted = true
-		else:
+		if global_position.distance_squared_to(p.global_position) > _magnet_range_sq(p):
 			return
+		attracted = true
 	var d: Vector2 = p.global_position - global_position
 	if d.length() < COLLECT_RADIUS:
 		p.call("add_xp", value)

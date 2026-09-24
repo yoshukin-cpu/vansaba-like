@@ -28,9 +28,9 @@ func _init() -> void:
 	for g: Node in get_nodes_in_group("gems"):
 		if bool(g.get("active")):
 			var gn: Node2D = g as Node2D
-			print("  dist=%.1f attracted=%s idle_age=%.1f" % [
+			print("  dist=%.1f attracted=%s" % [
 				gn.global_position.distance_to(player.global_position),
-				str(g.get("attracted")), float(g.get("idle_age"))])
+				str(g.get("attracted"))])
 	print("player: xp=", player.get("xp"), " level=", player.get("level"),
 		" hp=", snappedf(float(player.get("hp")), 0.1), " dead=", player.get("dead"))
 	quit()
