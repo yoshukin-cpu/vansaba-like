@@ -35,12 +35,13 @@ var magnet_mult: float = 1.0
 var xp_mult: float = 1.0
 var dead: bool = false
 var invuln: float = 0.0
+var facing: String = "down"
 var move_direction: Vector2 = Vector2.ZERO
 var aim_direction: Vector2 = Vector2.RIGHT
 var use_mouse_aim: bool = false
 var mouse_aim_msec: int = 0
 
-@onready var body: Polygon2D = $Body
+@onready var body: AnimatedSprite2D = $Body
 @onready var weapons: Node2D = $Weapons
 @onready var hurtbox: Area2D = $Hurtbox
 @onready var magnet: Area2D = $Magnet
@@ -78,6 +79,7 @@ func _physics_process(_delta: float) -> void:
 	velocity = move_direction * speed
 	move_and_slide()
 	_update_aim()
+	_update_animation()
 
 func _process(delta: float) -> void:
 	if not dead and regen > 0.0 and hp < max_hp:
@@ -112,6 +114,8 @@ func take_damage(amount: float) -> void:
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true
+		if body != null:
+			body.play("idle_" + facing)
 
 func add_shake(a: float) -> void:
 	trauma = minf(1.0, trauma + a)
@@ -153,8 +157,21 @@ func _update_aim() -> void:
 			aim_direction = move_direction.normalized()
 	elif move_direction.length() > 0.1:
 		aim_direction = move_direction.normalized()
-	if body != null:
-		body.rotation = aim_direction.angle()
+
+func _update_animation() -> void:
+	var moving: bool = move_direction.length() > 0.1
+	if moving:
+		if absf(move_direction.x) > absf(move_direction.y):
+			facing = "right" if move_direction.x > 0.0 else "left"
+		else:
+			facing = "down" if move_direction.y > 0.0 else "up"
+	var anim: String = ("walk_" if moving else "idle_") + facing
+	if String(body.animation) != anim:
+		body.play(anim)
+	if moving:
+		body.speed_scale = clampf(velocity.length() / speed, 0.75, 1.6)
+	else:
+		body.speed_scale = 1.0
 
 func is_mouse_aim_fresh() -> bool:
 	if not use_mouse_aim:

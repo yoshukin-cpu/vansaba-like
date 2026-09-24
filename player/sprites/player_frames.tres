@@ -1,0 +1,141 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_down_0.png" id="1_l74qx"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_down_1.png" id="2_keblg"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_left_0.png" id="3_20y0d"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_left_1.png" id="4_mmdqj"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_right_0.png" id="5_41owe"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_right_1.png" id="6_2ocug"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_up_0.png" id="7_obvsa"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_idle_up_1.png" id="8_a8sbd"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_down_0.png" id="9_wpqqo"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_down_1.png" id="10_8hn4w"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_down_2.png" id="11_xagu4"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_down_3.png" id="12_sajet"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_left_0.png" id="13_aon8h"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_left_1.png" id="14_pbkx3"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_left_2.png" id="15_4oxui"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_left_3.png" id="16_pjvwi"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_right_0.png" id="17_jl5r7"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_right_1.png" id="18_p31g8"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_right_2.png" id="19_2kw6j"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_right_3.png" id="20_ki3n3"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_up_0.png" id="21_4emfc"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_up_1.png" id="22_umkwx"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_up_2.png" id="23_vvqo6"]
+[ext_resource type="Texture2D" path="res://player/sprites/player_walk_up_3.png" id="24_nxscn"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_l74qx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_keblg")
+}],
+"loop": 1,
+"name": &"idle_down",
+"speed": 2.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_20y0d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_mmdqj")
+}],
+"loop": 1,
+"name": &"idle_left",
+"speed": 2.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_41owe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_2ocug")
+}],
+"loop": 1,
+"name": &"idle_right",
+"speed": 2.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_obvsa")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_a8sbd")
+}],
+"loop": 1,
+"name": &"idle_up",
+"speed": 2.5
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_wpqqo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_8hn4w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_xagu4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_sajet")
+}],
+"loop": 1,
+"name": &"walk_down",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_aon8h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_pbkx3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_4oxui")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_pjvwi")
+}],
+"loop": 1,
+"name": &"walk_left",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("17_jl5r7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_p31g8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_2kw6j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_ki3n3")
+}],
+"loop": 1,
+"name": &"walk_right",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("21_4emfc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_umkwx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_vvqo6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_nxscn")
+}],
+"loop": 1,
+"name": &"walk_up",
+"speed": 8.0
+}]
