@@ -98,7 +98,9 @@ func _physics_process(delta: float) -> void:
 			dir = to.normalized()
 		match behavior:
 			"keeper":
-				shot_cd -= delta
+				var advancing: bool = dist > preferred_range + 60.0
+				# 後退・停止中は発射頻度を半分にする (D19)
+				shot_cd -= delta * (1.0 if advancing else 0.5)
 				if dist > preferred_range + 60.0:
 					pass
 				elif dist < preferred_range - 60.0:
@@ -106,7 +108,8 @@ func _physics_process(delta: float) -> void:
 				else:
 					dir = to.normalized().rotated(PI / 2.0) * sin(Time.get_ticks_msec() / 900.0 + strafe_phase)
 					spd = speed * 0.5
-				if shot_cd <= 0.0 and dist < preferred_range + 250.0:
+				# 近距離では発射しない (D19)。接近戦は接触ダメージの領域。
+				if shot_cd <= 0.0 and dist < preferred_range + 250.0 and dist >= 150.0:
 					shot_cd = shot_interval
 					_fire_shot(to.normalized())
 			"dasher":
@@ -218,6 +221,8 @@ func take_damage(amount: float, kb: Vector2 = Vector2.ZERO, crit: bool = false) 
 		var game: Node = get_tree().get_first_node_in_group("game")
 		if game != null:
 			game.call("add_kill")
+			# 撃破スコア (D26): xp_value×10。エリートはxp5倍のため自動で5倍。
+			game.call("add_score", xp_value * 10)
 		_fx().call("poof", global_position, body_color, scale.x > 1.2)
 		_audio().call("play", "kill")
 		_spawn_gem()

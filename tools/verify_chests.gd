@@ -118,9 +118,10 @@ func _t_aim(player: Node2D, director: Node) -> void:
 ## 3) 各アイテムの効果
 func _t_items(player: Node2D, director: Node, main: Node) -> void:
 	var pp: Vector2 = player.global_position
-	# T02: スコア+100
+	# T02: スコア+100 (撃破スコア D26 があるため差分で判定)
+	var s_pre: int = int(main.get("score"))
 	director.call("apply_item", "T02", pp)
-	_check("T02 score+100", int(main.get("score")) == 100)
+	_check("T02 score+100", int(main.get("score")) == s_pre + 100)
 	# T01: 満タンなら小ジェムに変換
 	var g0: int = _active_gems().size()
 	director.call("apply_item", "T01", pp)
@@ -233,6 +234,11 @@ func _t_chest_cap(player: Node2D, director: Node) -> void:
 
 ## 5) アイテム爆弾: 範囲200dmg + 破片、プレイヤー無傷
 func _t_item_bomb(player: Node2D, director: Node, main: Node) -> void:
+	# capテストのランダム奇襲の残党を掃除する (プレイヤー無傷の判定のため)
+	for n: Node in get_nodes_in_group("enemies"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
 	var pos: Vector2 = player.global_position + Vector2(200, 0)
 	var before := {}
 	for b: Node in get_nodes_in_group("item_bombs"):

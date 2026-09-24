@@ -132,6 +132,7 @@ func take_damage(amount: float, kb: Vector2 = Vector2.ZERO, crit: bool = false) 
 func _boss_reward() -> void:
 	var scene: Node = get_tree().current_scene
 	var p: Node = _find_player_raw()
+	var game: Node = get_tree().get_first_node_in_group("game")
 	if boss_id == "B01":
 		if scene != null:
 			for i: int in range(3):
@@ -141,13 +142,16 @@ func _boss_reward() -> void:
 				g.global_position = global_position + Vector2.RIGHT.rotated(TAU * float(i) / 3.0) * 40.0
 				g.set("value", 20)
 				scene.call_deferred("add_child", g)
+		if game != null:
+			game.call("add_score", 500)
 		if p != null and not bool(p.get("dead")):
 			p.call("heal", 30.0)
 			p.set("pending_levels", int(p.get("pending_levels")) + 1)
 			p.emit_signal("level_up")
+	elif boss_id == "B02":
+		# v1.1までは else 分岐のため永久に呼ばれなかった (D25で修正)
+		if game != null:
+			game.call("add_score", 1000)
+			game.call("on_boss2_killed")
 	if p != null and p.has_method("add_shake"):
 		p.call("add_shake", 0.6)
-	else:
-		var game: Node = get_tree().get_first_node_in_group("game")
-		if game != null:
-			game.call("on_boss2_killed")

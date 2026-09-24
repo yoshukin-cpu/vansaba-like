@@ -81,7 +81,7 @@ func _spawn_placed(path: String, pos: Vector2, elite: bool) -> void:
 	scene.add_child(e)
 	(e as Node2D).global_position = pos
 	if elapsed >= 480.0:
-		e.call("apply_scaling", 2.0, 1.2)
+		e.call("apply_scaling", 2.0, 1.5)
 	elif elapsed >= 300.0:
 		e.call("apply_scaling", 1.5, 1.0)
 	if elite:

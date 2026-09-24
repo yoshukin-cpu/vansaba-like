@@ -34,6 +34,10 @@ func setup(dir: Vector2, spd: float, dmg: float) -> void:
 	damage = dmg
 	rotation = direction.angle()
 
+## スピンソードで消去されるときに呼ばれる (D18)。プールに返却する。
+func erase() -> void:
+	_despawn()
+
 func _physics_process(delta: float) -> void:
 	if not active:
 		return

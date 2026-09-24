@@ -26,6 +26,9 @@ var kills: int = 0
 var score: int = 0
 var warning_time: float = 0.0
 var result_shown: bool = false
+## B02撃破後のクリアカウントダウン (D25)。-1.0で非動作。
+var clear_countdown: float = -1.0
+var _last_count: int = -1
 
 func _ready() -> void:
 	add_to_group("game")
@@ -54,6 +57,7 @@ func start_game() -> void:
 	chest_director.set("running", true)
 
 func _process(_delta: float) -> void:
+	_tick_clear(_delta)
 	if player != null and info_label != null:
 		var fps: int = int(Engine.get_frames_per_second())
 		var enemy_count: int = get_tree().get_nodes_in_group("enemies").size()
@@ -126,7 +130,25 @@ func show_warning(text: String) -> void:
 	audio.call("play", "warn")
 
 func on_boss2_killed() -> void:
-	show_result(true)
+	if result_shown or clear_countdown >= 0.0:
+		return
+	clear_countdown = 3.0
+	_last_count = -1
+
+func _tick_clear(delta: float) -> void:
+	if clear_countdown < 0.0 or result_shown:
+		return
+	clear_countdown -= delta
+	var n: int = int(ceil(clear_countdown))
+	if n >= 1 and n != _last_count:
+		_last_count = n
+		if warning_label != null:
+			warning_label.text = str(n)
+			warning_label.show()
+			warning_time = 1.2
+		audio.call("play", "beep")
+	if clear_countdown < 0.0:
+		show_result(true)
 
 func show_result(clear: bool) -> void:
 	if result_shown:
@@ -135,6 +157,8 @@ func show_result(clear: bool) -> void:
 	director.set("running", false)
 	chest_director.set("running", false)
 	get_tree().paused = true
+	if warning_label != null:
+		warning_label.hide()
 	audio.call("play", "clear" if clear else "death")
 	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score)
 
