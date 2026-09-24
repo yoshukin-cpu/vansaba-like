@@ -6,13 +6,13 @@ extends Node2D
 
 const OPEN_TEXTURE: Texture2D = preload("res://objects/sprites/chest_open.png")
 
-const LIFE := 30.0
-const BLINK_AT := 5.0
+const MAX_HP := 25.0
 const OPEN_SHOW_TIME := 0.5
 
 var opened := false
 var dead := false
-var life := LIFE
+var hp := MAX_HP
+var flash := 0.0
 var free_in := -1.0
 var director: Node = null
 
@@ -21,9 +21,8 @@ var director: Node = null
 func _ready() -> void:
 	add_to_group("chests")
 
-func setup(director_node: Node, life_time: float = LIFE) -> void:
+func setup(director_node: Node) -> void:
 	director = director_node
-	life = life_time
 
 func _process(delta: float) -> void:
 	if opened:
@@ -32,28 +31,31 @@ func _process(delta: float) -> void:
 			if free_in <= 0.0:
 				queue_free()
 		return
-	life -= delta
-	if life <= BLINK_AT and sprite != null:
-		sprite.modulate.a = 0.35 + 0.65 * absf(sin(Time.get_ticks_msec() / 90.0))
-	if life <= 0.0:
-		queue_free()
-
-## 同時上限で消されるときは中身を出さずに消える
-func expire_silent() -> void:
-	opened = true
-	dead = true
-	queue_free()
+	if flash > 0.0:
+		flash -= delta
+		if flash <= 0.0 and sprite != null:
+			sprite.modulate = Color(1, 1, 1, 1)
 
 func take_damage(amount: float, kb: Vector2 = Vector2.ZERO, crit: bool = false) -> void:
 	if opened:
+		return
+	hp -= amount
+	_fx().call("damage_number", global_position + Vector2(0, -20), amount, crit)
+	if sprite != null:
+		sprite.modulate = Color(3, 3, 3, 1)
+	flash = 0.12
+	if hp > 0.0:
 		return
 	opened = true
 	dead = true
 	free_in = OPEN_SHOW_TIME
 	if sprite != null:
 		sprite.texture = OPEN_TEXTURE
-		sprite.modulate.a = 1.0
+		sprite.modulate = Color(1, 1, 1, 1)
 	# 開けた一撃が弾の area_entered (物理フラッシュ中) の場合があるため、
-	# 中身の適用 (スポーンを伴う) は遅延する。位置は今の値を渡す。
+	# 中身の出現 (スポーンを伴う) は遅延する。位置は今の値を渡す。
 	if director != null and is_instance_valid(director):
 		director.call_deferred("open_chest_at", global_position)
+
+func _fx() -> Node:
+	return get_tree().get_first_node_in_group("combat_fx")

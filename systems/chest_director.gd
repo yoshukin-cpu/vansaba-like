@@ -7,6 +7,7 @@ extends Node
 const ItemsDB := preload("res://data/items_db.gd")
 const CardsDB := preload("res://data/cards_db.gd")
 const ChestScene: PackedScene = preload("res://objects/chest.tscn")
+const ItemScene: PackedScene = preload("res://objects/item.tscn")
 const ItemBombScene: PackedScene = preload("res://objects/bomb.tscn")
 const GEM_SCENE: PackedScene = preload("res://pickups/xp_gem.tscn")
 
@@ -45,11 +46,6 @@ func _process(delta: float) -> void:
 
 func spawn_chest() -> Node:
 	_prune()
-	while chests.size() >= MAX_CHESTS:
-		# 型付き変数への代入は解放済み参照でエラーになるため、型なしで受ける
-		var oldest = chests.pop_front()
-		if is_instance_valid(oldest):
-			(oldest as Node).call("expire_silent")
 	return spawn_chest_at(_pick_pos())
 
 func spawn_chest_at(pos: Vector2) -> Node:
@@ -62,9 +58,38 @@ func spawn_chest_at(pos: Vector2) -> Node:
 	_audio().call("play", "pop")
 	return c
 
-## 宝箱が開かれたときに呼ばれる (take_damage から遅延呼び出し)。抽選して適用する。
+## 宝箱が開かれたときに呼ばれる (take_damage から遅延呼び出し)。
+## T04 (奇襲) と T08 (ラッシュ) は即時適用し、それ以外はアイテムとして飛び出す。
 func open_chest_at(pos: Vector2) -> void:
-	apply_item(ItemsDB.roll(), pos)
+	var item_id: String = ItemsDB.roll()
+	match item_id:
+		"T04", "T08":
+			apply_item(item_id, pos)
+			return
+		"T05":
+			# 経験値はジェム現物をばら撒く (取得式・絵・回収範囲が既存のため)
+			for i: int in range(3):
+				_spawn_gem(pos + _ring(30.0, 70.0), 5)
+			for i: int in range(5):
+				_spawn_gem(pos + _ring(30.0, 70.0), 1)
+			_fx().call("spark", pos, Color(0.4, 0.8, 1.0, 1.0))
+			_audio().call("play", "coin")
+			_audio().call("play", "chest")
+			return
+	spawn_item(item_id, pos, _item_big(item_id))
+	_fx().call("poof", pos, Color(1.0, 0.85, 0.4), false)
+	_audio().call("play", "chest")
+
+## 開封時に飛び出すアイテム実体を作る。kind は apply_item のID。
+func spawn_item(kind: String, pos: Vector2, big: bool) -> Node:
+	var it: Node = ItemScene.instantiate()
+	get_tree().current_scene.add_child(it)
+	(it as Node2D).global_position = pos + _ring(40.0, 80.0)
+	it.call("setup", kind, big)
+	return it
+
+func _item_big(item_id: String) -> bool:
+	return item_id == "R_HEAL" or item_id == "R_COIN" or item_id == "R_WEAPON"
 
 func apply_item(item_id: String, pos: Vector2) -> String:
 	var p: Node = _player()

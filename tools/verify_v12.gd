@@ -21,6 +21,7 @@ func _init() -> void:
 	for i: int in range(20):
 		await process_frame
 	var player: Node2D = main.get_node("Player")
+	var director: Node = main.get_node("ChestDirector")
 	player.set("max_hp", 1000000.0)
 	player.set("hp", 1000000.0)
 	player.set("xp_next", 1000000)
@@ -28,6 +29,8 @@ func _init() -> void:
 	await _t_blades(player)
 	await _t_erase(player)
 	await _t_score(player, main)
+	await _t_item_drop(player, director)
+	await _t_item_pickup(player, director, main)
 	# 以降はスピンを止める (ノックバックでアーチャーが流されないように)
 	var w1: Node = player.get_node_or_null("Weapons/Weapon_C01")
 	if w1 != null:
@@ -86,7 +89,60 @@ func _t_erase(player: Node2D) -> void:
 	_check("spin erases 12 static shots (%d left)" % alive, alive == 0)
 
 
-## 3) 撃破スコア: 通常xp×10、エリート×5
+## 3b) 開封でアイテムが飛び出す (即時適用はT04/T08のみ)
+func _t_item_drop(player: Node2D, director: Node) -> void:
+	var valid := ["T01", "T02", "T03", "T06", "T07", "T09", "R_HEAL", "R_COIN", "R_WEAPON"]
+	var got := false
+	for k: int in range(5):
+		var c: Node = director.call("spawn_chest_at", player.global_position + Vector2(100, 0))
+		c.call("take_damage", 999.0, Vector2.ZERO, false)
+		for i: int in range(10):
+			await process_frame
+		var items: Array = get_nodes_in_group("items")
+		if not items.is_empty():
+			got = true
+			var ok := true
+			for it: Node in items:
+				if not str(it.get("kind")) in valid:
+					ok = false
+			_check("dropped item kinds valid", ok)
+			break
+	_check("chest drops an item", got)
+	for n: Node in get_nodes_in_group("items"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
+
+
+## 3c) アイテム取得: T02でスコア、T03で爆弾設置、引き寄せなし
+func _t_item_pickup(player: Node2D, director: Node, main: Node) -> void:
+	var s0: int = int(main.get("score"))
+	var it: Node = director.call("spawn_item", "T02", player.global_position, false)
+	player.global_position = (it as Node2D).global_position
+	for i: int in range(15):
+		await process_frame
+	_check("coin pickup +100", int(main.get("score")) == s0 + 100 and not is_instance_valid(it))
+	var b0: int = get_nodes_in_group("item_bombs").size()
+	var it3: Node = director.call("spawn_item", "T03", player.global_position, false)
+	player.global_position = (it3 as Node2D).global_position
+	for i: int in range(15):
+		await process_frame
+	_check("bomb pickup places live bomb", get_nodes_in_group("item_bombs").size() == b0 + 1)
+	for n: Node in get_nodes_in_group("item_bombs"):
+		n.queue_free()
+	# 引き寄せなし: 300px先に置いて60フレーム待っても動かない
+	var it6: Node = director.call("spawn_item", "T06", player.global_position + Vector2(300, 0), false)
+	var p0: Vector2 = (it6 as Node2D).global_position
+	for i: int in range(60):
+		await process_frame
+	_check("item not attracted", (it6 as Node2D).global_position.distance_to(p0) < 1.0)
+	for n: Node in get_nodes_in_group("items"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
+
+
+## 4) 撃破スコア: 通常xp×10、エリート×5
 func _t_score(player: Node2D, main: Node) -> void:
 	var s0: int = int(main.get("score"))
 	var a: Node2D = SlimeScene.instantiate() as Node2D

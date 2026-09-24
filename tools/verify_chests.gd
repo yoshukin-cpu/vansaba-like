@@ -110,7 +110,7 @@ func _t_aim(player: Node2D, director: Node) -> void:
 	for i: int in range(5):
 		await process_frame
 	_check("test slime gone", get_nodes_in_group("enemies").is_empty())
-	chest.call("expire_silent")
+	chest.queue_free()
 	for i: int in range(3):
 		await process_frame
 
@@ -183,7 +183,7 @@ func _t_items(player: Node2D, director: Node, main: Node) -> void:
 		await process_frame
 
 
-## 4) 宝箱の開封フロー
+## 4) 宝箱の開封フロー (HP25: 削り→開封)
 func _t_chest_open(player: Node2D, director: Node) -> void:
 	# 以降は武器の自動発射を止める (流れ弾によるランダム開封を排除して決定的にする)
 	for w: Node in player.get_node("Weapons").get_children():
@@ -193,34 +193,26 @@ func _t_chest_open(player: Node2D, director: Node) -> void:
 	_check("chest not in enemies group", not c.is_in_group("enemies"))
 	_check("chest receiver on layer 2", int((c as Node).get_node("Receiver").collision_layer) == 2)
 	c.call("take_damage", 10.0, Vector2.ZERO, false)
+	_check("chest survives chip damage", not bool(c.get("opened")) and absf(float(c.get("hp")) - 15.0) < 0.01)
+	c.call("take_damage", 20.0, Vector2.ZERO, false)
 	_check("chest opened", bool(c.get("opened")))
 	for i: int in range(40):
 		await process_frame
 	_check("chest freed after open", not is_instance_valid(c))
 
 
-## 4b) 上限4個と解放済み参照の剪定 (回帰: _prune の freed instance エラー)
+## 4b) 宝箱の永続化 (上限撤廃の回帰): 6個置いても追い出されない
 func _t_chest_cap(player: Node2D, director: Node) -> void:
 	for n: Node in get_nodes_in_group("chests"):
 		n.queue_free()
 	for i: int in range(5):
 		await process_frame
-	for i: int in range(4):
+	for i: int in range(6):
 		director.call("spawn_chest")
-	_check("cap: 4 spawned", get_nodes_in_group("chests").size() == 4)
-	# 1つ開けて解放させた後に spawn → _prune が解放済み参照を踏む
-	var first: Node = get_nodes_in_group("chests")[0]
-	first.call("take_damage", 10.0, Vector2.ZERO, false)
-	for i: int in range(40):
-		await process_frame
-	director.call("spawn_chest")
-	_check("cap: still 4 after reopen", get_nodes_in_group("chests").size() == 4)
-	director.call("spawn_chest")
-	director.call("spawn_chest")
-	# queue_free はフレーム末までグループに残るため、カウント前に待つ
 	for i: int in range(5):
 		await process_frame
-	_check("cap: oldest evicted, still 4", get_nodes_in_group("chests").size() == 4)
+	_check("chests persist beyond 4 (%d)" % get_nodes_in_group("chests").size(),
+		get_nodes_in_group("chests").size() == 6)
 	var leaked := false
 	for c in director.get("chests"):
 		if not is_instance_valid(c):
