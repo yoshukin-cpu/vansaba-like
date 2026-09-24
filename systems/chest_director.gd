@@ -46,9 +46,10 @@ func _process(delta: float) -> void:
 func spawn_chest() -> Node:
 	_prune()
 	while chests.size() >= MAX_CHESTS:
-		var oldest: Node = chests.pop_front()
+		# 型付き変数への代入は解放済み参照でエラーになるため、型なしで受ける
+		var oldest = chests.pop_front()
 		if is_instance_valid(oldest):
-			oldest.call("expire_silent")
+			(oldest as Node).call("expire_silent")
 	return spawn_chest_at(_pick_pos())
 
 func spawn_chest_at(pos: Vector2) -> Node:
@@ -188,7 +189,9 @@ func _pick_pos() -> Vector2:
 
 func _prune() -> void:
 	var alive: Array = []
-	for c: Node in chests:
+	# 解放済み参照が混ざっているため、型付きループ変数は使えない
+	# (for c: Node だと代入時点で "Trying to assign invalid previously freed instance")
+	for c in chests:
 		if is_instance_valid(c):
 			alive.append(c)
 	chests = alive

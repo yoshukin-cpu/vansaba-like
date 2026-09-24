@@ -32,6 +32,7 @@ func _init() -> void:
 	await _t_aim(player, director)
 	await _t_items(player, director, main)
 	await _t_chest_open(player, director)
+	await _t_chest_cap(player, director)
 	await _t_item_bomb(player, director, main)
 
 	print("RESULT: ", "ALL PASS" if failures == 0 else "%d FAILURE(S)" % failures)
@@ -90,19 +91,21 @@ func _t_aim(player: Node2D, director: Node) -> void:
 	_check("has Weapon_C02", w != null)
 	if w == null:
 		return
-	var chest: Node = director.call("spawn_chest_at", player.global_position + Vector2(300, 0))
+	var chest: Node = director.call("spawn_chest_at", player.global_position + Vector2(0, -300))
 	# 実マウス位置がエイムに優先されるため、自動照準の判定前に切る (同tick内は新イベントなし)
+	# 宝箱は+X軸を外す (直線弾の流れ弾が当たって開く22%コインフレーキーを避ける)
 	player.set("use_mouse_aim", false)
 	var d: Vector2 = w.call("get_fire_direction")
-	_check("aims at chest when no enemy", d.angle_to(Vector2.RIGHT) < 0.2)
+	_check("aims at chest when no enemy", d.angle_to(Vector2.UP) < 0.2)
 	var slime: Node2D = SlimeScene.instantiate() as Node2D
 	(current_scene as Node).add_child(slime)
-	slime.global_position = player.global_position + Vector2(-150, 0)
+	slime.global_position = player.global_position + Vector2(150, 60)
 	for i: int in range(5):
 		await process_frame
 	player.set("use_mouse_aim", false)
+	var want: Vector2 = (slime.global_position - player.global_position).normalized()
 	var d2: Vector2 = w.call("get_fire_direction")
-	_check("aims at enemy when present", d2.angle_to(Vector2.LEFT) < 0.3)
+	_check("aims at enemy when present", d2.angle_to(want) < 0.3)
 	slime.call("take_damage", 99999.0)
 	for i: int in range(5):
 		await process_frame
@@ -181,6 +184,9 @@ func _t_items(player: Node2D, director: Node, main: Node) -> void:
 
 ## 4) 宝箱の開封フロー
 func _t_chest_open(player: Node2D, director: Node) -> void:
+	# 以降は武器の自動発射を止める (流れ弾によるランダム開封を排除して決定的にする)
+	for w: Node in player.get_node("Weapons").get_children():
+		w.set("cooldown", 9999.0)
 	var c: Node = director.call("spawn_chest_at", player.global_position + Vector2(100, 0))
 	_check("chest in chests group", c.is_in_group("chests"))
 	_check("chest not in enemies group", not c.is_in_group("enemies"))
@@ -190,6 +196,39 @@ func _t_chest_open(player: Node2D, director: Node) -> void:
 	for i: int in range(40):
 		await process_frame
 	_check("chest freed after open", not is_instance_valid(c))
+
+
+## 4b) 上限4個と解放済み参照の剪定 (回帰: _prune の freed instance エラー)
+func _t_chest_cap(player: Node2D, director: Node) -> void:
+	for n: Node in get_nodes_in_group("chests"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
+	for i: int in range(4):
+		director.call("spawn_chest")
+	_check("cap: 4 spawned", get_nodes_in_group("chests").size() == 4)
+	# 1つ開けて解放させた後に spawn → _prune が解放済み参照を踏む
+	var first: Node = get_nodes_in_group("chests")[0]
+	first.call("take_damage", 10.0, Vector2.ZERO, false)
+	for i: int in range(40):
+		await process_frame
+	director.call("spawn_chest")
+	_check("cap: still 4 after reopen", get_nodes_in_group("chests").size() == 4)
+	director.call("spawn_chest")
+	director.call("spawn_chest")
+	# queue_free はフレーム末までグループに残るため、カウント前に待つ
+	for i: int in range(5):
+		await process_frame
+	_check("cap: oldest evicted, still 4", get_nodes_in_group("chests").size() == 4)
+	var leaked := false
+	for c in director.get("chests"):
+		if not is_instance_valid(c):
+			leaked = true
+	_check("director list has no freed refs", not leaked)
+	for n: Node in get_nodes_in_group("chests"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
 
 
 ## 5) アイテム爆弾: 範囲200dmg + 破片、プレイヤー無傷
