@@ -133,7 +133,13 @@ res://
 - **完了条件**: 10分プレイが最後まで破綻なく動き、宝箱込みで「易しすぎない」難易度になっている
 - 検証: `run_test_scenario` / `run_stress_test` + 通しプレイのスクショ・ログ
 
-### P13 バランス・スコア・SE・クリア [M12]
+### P13 バランス・スコア・SE・クリア [M12] ✅ 完了
+
+- 実装: スピン複数刃 (COUNT/DMGテーブル) + 敵弾消去 (mask 10・`erase()`) /
+  keeper半減速+150px不発 / 8分dmg×1.5 / 撃破スコア (xp×10・ボス別枠) /
+  B02分岐修正+3秒カウントダウン / beep 1音色
+- 検証: `tools/verify_v12.gd` 16件 ALL PASS (刃数・威力・消去・射撃抑制・減速率・
+  スコア・B02→カウントダウン→CLEAR)。回帰 `verify_chests.gd`・`test_gem_magnet.gd` ALL PASS
 
 - `weapons/spin_sword.gd`: 刃をN個化 (`COUNT_TABLE=[1,1,2,2,2,3,3,3]` / `DMG_TABLE=[8〜16]`)、mask 2→10、敵弾の消去
 - `projectiles/enemy_shot.gd`: `erase()` 追加 (プール返却+小スパーク)
@@ -145,7 +151,13 @@ res://
 - **完了条件**: スピン3本・敵弾消去・3秒カウントダウン付きクリアが動く。キルでスコアが増える
 - 検証: `tools/verify_chests.gd` 回帰 + 新規 `tools/verify_v12.gd` (刃数・消去・射撃抑制・スコア・カウントダウン) + 実機キャプチャ
 
-### P14 宝箱の作り直し [M13]
+### P14 宝箱の作り直し [M13] ✅ 完了
+
+- 実装: `objects/chest.gd` HP25+被弾表示、寿命・上限の撤去 / `chest_director` 上限追い出し撤去・
+  開封→アイテムスポーン分離 / `objects/item.tscn`+`item.gd` 新規 (接触26・マグネット無効・永続) /
+  素材 heart/star/magnet/sword + coin/bomb/ジェム流用
+- 検証: `verify_chests.gd` を新仕様に更新 ALL PASS + `verify_v12.gd` に5件追加
+  (開封ドロップ・取得適用・T03設置・引き寄せなし) ALL PASS (計21件)
 
 - `objects/chest.gd`: HP25 + 被弾表示 (damage_number+白フラッシュ)、寿命・上限の撤去
 - `systems/chest_director.gd`: 上限追い出し・`expire_silent` の撤去、開封はアイテムスポーンに分離
