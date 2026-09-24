@@ -114,24 +114,42 @@ func _t_item_drop(player: Node2D, director: Node) -> void:
 		await process_frame
 
 
-## 3c) アイテム取得: T02でスコア、T03で爆弾設置、引き寄せなし
+## 3c) アイテム取得: T02でスコア、爆弾は開封時即時、T09は武器名ポップアップ
 func _t_item_pickup(player: Node2D, director: Node, main: Node) -> void:
-	var s0: int = int(main.get("score"))
+	# 飛び出し中は取得できない。着地 (約0.5秒) して初めて拾える
 	var it: Node = director.call("spawn_item", "T02", player.global_position, false)
+	player.global_position = (it as Node2D).global_position
+	for i: int in range(5):
+		await process_frame
+	_check("item not picked while flying", is_instance_valid(it))
+	var s0: int = int(main.get("score"))
+	for i: int in range(40):
+		await process_frame
+	_check("item landed beyond pickup (%s)" % str((it as Node2D).global_position - player.global_position),
+		is_instance_valid(it))
 	player.global_position = (it as Node2D).global_position
 	for i: int in range(15):
 		await process_frame
 	_check("coin pickup +100", int(main.get("score")) == s0 + 100 and not is_instance_valid(it))
+	# 爆弾は開封時即時 (取得不要): apply_item 直呼びで設置される
 	var b0: int = get_nodes_in_group("item_bombs").size()
-	var it3: Node = director.call("spawn_item", "T03", player.global_position, false)
-	player.global_position = (it3 as Node2D).global_position
-	for i: int in range(15):
+	director.call("apply_item", "T03", player.global_position)
+	for i: int in range(5):
 		await process_frame
-	_check("bomb pickup places live bomb", get_nodes_in_group("item_bombs").size() == b0 + 1)
+	_check("bomb applies immediately", get_nodes_in_group("item_bombs").size() == b0 + 1)
 	for n: Node in get_nodes_in_group("item_bombs"):
 		n.queue_free()
-	# 引き寄せなし: 300px先に置いて60フレーム待っても動かない
+	# T09: 武器名ポップアップが出る
+	var fx: Node = get_first_node_in_group("combat_fx")
+	var n0: int = (fx.get("nums") as Array).size()
+	director.call("apply_item", "T09", player.global_position)
+	_check("T09 shows weapon popup", (fx.get("nums") as Array).size() == n0 + 1)
+	for i: int in range(5):
+		await process_frame
+	# 引き寄せなし: 着地後に記録して60フレーム待っても動かない
 	var it6: Node = director.call("spawn_item", "T06", player.global_position + Vector2(300, 0), false)
+	for i: int in range(40):
+		await process_frame
 	var p0: Vector2 = (it6 as Node2D).global_position
 	for i: int in range(60):
 		await process_frame

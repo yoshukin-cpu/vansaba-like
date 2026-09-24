@@ -47,7 +47,9 @@ func _refresh_blades() -> void:
 		bl.collision_layer = 4
 		bl.collision_mask = 10
 		bl.monitoring = true
+		# 刃は放射状に向ける (位置角度と同じだけ回転。Orbit の回転で振り回す)
 		bl.position = Vector2(radius, 0).rotated(TAU * float(i) / float(n))
+		bl.rotation = TAU * float(i) / float(n)
 		var shape := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
 		rect.size = Vector2(48, 28)

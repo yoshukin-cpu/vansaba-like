@@ -63,7 +63,8 @@ func spawn_chest_at(pos: Vector2) -> Node:
 func open_chest_at(pos: Vector2) -> void:
 	var item_id: String = ItemsDB.roll()
 	match item_id:
-		"T04", "T08":
+		"T03", "T04", "T08":
+			# 爆弾・奇襲・ラッシュは即時発動する (取得の必要なし)
 			apply_item(item_id, pos)
 			return
 		"T05":
@@ -81,10 +82,11 @@ func open_chest_at(pos: Vector2) -> void:
 	_audio().call("play", "chest")
 
 ## 開封時に飛び出すアイテム実体を作る。kind は apply_item のID。
+## 開始位置は宝箱の真上で、アイテム自身がランダム方向に飛んで着地する。
 func spawn_item(kind: String, pos: Vector2, big: bool) -> Node:
 	var it: Node = ItemScene.instantiate()
 	get_tree().current_scene.add_child(it)
-	(it as Node2D).global_position = pos + _ring(40.0, 80.0)
+	(it as Node2D).global_position = pos
 	it.call("setup", kind, big)
 	return it
 
@@ -149,8 +151,10 @@ func apply_item(item_id: String, pos: Vector2) -> String:
 			rush_time = RUSH_TIME
 			_game().call("show_warning", "宝箱ラッシュ!")
 		"T09", "R_WEAPON":
-			if not _upgrade_weapon():
+			var wup: Node = _upgrade_weapon()
+			if wup == null:
 				return apply_item("T02", pos)
+			_fx().call("text_popup", pos, "%s Lv%d!" % [str(CardsDB.get_def(str(wup.get("weapon_id")))["name"]), int(wup.get("weapon_level"))], 24, Color(1.0, 0.6, 0.2))
 			_fx().call("spark", pos, Color(1.0, 0.6, 0.2, 1.0))
 			_audio().call("play", "buff")
 		"R_HEAL":
@@ -162,22 +166,22 @@ func apply_item(item_id: String, pos: Vector2) -> String:
 	_audio().call("play", "chest")
 	return item_id
 
-## 取得済み武器からランダムに1つ強化する。対象がなければ false。
-func _upgrade_weapon() -> bool:
+## 取得済み武器からランダムに1つ強化し、強化した武器を返す。対象がなければ null。
+func _upgrade_weapon() -> Node:
 	var cards: Node = _cards()
 	var p: Node = _player()
 	if cards == null or p == null:
-		return false
+		return null
 	var cands: Array = []
 	for cid: String in CardsDB.WEAPON_IDS:
 		var w: Node = cards.call("weapon_by_id", cid)
 		if w != null and int(w.get("weapon_level")) < CardsDB.WEAPON_MAX_LEVEL:
 			cands.append(w)
 	if cands.is_empty():
-		return false
+		return null
 	var w2: Node = cands[randi() % cands.size()]
 	w2.call("upgrade")
-	return true
+	return w2
 
 func _spawn_gem(pos: Vector2, value: int) -> void:
 	var pool: Node = get_tree().get_first_node_in_group("pool_gems")

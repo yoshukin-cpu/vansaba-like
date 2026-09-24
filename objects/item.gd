@@ -28,6 +28,9 @@ var kind := ""
 var big := false
 var age := 0.0
 var base_y := -20.0
+## 落下演出中。初速で飛び出し、減速して着地するまで取得できない。
+var fly_vel := Vector2.ZERO
+var flying := false
 
 var sprite: Sprite2D = null
 
@@ -47,13 +50,33 @@ func setup(item_kind: String, is_big: bool = false) -> void:
 	if big:
 		sprite.scale = Vector2(1.4, 1.4)
 	add_child(sprite)
+	# 宝箱から飛び出す: ランダム方向に初速を与え、着地するまで取得できない
+	# 飛距離は約40〜85px (取得半径26より外に落ちる)
+	fly_vel = Vector2.RIGHT.rotated(randf() * TAU) * randf_range(220.0, 320.0)
+	flying = true
 
 func _process(delta: float) -> void:
 	age += delta
+	if flying:
+		var step: Vector2 = fly_vel * delta
+		# 減速 (約0.3〜0.5秒で着地)
+		fly_vel = fly_vel.move_toward(Vector2.ZERO, 600.0 * delta)
+		global_position += step
+		if fly_vel.length() < 5.0:
+			flying = false
+			_fx().call("poof", global_position, Color(1, 1, 1, 1), false)
 	if sprite != null and is_instance_valid(sprite):
-		sprite.position.y = base_y + sin(age * 3.0) * 3.0
+		var hop := 0.0
+		if flying:
+			hop = -10.0 * (fly_vel.length() / 320.0)
+		sprite.position.y = base_y + sin(age * 3.0) * 3.0 + hop
+
+func _fx() -> Node:
+	return get_tree().get_first_node_in_group("combat_fx")
 
 func _physics_process(_delta: float) -> void:
+	if flying:
+		return
 	var p: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	if p == null or bool(p.get("dead")):
 		return

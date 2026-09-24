@@ -21,6 +21,12 @@ func spark(pos: Vector2, color: Color) -> void:
 	while sparks.size() > 80:
 		sparks.pop_front()
 
+## 文字ポップアップ (T09 の武器名表示など)。damage_number と同じ描画経路を使う。
+func text_popup(pos: Vector2, text: String, size: int, color: Color) -> void:
+	nums.append({"pos": pos + Vector2(0, -30), "vel": Vector2(0, -70), "age": 0.0, "life": 1.4, "text": text, "size": size, "color": color})
+	while nums.size() > 120:
+		nums.pop_front()
+
 func poof(pos: Vector2, color: Color, big: bool) -> void:
 	var r: float = 34.0 if big else 20.0
 	sparks.append({"pos": pos, "age": 0.0, "life": 0.3, "max_r": r, "color": color, "width": 5.0})
