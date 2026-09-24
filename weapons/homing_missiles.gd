@@ -38,6 +38,8 @@ func fire() -> void:
 		var pr: Area2D
 		if pool != null:
 			pr = pool.call("acquire") as Area2D
+			if pr == null:
+				continue
 		else:
 			pr = HomingScene.instantiate() as Area2D
 			scene.add_child(pr)

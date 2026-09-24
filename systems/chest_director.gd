@@ -62,9 +62,8 @@ func spawn_chest_at(pos: Vector2) -> Node:
 	_audio().call("play", "pop")
 	return c
 
-## 宝箱が開かれたときに呼ばれる。抽選して適用する。
-func open_chest(chest: Node) -> void:
-	var pos: Vector2 = (chest as Node2D).global_position
+## 宝箱が開かれたときに呼ばれる (take_damage から遅延呼び出し)。抽選して適用する。
+func open_chest_at(pos: Vector2) -> void:
 	apply_item(ItemsDB.roll(), pos)
 
 func apply_item(item_id: String, pos: Vector2) -> String:

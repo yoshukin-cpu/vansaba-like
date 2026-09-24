@@ -136,9 +136,11 @@ func _boss_reward() -> void:
 		if scene != null:
 			for i: int in range(3):
 				var g: Area2D = GEM_SCENE.instantiate() as Area2D
-				scene.add_child(g)
+				# 撃破の一撃が弾の area_entered (物理フラッシュ中) の場合があるため遅延追加する。
+				# 親は原点の Main なので、追加前の global 設定がそのまま有効。
 				g.global_position = global_position + Vector2.RIGHT.rotated(TAU * float(i) / 3.0) * 40.0
 				g.set("value", 20)
+				scene.call_deferred("add_child", g)
 		if p != null and not bool(p.get("dead")):
 			p.call("heal", 30.0)
 			p.set("pending_levels", int(p.get("pending_levels")) + 1)

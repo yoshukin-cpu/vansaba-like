@@ -285,8 +285,11 @@ func _spawn_split() -> void:
 		return
 	for i: int in range(3):
 		var m: Node = scn.instantiate()
-		scene.add_child(m)
+		# take_damage は弾の area_entered (物理フラッシュ中) から呼ばれるため、
+		# その場で add_child すると "Can't change this state while flushing queries" になる。
+		# 位置だけ先に決めて追加は遅延する (Main は原点なので local == global)。
 		(m as Node2D).global_position = global_position + Vector2.RIGHT.rotated(TAU * float(i) / 3.0) * 20.0
+		scene.call_deferred("add_child", m)
 
 func _find_player() -> Node2D:
 	var p: Node = _find_player_raw()

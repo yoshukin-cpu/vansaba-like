@@ -53,5 +53,7 @@ func take_damage(amount: float, kb: Vector2 = Vector2.ZERO, crit: bool = false) 
 	if sprite != null:
 		sprite.texture = OPEN_TEXTURE
 		sprite.modulate.a = 1.0
+	# 開けた一撃が弾の area_entered (物理フラッシュ中) の場合があるため、
+	# 中身の適用 (スポーンを伴う) は遅延する。位置は今の値を渡す。
 	if director != null and is_instance_valid(director):
-		director.call("open_chest", self)
+		director.call_deferred("open_chest_at", global_position)
