@@ -113,7 +113,7 @@ func _burn() -> void:
 	var dmg: float = rh[0]
 	var crit: bool = rh[1]
 	var kb: float = kb_mult()
-	for n: Node in get_tree().get_nodes_in_group("enemies"):
+	for n: Node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("chests"):
 		if not (n is Node2D):
 			continue
 		if bool(n.get("dead")):

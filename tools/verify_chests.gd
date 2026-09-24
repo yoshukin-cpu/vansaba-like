@@ -32,6 +32,7 @@ func _init() -> void:
 	await _t_aim(player, director)
 	await _t_items(player, director, main)
 	await _t_chest_open(player, director)
+	await _t_flame_chest(player, director, main)
 	await _t_chest_cap(player, director)
 	await _t_item_bomb(player, director, main)
 
@@ -201,7 +202,32 @@ func _t_chest_open(player: Node2D, director: Node) -> void:
 	_check("chest freed after open", not is_instance_valid(c))
 
 
-## 4b) 宝箱の永続化 (上限撤廃の回帰): 6個置いても追い出されない
+## 4b) 火炎放射で宝箱が削れる (回帰: enemies群のみ走査していた不具合)
+func _t_flame_chest(player: Node2D, director: Node, main: Node) -> void:
+	for w: Node in player.get_node("Weapons").get_children():
+		w.set("cooldown", 9999.0)
+	for n: Node in get_nodes_in_group("enemies"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
+	var cards: Node = main.get_node("CardManager")
+	if cards.call("weapon_by_id", "C05") == null:
+		cards.call("apply_card", "C05")
+	player.set("aim_direction", Vector2.RIGHT)
+	var c: Node = director.call("spawn_chest_at", player.global_position + Vector2(150, 0))
+	for i: int in range(60):
+		await process_frame
+	_check("flame damages chest (hp=%s)" % str(c.get("hp") if is_instance_valid(c) else "freed"),
+		not is_instance_valid(c) or float(c.get("hp")) < 25.0)
+	for n: Node in get_nodes_in_group("chests"):
+		n.queue_free()
+	for n: Node in get_nodes_in_group("enemies"):
+		n.queue_free()
+	for i: int in range(5):
+		await process_frame
+
+
+## 4c) 宝箱の永続化 (上限撤廃の回帰): 6個置いても追い出されない
 func _t_chest_cap(player: Node2D, director: Node) -> void:
 	for n: Node in get_nodes_in_group("chests"):
 		n.queue_free()
