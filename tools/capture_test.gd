@@ -10,6 +10,7 @@ func _init() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
 	var main := (load("res://main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
+	current_scene = main
 	await process_frame
 	await process_frame
 	main.call("start_game")

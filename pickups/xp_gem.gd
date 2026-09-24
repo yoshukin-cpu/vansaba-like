@@ -2,10 +2,17 @@ extends Area2D
 
 @export var value: int = 1
 
+const COLLECT_RADIUS := 22.0
+const ATTRACT_SPEED := 600.0
+const IDLE_RESCUE_SEC := 12.0
+const FALLBACK_MAGNET_RADIUS := 110.0
+
 var attracted: bool = false
 var active: bool = true
 var home_pool: Node = null
 var idle_age: float = 0.0
+
+@onready var shape_node: CollisionShape2D = $CollisionShape2D
 
 func _ready() -> void:
 	add_to_group("gems")
@@ -19,12 +26,17 @@ func activate() -> void:
 	attracted = false
 	idle_age = 0.0
 	set_deferred("monitorable", true)
+	shape_node.set_deferred("disabled", false)
 
 func deactivate() -> void:
 	active = false
 	visible = false
 	attracted = false
 	set_deferred("monitorable", false)
+	# プール待機中はコリジョンを無効化する。原点などに重なったまま残すと
+	# マグネット側の重複ペアが古い状態で保持され、再利用時に吸い寄せが
+	# 発火しない(エリアの entered が来ない)不具合の原因になる。
+	shape_node.set_deferred("disabled", true)
 
 func attract() -> void:
 	attracted = true
@@ -32,21 +44,31 @@ func attract() -> void:
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
-	if not attracted:
-		idle_age += delta
-		if idle_age > 12.0:
-			attracted = true
-		else:
-			return
 	var p: Node2D = _find_player()
 	if p == null:
 		return
+	if not attracted:
+		idle_age += delta
+		if idle_age > IDLE_RESCUE_SEC:
+			# 真空救済: 長時間未回収なら無条件で引き寄せる
+			attracted = true
+		elif global_position.distance_squared_to(p.global_position) <= _magnet_range_sq(p):
+			# 磁石範囲内なら自分で吸い寄せ開始 (物理イベントに依存しない)
+			attracted = true
+		else:
+			return
 	var d: Vector2 = p.global_position - global_position
-	if d.length() < 22.0:
+	if d.length() < COLLECT_RADIUS:
 		p.call("add_xp", value)
 		_despawn()
 		return
-	global_position = global_position.move_toward(p.global_position, 600.0 * delta)
+	global_position = global_position.move_toward(p.global_position, ATTRACT_SPEED * delta)
+
+func _magnet_range_sq(p: Node) -> float:
+	var r: float = FALLBACK_MAGNET_RADIUS
+	if p.has_method("magnet_radius"):
+		r = float(p.call("magnet_radius"))
+	return r * r
 
 func _despawn() -> void:
 	if home_pool != null and is_instance_valid(home_pool):

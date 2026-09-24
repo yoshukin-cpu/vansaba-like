@@ -37,6 +37,7 @@ shape = SubResource("1")
 [node name="Magnet" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 16
+monitoring = false
 
 [node name="MagnetShape" type="CollisionShape2D" parent="Magnet"]
 shape = SubResource("2")

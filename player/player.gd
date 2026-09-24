@@ -54,7 +54,6 @@ func _ready() -> void:
 	add_to_group("player")
 	hp = max_hp
 	hurtbox.add_to_group("player_hurtbox")
-	magnet.area_entered.connect(_on_magnet_area)
 	add_weapon("C02")
 	add_weapon("C01")
 
@@ -139,9 +138,16 @@ func heal(amount: float) -> void:
 		return
 	hp = minf(max_hp, hp + amount)
 
-func _on_magnet_area(area: Area2D) -> void:
-	if area.has_method("attract"):
-		area.call("attract")
+## マグネットの実効半径 (C19などの倍率込み)。ジェム側の吸い寄せ判定が参照する。
+## 吸い寄せはジェム自身が毎フレーム距離判定するため、Area2Dの重複イベントは使わない。
+func magnet_radius() -> float:
+	var shape_node: CollisionShape2D = magnet.get_node_or_null("MagnetShape") as CollisionShape2D
+	if shape_node == null:
+		return 110.0 * magnet_mult
+	var circle: CircleShape2D = shape_node.shape as CircleShape2D
+	if circle == null:
+		return 110.0 * magnet_mult
+	return circle.radius * magnet.global_scale.x
 
 func _update_aim() -> void:
 	var joy_aim: Vector2 = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
