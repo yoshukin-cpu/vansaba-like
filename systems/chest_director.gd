@@ -55,7 +55,7 @@ func spawn_chest_at(pos: Vector2) -> Node:
 	(c as Node2D).global_position = pos
 	c.call("setup", self)
 	chests.append(c)
-	_audio().call("play", "pop")
+	_audio().call("play", "chest")
 	return c
 
 ## 宝箱が開かれたときに呼ばれる (take_damage から遅延呼び出し)。
@@ -75,11 +75,11 @@ func open_chest_at(pos: Vector2) -> void:
 				_spawn_gem(pos + _ring(30.0, 70.0), 1)
 			_fx().call("spark", pos, Color(0.4, 0.8, 1.0, 1.0))
 			_audio().call("play", "coin")
-			_audio().call("play", "chest")
+			_audio().call("play", "chest_open")
 			return
 	spawn_item(item_id, pos, _item_big(item_id))
 	_fx().call("poof", pos, Color(1.0, 0.85, 0.4), false)
-	_audio().call("play", "chest")
+	_audio().call("play", "chest_open")
 
 ## 開封時に飛び出すアイテム実体を作る。kind は apply_item のID。
 ## 開始位置は宝箱の真上で、アイテム自身がランダム方向に飛んで着地する。

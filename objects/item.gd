@@ -74,6 +74,9 @@ func _process(delta: float) -> void:
 func _fx() -> Node:
 	return get_tree().get_first_node_in_group("combat_fx")
 
+func _audio() -> Node:
+	return get_tree().get_first_node_in_group("audio")
+
 func _physics_process(_delta: float) -> void:
 	if flying:
 		return
@@ -83,6 +86,7 @@ func _physics_process(_delta: float) -> void:
 	if global_position.distance_to(p.global_position) > PICKUP_RADIUS:
 		return
 	var director: Node = get_tree().get_first_node_in_group("chest_director")
+	_audio().call("play", "item_pickup")
 	if director != null:
 		director.call("apply_item", kind, p.global_position)
 	queue_free()

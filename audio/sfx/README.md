@@ -43,6 +43,15 @@
 - 出力は 44.1kHz / 16bit / mono の wav に変換して格納する。例:
   `ffmpeg -i in.mp3 -ar 44100 -ac 1 -sample_fmt s16 out.wav`
 
+## 実ファイルの実測 (2026-09-24)
+
+生成物の長さは指定と一部異なるが、全20ファイル内容は個別で使用可能。
+`death` 1.20s / `explode` 0.80s は指定どおり。
+`beep` 等の短音は 0.48s、`clear`・`levelup`・`warn` は 2.00s、
+いずれも stereo 44.1kHz。末尾の無音は one-shot 再生のため実害なし
+(beep は1秒間隔、warn は稀発のため重なりなし)。気になる場合のみ
+ffmpeg で trim する。
+
 ## 組み込み (実装時に行う)
 
 1. wav をこのフォルダに置く (ファイル名は上の表どおり)。

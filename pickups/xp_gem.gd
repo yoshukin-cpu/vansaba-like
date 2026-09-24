@@ -60,6 +60,9 @@ func _physics_process(delta: float) -> void:
 	var d: Vector2 = p.global_position - global_position
 	if d.length() < COLLECT_RADIUS:
 		p.call("add_xp", value)
+		var audio: Node = get_tree().get_first_node_in_group("audio")
+		if audio != null:
+			audio.call("play", "gem")
 		_despawn()
 		return
 	# 吸い寄せはゆっくり始まって徐々に加速する
