@@ -16,6 +16,7 @@ const ENEMY_SHOT_SCRIPT := preload("res://projectiles/enemy_shot.gd")
 @export var dash_speed: float = 350.0
 @export var dash_interval: float = 3.0
 @export var split_scene: String = ""
+@export var sprite_path: String = ""
 
 var hp: float = 12.0
 var dead: bool = false
@@ -30,17 +31,25 @@ var strafe_phase: float = 0.0
 var fx: Node = null
 var gem_pool: Node = null
 
-@onready var body: Polygon2D = $Body
+@onready var body: Sprite2D = $Body
 @onready var hitbox: Area2D = $Hitbox
 
 func _ready() -> void:
 	hp = max_hp
 	add_to_group("enemies")
-	body.color = body_color
+	_apply_sprite()
 	hitbox.area_entered.connect(_on_hitbox_area)
 	shot_cd = shot_interval * (0.5 + randf() * 0.5)
 	dash_cd = dash_interval
 	strafe_phase = randf() * TAU
+
+## sprite_path のテクスチャを Body に適用する (未指定なら何もしない)
+func _apply_sprite() -> void:
+	if sprite_path == "" or not ResourceLoader.exists(sprite_path):
+		return
+	var tex: Texture2D = load(sprite_path) as Texture2D
+	if tex != null and body != null:
+		body.texture = tex
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -123,7 +132,7 @@ func make_elite() -> void:
 	set("xp_value", xp_value * 5)
 	scale = Vector2(1.5, 1.5)
 	if body != null:
-		body.color = Color(1.0, 0.8, 0.2, 1.0)
+		body.self_modulate = Color(1.0, 0.8, 0.2, 1.0)
 
 func _process(delta: float) -> void:
 	if flash > 0.0:

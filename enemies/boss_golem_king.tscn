@@ -15,17 +15,13 @@ xp_value = 0
 body_color = Color(0.7, 0.2, 0.2, 1)
 boss_id = "B01"
 boss_name = "Golem King"
+sprite_path = "res://enemies/sprites/boss_golem_king.png"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
 
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.7, 0.2, 0.2, 1)
-polygon = PackedVector2Array(40, 0, 28, 28, 0, 40, -28, 28, -40, 0, -28, -28, 0, -40, 28, -28)
-
-[node name="Crown" type="Polygon2D" parent="."]
-color = Color(1, 0.8, 0.2, 1)
-polygon = PackedVector2Array(-20, -38, -20, -52, -10, -42, 0, -54, 10, -42, 20, -52, 20, -38)
+[node name="Body" type="Sprite2D" parent="."]
+texture_filter = 1
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 2

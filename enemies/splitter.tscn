@@ -9,3 +9,5 @@ contact_damage = 10.0
 xp_value = 4
 body_color = Color(0.3, 0.7, 0.65, 1)
 split_scene = "res://enemies/splitmini.tscn"
+sprite_path = "res://enemies/sprites/enemy_splitter.png"
+scale = Vector2(1.1, 1.1)

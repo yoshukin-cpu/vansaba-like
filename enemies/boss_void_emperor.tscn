@@ -18,17 +18,13 @@ shot_damage = 10.0
 shot_speed = 260.0
 boss_id = "B02"
 boss_name = "Void Emperor"
+sprite_path = "res://enemies/sprites/boss_void_emperor.png"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
 
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.5, 0.2, 0.7, 1)
-polygon = PackedVector2Array(36, 0, 18, 20, 25, 25, 0, 36, -25, 25, -18, 20, -36, 0, -18, -20, -25, -25, 0, -36, 25, -25, 18, -20)
-
-[node name="Core" type="Polygon2D" parent="."]
-color = Color(1, 0.3, 0.9, 1)
-polygon = PackedVector2Array(12, 0, 0, 12, -12, 0, 0, -12)
+[node name="Body" type="Sprite2D" parent="."]
+texture_filter = 1
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 2

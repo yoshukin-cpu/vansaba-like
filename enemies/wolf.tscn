@@ -11,3 +11,5 @@ body_color = Color(0.55, 0.55, 0.6, 1)
 behavior = "dasher"
 dash_speed = 350.0
 dash_interval = 3.0
+sprite_path = "res://enemies/sprites/enemy_wolf.png"
+scale = Vector2(1.1, 1.1)

@@ -13,3 +13,4 @@ preferred_range = 300.0
 shot_damage = 8.0
 shot_speed = 220.0
 shot_interval = 2.5
+sprite_path = "res://enemies/sprites/enemy_archer.png"
