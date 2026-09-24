@@ -45,12 +45,12 @@ func upgrade() -> void:
 
 func get_effective_damage() -> float:
 	if player != null:
-		return damage * float(player.get("attack_mult"))
+		return damage * pstat("attack_mult", 1.0) * pstat("buff_attack", 1.0)
 	return damage
 
 func get_cooldown() -> float:
 	if player != null:
-		return cooldown * float(player.get("cooldown_mult"))
+		return cooldown * pstat("cooldown_mult", 1.0) * pstat("buff_cd", 1.0)
 	return cooldown
 
 func pstat(n: String, d: float) -> float:
@@ -86,7 +86,7 @@ func get_fire_direction() -> Vector2:
 		return joy.normalized()
 	if player != null and player.has_method("is_mouse_aim_fresh") and bool(player.call("is_mouse_aim_fresh")):
 		return (player.get("aim_direction") as Vector2)
-	var near: Node2D = find_nearest_enemy(900.0)
+	var near: Node2D = find_nearest_enemy(900.0, true)
 	if near != null and player != null:
 		var d: Vector2 = near.global_position - player.global_position
 		if d.length() > 1.0:
@@ -95,7 +95,9 @@ func get_fire_direction() -> Vector2:
 		return (player.get("aim_direction") as Vector2)
 	return Vector2.RIGHT
 
-func find_nearest_enemy(max_range: float) -> Node2D:
+## 射程内に敵がいない場合のみ、宝箱 (chests) を対象にする (SPEC §19.2)。
+## チェインライトニングは敵専用のため with_chests=false のまま呼ぶ。
+func find_nearest_enemy(max_range: float, with_chests: bool = false) -> Node2D:
 	var best: Node2D = null
 	var best_d: float = max_range
 	if player == null:
@@ -108,5 +110,16 @@ func find_nearest_enemy(max_range: float) -> Node2D:
 		var d: float = ((n as Node2D).global_position - player.global_position).length()
 		if d < best_d:
 			best_d = d
+			best = n as Node2D
+	if best != null or not with_chests:
+		return best
+	for n: Node in get_tree().get_nodes_in_group("chests"):
+		if not (n is Node2D):
+			continue
+		if bool(n.get("dead")):
+			continue
+		var d2: float = ((n as Node2D).global_position - player.global_position).length()
+		if d2 < best_d:
+			best_d = d2
 			best = n as Node2D
 	return best

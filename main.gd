@@ -19,8 +19,11 @@ static var quick_start: bool = false
 @onready var pause_ui: CanvasLayer = $PauseUI
 @onready var result_ui: CanvasLayer = $ResultUI
 @onready var audio: Node = $AudioManager
+@onready var chest_director: Node = $ChestDirector
+@onready var score_label: Label = $HUD/ScoreLabel
 
 var kills: int = 0
+var score: int = 0
 var warning_time: float = 0.0
 var result_shown: bool = false
 
@@ -38,6 +41,7 @@ func _ready() -> void:
 	result_ui.connect("retry_pressed", _on_retry)
 	result_ui.connect("title_pressed", _on_quit_to_title)
 	director.set("running", false)
+	chest_director.set("running", false)
 	if quick_start:
 		start_game()
 	else:
@@ -47,6 +51,7 @@ func start_game() -> void:
 	title_ui.hide()
 	get_tree().paused = false
 	director.set("running", true)
+	chest_director.set("running", true)
 
 func _process(_delta: float) -> void:
 	if player != null and info_label != null:
@@ -74,6 +79,8 @@ func _process(_delta: float) -> void:
 		xp_bar.value = float(player.get("xp"))
 	if player != null and lv_label != null:
 		lv_label.text = "Lv %d" % int(player.get("level"))
+	if score_label != null:
+		score_label.text = "SCORE %d" % score
 	if timer_label != null and director != null:
 		timer_label.text = _fmt_time(float(director.get("elapsed")))
 	if warning_label != null:
@@ -107,6 +114,9 @@ func _update_boss_bar() -> void:
 func add_kill() -> void:
 	kills += 1
 
+func add_score(v: int) -> void:
+	score += v
+
 func show_warning(text: String) -> void:
 	if warning_label == null:
 		return
@@ -123,9 +133,10 @@ func show_result(clear: bool) -> void:
 		return
 	result_shown = true
 	director.set("running", false)
+	chest_director.set("running", false)
 	get_tree().paused = true
 	audio.call("play", "clear" if clear else "death")
-	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills)
+	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score)
 
 func _on_player_level_up() -> void:
 	if result_shown or levelup_ui.visible:

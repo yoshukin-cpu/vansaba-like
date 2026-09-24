@@ -70,6 +70,14 @@ func _explode() -> void:
 			if away.length() < 1.0:
 				away = Vector2.RIGHT
 			n.call("take_damage", damage, away.normalized() * 260.0 * kb_scale, crit_hit)
+	# 宝箱も開く (SPEC §19.2。爆発はグループ走査のため chests も走査する)
+	for n: Node in get_tree().get_nodes_in_group("chests"):
+		if not (n is Node2D):
+			continue
+		if bool(n.get("dead")):
+			continue
+		if (n as Node2D).global_position.distance_to(target) <= blast_radius:
+			n.call("take_damage", damage, Vector2.ZERO, crit_hit)
 
 func _draw() -> void:
 	# 飛行中は Visual (スプライト) を表示し、爆発エフェクトだけ自前で描く

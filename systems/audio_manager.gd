@@ -21,6 +21,12 @@ func _ready() -> void:
 	streams["warn"] = _tone(150.0, 0.4, 0.6)
 	streams["clear"] = _tone(784.0, 0.35, 0.5)
 	streams["death"] = _tone(110.0, 0.5, 0.6)
+	streams["pop"] = _tone(600.0, 0.08, 0.4)
+	streams["chest"] = _tone(520.0, 0.12, 0.5)
+	streams["coin"] = _tone(1568.0, 0.1, 0.4)
+	streams["explode"] = _tone(70.0, 0.5, 0.7)
+	streams["buff"] = _tone(660.0, 0.15, 0.5)
+	streams["heal"] = _tone(740.0, 0.15, 0.45)
 
 func _tone(freq: float, dur: float, vol: float) -> AudioStreamWAV:
 	var rate: int = 22050

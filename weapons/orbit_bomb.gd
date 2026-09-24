@@ -36,7 +36,7 @@ func fire() -> void:
 	var crit: bool = rh[1]
 	var radius: float = blast_radius * pstat("area_mult", 1.0)
 	for i: int in range(n):
-		var tgt: Node2D = find_nearest_enemy(throw_range + 200.0)
+		var tgt: Node2D = find_nearest_enemy(throw_range + 200.0, true)
 		var to: Vector2
 		if tgt != null and (tgt.global_position - player.global_position).length() <= throw_range:
 			to = tgt.global_position

@@ -32,9 +32,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				title_pressed.emit()
 
-func show_result(clear: bool, time_s: String, lv: int, kills: int) -> void:
+func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0) -> void:
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
-	stats_label.text = "生存時間 %s / Lv %d / 撃破 %d" % [time_s, lv, kills]
+	stats_label.text = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
 	visible = true
 	focus_idx = 0
 	retry_btn.grab_focus()

@@ -84,7 +84,18 @@ res://
 - **完了条件**: 草原に荒野がまだらに広がり、木と岩が自然に立っている (単色タイルが消えている)
 - 検証: 実機キャプチャ (4方向 + 荒野/木の密集地) を vision で確認。タイル継ぎ目の破綻がないこと
 
-### P11 宝箱とアイテム [M10]
+### P11 宝箱とアイテム [M10] ✅ 完了
+
+- 実装: `objects/chest.tscn` + `chest.gd` (layer 2 受信用Area2D / HP1 / 寿命30秒+点滅 / 開封0.5秒表示) /
+  `objects/bomb.tscn` + `bomb.gd` (2.5秒ヒューズ+警告円 / 爆発200dmg・半径140 / 破片12発・各40dmg・射程400・貫通) /
+  `systems/chest_director.gd` (15秒間隔・初回30秒・ラッシュ5秒 / リング320〜540+画面内 / 障害物回避 / 上限4) /
+  `data/items_db.gd` (9種+レア5%) / `player.gd` にバフ4種 / HUD SCORE / リザルトにスコア行 / SE 6種追加
+- SPEC §19.2 からの実装差分: オービットボムの爆発はグループ走査のため `projectiles/bomb.gd` に chests 走査を1箇所追加
+  (直線弾・スピン・ホーミングは Area2D 検出のため変更なし)。チェインライトニングは敵専用のまま
+  (`find_nearest_enemy` に `with_chests` 引数を追加し、通常エイムとボム照準だけ true)。
+- **完了条件**: 15秒ごとに宝箱が現れ、攻撃すると開いて中身が出る。9種すべてが機能する → 達成
+- 検証: `tools/verify_chests.gd` (32件 ALL PASS: 抽選分布・全アイテム効果・開封フロー・爆弾・オートエイム) +
+  `tools/verify_chest_look.gd` (開閉・ヒューズ・爆発の実機キャプチャ、画素で確認)。回帰: `test_gem_magnet.gd` ALL PASS
 
 - `objects/chest.tscn` + `chest.gd`: layer 2 の受信用 Area2D、`take_damage()`、HP1、寿命30秒、点滅
 - `systems/chest_director.gd`: 15秒間隔の出現 (初回30秒)、リング上の位置決め + 障害物回避、同時上限4、ラッシュ対応

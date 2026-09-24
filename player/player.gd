@@ -33,6 +33,14 @@ var regen: float = 0.0
 var armor: float = 0.0
 var magnet_mult: float = 1.0
 var xp_mult: float = 1.0
+## 一時強化バフ (T06)。カード強化とは別枠の乗算で持つ (SPEC §19.3)。
+var buff_attack: float = 1.0
+var buff_attack_t: float = 0.0
+var buff_cd: float = 1.0
+var buff_cd_t: float = 0.0
+var buff_spd: float = 1.0
+var buff_spd_t: float = 0.0
+var buff_inv_t: float = 0.0
 var dead: bool = false
 var invuln: float = 0.0
 var facing: String = "down"
@@ -75,7 +83,7 @@ func _physics_process(_delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	move_direction = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	velocity = move_direction * speed
+	velocity = move_direction * speed * buff_spd
 	move_and_slide()
 	_update_aim()
 	_update_animation()
@@ -83,6 +91,7 @@ func _physics_process(_delta: float) -> void:
 func _process(delta: float) -> void:
 	if not dead and regen > 0.0 and hp < max_hp:
 		hp = minf(max_hp, hp + regen * delta)
+	_tick_buffs(delta)
 	if trauma > 0.0:
 		trauma = maxf(0.0, trauma - 1.6 * delta)
 		var s: float = trauma * trauma * 24.0
@@ -97,7 +106,7 @@ func _process(delta: float) -> void:
 			body.modulate = Color(1, 1, 1, 1)
 
 func take_damage(amount: float) -> void:
-	if dead or invuln > 0.0:
+	if dead or invuln > 0.0 or buff_inv_t > 0.0:
 		return
 	hp -= maxf(1.0, amount - armor)
 	invuln = 0.6
@@ -137,6 +146,37 @@ func heal(amount: float) -> void:
 	if dead:
 		return
 	hp = minf(max_hp, hp + amount)
+
+## 一時強化バフ (T06)。attack:攻撃+50% / haste:CD-40% / swift:移動+40% (10秒)、guard:無敵3秒。
+func apply_buff(kind: String) -> void:
+	match kind:
+		"attack":
+			buff_attack = 1.5
+			buff_attack_t = 10.0
+		"haste":
+			buff_cd = 0.6
+			buff_cd_t = 10.0
+		"swift":
+			buff_spd = 1.4
+			buff_spd_t = 10.0
+		"guard":
+			buff_inv_t = 3.0
+
+func _tick_buffs(delta: float) -> void:
+	if buff_attack_t > 0.0:
+		buff_attack_t -= delta
+		if buff_attack_t <= 0.0:
+			buff_attack = 1.0
+	if buff_cd_t > 0.0:
+		buff_cd_t -= delta
+		if buff_cd_t <= 0.0:
+			buff_cd = 1.0
+	if buff_spd_t > 0.0:
+		buff_spd_t -= delta
+		if buff_spd_t <= 0.0:
+			buff_spd = 1.0
+	if buff_inv_t > 0.0:
+		buff_inv_t -= delta
 
 ## マグネットの実効半径 (C19などの倍率込み)。ジェム側の吸い寄せ判定が参照する。
 ## 吸い寄せはジェム自身が毎フレーム距離判定するため、Area2Dの重複イベントは使わない。

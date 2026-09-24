@@ -55,6 +55,20 @@ func _spawn_pos() -> Vector2:
 	return p
 
 func _spawn_one(path: String, elite: bool) -> void:
+	_spawn_placed(path, _spawn_pos(), elite)
+
+## 宝箱の奇襲 (T04) 用に、指定中心の周囲に湧かせる
+func spawn_around(center: Vector2, count: int) -> void:
+	var weights: Array = (WavesDB.band(elapsed)["weights"]) as Array
+	var w: Node = get_tree().get_first_node_in_group("world")
+	for i: int in range(count):
+		var path := str(WavesDB.pick(weights))
+		var p: Vector2 = center + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(60.0, 180.0)
+		if w != null and w.has_method("find_free"):
+			p = w.call("find_free", p) as Vector2
+		_spawn_placed(path, p, false)
+
+func _spawn_placed(path: String, pos: Vector2, elite: bool) -> void:
 	if not ResourceLoader.exists(path):
 		return
 	var scn: PackedScene = load(path) as PackedScene
@@ -65,7 +79,7 @@ func _spawn_one(path: String, elite: bool) -> void:
 		return
 	var e: Node = scn.instantiate()
 	scene.add_child(e)
-	(e as Node2D).global_position = _spawn_pos()
+	(e as Node2D).global_position = pos
 	if elapsed >= 480.0:
 		e.call("apply_scaling", 2.0, 1.2)
 	elif elapsed >= 300.0:
