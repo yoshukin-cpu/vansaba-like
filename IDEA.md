@@ -88,3 +88,10 @@ ElvenLabsを使用して効果音を作成しようと考えています。
 ElvenLabsのプロンプトガイドは以下です。
 https://elevenlabs.io/docs/eleven-agents/best-practices/prompting-guide
 ```
+
+# バージョンアップ案3
+
+* 画面内の敵にダメージ＋すべての敵弾を消すアイテムを作成
+* タイトルに終了(デスクトップに戻る)メニュー作成
+* タイトル画像。ピクセルアートスタイルで。
+

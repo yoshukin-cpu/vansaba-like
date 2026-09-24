@@ -29,6 +29,10 @@
 - **M13 宝箱が永続・取得式アイテムになる (P14)**
 - **M14 案2込みで10分通しプレイが成立し、回帰が通る (P15)**
 
+### v1.3 (新規)
+
+- **M15 案3 (ノヴァ・タイトル終了・タイトル画像) が入り、回帰が通る (P16)**
+
 ## 1. ファイル構成 (v1.1)
 
 ```
@@ -184,6 +188,17 @@ res://
 - 全回帰 (`verify_*.gd`、`test_gem_magnet.gd`) + 実機キャプチャ + SE耳確認
 - SPEC §23 との差分を修正
 - **完了条件**: 10分プレイが破綻なく動き、verify 全PASS。v1.2 完了
+
+### P16 バージョンアップ案3 [M15]
+
+- `data/items_db.gd`: T10「ノヴァ」重み4を追加 (合計100→104)
+- `systems/chest_director.gd`: `apply_item` に T10 分岐 (画面内700pxに80dmg + 敵弾全消去 + 大poof/explode/警告)
+- `objects/item.gd`: `nova` の絵と ID 対応を追加 (取得式・接触26・無引き寄せは共通)
+- `objects/sprites/item_nova.png`: 1min-image 生成 → 48x48 整列
+- `ui/title_ui.tscn` + `title_ui.gd` + `main.gd`: 終了ボタン → `quit_pressed` → `get_tree().quit()`
+- `ui/title_art.png`: ピクセルアート生成 → TitleUI 最背面に配置、Dim 0.94→0.55
+- **完了条件**: ノヴァ取得で画面一掃が起き、タイトルから終了でき、タイトルに絵が出る
+- 検証: 新規 `tools/verify_v13.gd` (T10抽選・効果・弾消去・終了接続・絵の存在) + 全回帰
 
 ## 3. 並行可能タスク
 
