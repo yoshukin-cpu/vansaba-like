@@ -166,7 +166,19 @@ res://
 - **完了条件**: 宝箱が残り続け、開けるとアイテムが飛び出し、拾うと効果が出る
 - 検証: `verify_v12.gd` に追加 (永続・HP25・取得適用・T03取得設置) + 実機キャプチャ
 
-### P15 QA・仕上げ [M14]
+### P15 QA・仕上げ [M14] ✅ 完了
+
+- 通しプレイ (`playtest_full.gd` 3倍速・自動操作):
+  - 通常: t=341 死亡 (Lv5・148kill・19宝箱・score 2160)、別走で t=518 死亡
+    (Lv4・213kill・23宝箱)。v1.1 (宝箱なし4:08/あり5:28) 比で生存が伸び、
+    10分ゲームとして自動操作でも5〜9分もつ難易度。数値調整なし。
+  - 不死: 11分 TIMEOUT (Lv11・460kill・35宝箱・score 7080、fps60維持)。
+    ボス撃破は自動操作の限界 (P12と同様、TIMEOUT enemy_boss_alive)。
+  - 両走行とも SCRIPT ERROR 0。min_fps=1 は起動直後の初回サンプルのみ (以降60)。
+- 全回帰 ALL PASS: `verify_world`・`verify_obstacles`・`verify_chests`・`verify_v12` (24件)・
+  `verify_feedback_look` (6件)・`test_gem_magnet` + スモークキャプチャ (エラー0)。
+  SE は単音機構のまま (D27対象外のため耳確認は beep のみ)。
+- SPEC §23 との差分を修正: §23.1 放射状・§23.6 T09ポップアップ を追記、§23.0 D27行に注記。
 
 - 通しプレイ (`playtest_full.gd`、通常+不死) でD17〜D27の複合バランスを確認 → 必要なら数値微調整
 - 全回帰 (`verify_*.gd`、`test_gem_magnet.gd`) + 実機キャプチャ + SE耳確認
