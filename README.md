@@ -17,6 +17,7 @@
 - **v1.0 実装済み** (P0〜P7): 移動/カメラ、武器6種、敵10種、カード20種、ボス2種、勝敗、プール、演出。
 - スプライト差し替え済み: プレイヤー (4方向walk/idle)、敵10種 (2フレーム前後)、ボス2種、弾4種、スピンソード、火炎放射。
 - v1.1 実装完了 (P8〜P12)。**v1.2 実装完了 (P13〜P15)**。**v1.3 実装完了 (P16)**。
+  **v1.4 カードマーク表示 (D31) 実装済み**。
 - `IDEA.md` の新要望は設計反映済み (D27のみ対象外で再検討待ち)。
 
 ### 実装済みの検証値 (P8〜P12)
@@ -33,7 +34,7 @@
 | アイテム爆弾 | 範囲200dmgでスライム撃破・破片12発・プレイヤー無傷・爆発後に解放 |
 | オートエイム | 敵なし→宝箱、敵あり→敵 (チェインライトニングは敵専用のまま) |
 | 通しプレイ | 宝箱なし4:08死亡 / あり9:02死亡(調整前)・5:28死亡(調整後・cap+12%)。不死11分走行で297体・60fps・エラー0 |
-| 検証スクリプト | `tools/verify_world.gd` (headless) / `verify_obstacles.gd` / `verify_obstacle_block.gd` / `verify_terrain.gd` / `verify_chests.gd` (32件) / `verify_chest_look.gd` / `capture_test.gd` |
+| 検証スクリプト | `tools/verify_world.gd` (headless) / `verify_obstacles.gd` / `verify_obstacle_block.gd` / `verify_terrain.gd` / `verify_chests.gd` (32件) / `verify_chest_look.gd` / `verify_card_marks.gd` / `capture_test.gd` |
 
 
 ## 実行・検証
@@ -81,6 +82,7 @@
 | D28 | 全画面一掃アイテム (T10ノヴァ・重み4・80dmg+弾全消去) | ✅ 推奨 |
 | D29 | タイトル終了メニュー (終了ボタン→quit) | ✅ 推奨 |
 | D30 | タイトル画像 (ピクセルアート・Dim 0.55) | ✅ 推奨 |
+| D31 | カードマーク表示 (24px生成・選択画面は約112px・履歴は下部取得順/複数行) | ✅ 推奨 |
 
 ## リポジトリ
 

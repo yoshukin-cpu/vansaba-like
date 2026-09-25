@@ -69,7 +69,7 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Btn0" type="Button" parent="Center/VBox/Cards"]
-custom_minimum_size = Vector2(300, 220)
+custom_minimum_size = Vector2(320, 340)
 clip_text = true
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("sn")
@@ -79,7 +79,7 @@ theme_override_styles/focus = SubResource("sf")
 text = "card0"
 
 [node name="Btn1" type="Button" parent="Center/VBox/Cards"]
-custom_minimum_size = Vector2(300, 220)
+custom_minimum_size = Vector2(320, 340)
 clip_text = true
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("sn")
@@ -89,7 +89,7 @@ theme_override_styles/focus = SubResource("sf")
 text = "card1"
 
 [node name="Btn2" type="Button" parent="Center/VBox/Cards"]
-custom_minimum_size = Vector2(300, 220)
+custom_minimum_size = Vector2(320, 340)
 clip_text = true
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("sn")

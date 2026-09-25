@@ -1,6 +1,7 @@
 extends Node
 
 const CardsDB := preload("res://data/cards_db.gd")
+const CardMarks := preload("res://data/card_marks.gd")
 
 var player: Node2D = null
 var stat_levels := {"C07": 0, "C08": 0, "C09": 0, "C10": 0, "C11": 0, "C12": 0, "C13": 0, "C14": 0, "C15": 0, "C16": 0, "C17": 0, "C18": 0, "C19": 0, "C20": 0}
@@ -38,13 +39,13 @@ func get_offers() -> Array:
 	pool.shuffle()
 	var offers: Array = pool.slice(0, 3)
 	while offers.size() < 3:
-		offers.append({"id": "HEAL", "name": "応急手当", "detail": "HPを30回復する", "level_text": ""})
+		offers.append({"id": "HEAL", "name": "応急手当", "detail": "HPを30回復する", "level_text": "", "icon": CardMarks.texture_for("HEAL")})
 	return offers
 
 func _entry(card_id: String, is_new: bool, lv: int) -> Dictionary:
 	var d: Dictionary = CardsDB.get_def(card_id)
 	var text: String = "新規取得!" if is_new else ("Lv%d→%d" % [lv + 1, lv + 2])
-	return {"id": card_id, "name": str(d["name"]), "detail": str(d["detail"]), "level_text": text}
+	return {"id": card_id, "name": str(d["name"]), "detail": str(d["detail"]), "level_text": text, "icon": CardMarks.texture_for(card_id)}
 
 func apply_card(card_id: String) -> void:
 	if player == null:

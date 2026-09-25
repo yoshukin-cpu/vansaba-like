@@ -156,6 +156,19 @@ static func biome_at(cell: Vector2i) -> bool:
 	var y: int = HN.pos_mod(cell.y, PERIOD_TILES)
 	return lut[y * PERIOD_TILES + x] == 1
 
+## ラン開始時に呼ぶ: 地形シードを決めてシード依存のキャッシュを捨てる (§27.1)。
+## これを呼ぶと以降に生成する地形がまるごと変わる (同じ seed なら常に同じ地形)。
+## 戻り値は実際に使われるシード (内部で 31bit に丸めた値)。
+static func begin_run(seed: int) -> int:
+	HN.set_run_seed(seed)
+	clear_cache()
+	return HN.run_seed
+
+## シード依存のキャッシュ (荒野パッチ / バイオーム LUT) を捨てる。
+static func clear_cache() -> void:
+	_patches.clear()
+	_biome_lut = PackedByteArray()
+
 ## チャンクを生成する。cx, cy は絶対チャンク座標 (内部で周期に畳む)。
 static func generate_chunk(cx: int, cy: int) -> Dictionary:
 	var key: Vector2i = chunk_key(cx, cy)

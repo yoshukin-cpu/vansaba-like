@@ -1,5 +1,13 @@
 extends Node2D
 
+const CG := preload("res://world/chunk_gen.gd")
+const CardMarks := preload("res://data/card_marks.gd")
+
+const MARK_CELL := 24.0
+const MARK_GAP := 6.0
+const MARK_SIDE := 16.0
+const MARK_BOTTOM := 12.0
+
 static var quick_start: bool = false
 
 @onready var player: CharacterBody2D = $Player
@@ -21,14 +29,33 @@ static var quick_start: bool = false
 @onready var audio: Node = $AudioManager
 @onready var chest_director: Node = $ChestDirector
 @onready var score_label: Label = $HUD/ScoreLabel
+@onready var acquired_marks: GridContainer = $HUD/AcquiredMarks
 
 var kills: int = 0
 var score: int = 0
+var acquired_cards: Array[String] = []
 var warning_time: float = 0.0
 var result_shown: bool = false
 ## B02撃破後のクリアカウントダウン (D25)。-1.0で非動作。
 var clear_countdown: float = -1.0
 var _last_count: int = -1
+
+## ラン開始時に地形シードを決める。`_enter_tree` は子ノード (World) の `_ready` より
+## 先に呼ばれるため、World が地形を生成する前にシードが確定する (§27.1)。
+func _enter_tree() -> void:
+	var map_seed: int = CG.begin_run(_pick_map_seed())
+	print("[world] map seed = %d" % map_seed)
+
+## マップ生成のシード。既定は毎回異なる値 (マップが毎回変わる)。
+## `-- --seed 12345` を付けると固定できる (デバッグ・回帰テスト用)。
+func _pick_map_seed() -> int:
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	for i: int in range(args.size() - 1):
+		if args[i] == "--seed" and args[i + 1].is_valid_int():
+			return args[i + 1].to_int()
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	return rng.randi()
 
 func _ready() -> void:
 	add_to_group("game")
@@ -44,6 +71,7 @@ func _ready() -> void:
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
 	result_ui.connect("title_pressed", _on_quit_to_title)
+	_setup_acquired_marks()
 	director.set("running", false)
 	chest_director.set("running", false)
 	if quick_start:
@@ -122,6 +150,55 @@ func add_kill() -> void:
 func add_score(v: int) -> void:
 	score += v
 
+## 取得カードの履歴表示。デバッグ文は左上の InfoLabel に集約し、
+## ここは画面下部に取得順のマークだけを並べる。行数は表示幅から求め、
+## パネル自体を下端基準で伸ばすことで複数行に対応する。
+func _setup_acquired_marks() -> void:
+	for c: Node in acquired_marks.get_children():
+		c.queue_free()
+	acquired_cards.clear()
+	if not get_viewport().size_changed.is_connected(_layout_acquired_marks):
+		get_viewport().size_changed.connect(_layout_acquired_marks)
+	_layout_acquired_marks()
+
+func _record_acquired_card(card_id: String) -> void:
+	acquired_cards.append(card_id)
+	var mark := TextureRect.new()
+	mark.custom_minimum_size = Vector2(MARK_CELL, MARK_CELL)
+	mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	mark.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mark.texture = CardMarks.texture_for(card_id)
+	mark.tooltip_text = CardMarks.label_for(card_id)
+	mark.set_meta("card_id", card_id)
+	acquired_marks.add_child(mark)
+	_layout_acquired_marks()
+
+func _layout_acquired_marks() -> void:
+	if acquired_marks == null:
+		return
+	var width: float = get_viewport().get_visible_rect().size.x
+	var avail: float = maxf(160.0, width - MARK_SIDE * 2.0)
+	var columns: int = maxi(1, int(floor((avail + MARK_GAP) / (MARK_CELL + MARK_GAP))))
+	acquired_marks.columns = columns
+	var count := 0
+	for c: Node in acquired_marks.get_children():
+		if c is TextureRect and not c.is_queued_for_deletion():
+			count += 1
+	var rows: int = maxi(1, int(ceil(float(maxi(count, 1)) / float(columns))))
+	var height: float = float(rows) * MARK_CELL + float(rows - 1) * MARK_GAP
+	acquired_marks.offset_left = MARK_SIDE
+	acquired_marks.offset_right = -MARK_SIDE
+	acquired_marks.offset_top = -MARK_BOTTOM - height
+	acquired_marks.offset_bottom = -MARK_BOTTOM
+	# デバッグ文は右下・履歴の上に置く (他のUIと重ねない)。
+	if info_label != null:
+		info_label.offset_left = -516.0
+		info_label.offset_right = -MARK_SIDE
+		info_label.offset_bottom = acquired_marks.offset_top - MARK_GAP
+		info_label.offset_top = info_label.offset_bottom - 44.0
+
 func show_warning(text: String) -> void:
 	if warning_label == null:
 		return
@@ -176,6 +253,7 @@ func _show_levelup() -> void:
 
 func _on_card_chosen(card_id: String) -> void:
 	card_manager.call("apply_card", card_id)
+	_record_acquired_card(card_id)
 	audio.call("play", "ui")
 	if int(player.get("pending_levels")) > 0:
 		_show_levelup()

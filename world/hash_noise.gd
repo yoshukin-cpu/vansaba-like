@@ -7,14 +7,23 @@ extends RefCounted
 
 const SEED: int = 20260924
 
+## ラン単位の地形シード。ラン開始時に `chunk_gen.begin_run()` が設定する (§27.1)。
+## 0 のままだと v1.3 までの地形と同一。値を変えると地形 (バイオーム/障害物/装飾) が
+## まるごと変わる。同じ値なら何度生成しても同じ地形 (決定論)。
+static var run_seed: int = 0
+
+## ラン単位のシードを設定する。掛け算の桁溢れを避けるため 31bit に丸める。
+static func set_run_seed(v: int) -> void:
+	run_seed = v & 0x7FFFFFFF
+
 ## 正の剰余 (GDScript の % は負で負を返すため)
 static func pos_mod(v: int, m: int) -> int:
 	var r: int = v % m
 	return r + m if r < 0 else r
 
-## 整数ハッシュ (64bit の範囲で決定的)
+## 整数ハッシュ (64bit の範囲で決定的)。s は用途別の塩、run_seed はラン単位の種。
 static func h2(x: int, y: int, s: int = SEED) -> int:
-	var n: int = x * 374761393 + y * 668265263 + s * 2246822519
+	var n: int = x * 374761393 + y * 668265263 + s * 2246822519 + run_seed * 2654435761
 	n = (n ^ (n >> 13)) * 1274126177
 	n = n ^ (n >> 16)
 	return n

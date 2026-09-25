@@ -154,7 +154,9 @@ func apply_item(item_id: String, pos: Vector2) -> String:
 			var wup: Node = _upgrade_weapon()
 			if wup == null:
 				return apply_item("T02", pos)
-			_fx().call("text_popup", pos, "%s Lv%d!" % [str(CardsDB.get_def(str(wup.get("weapon_id")))["name"]), int(wup.get("weapon_level"))], 24, Color(1.0, 0.6, 0.2))
+			var wup_id: String = str(wup.get("weapon_id"))
+			_game().call("_record_acquired_card", wup_id)
+			_fx().call("text_popup", pos, "%s Lv%d!" % [str(CardsDB.get_def(wup_id)["name"]), int(wup.get("weapon_level"))], 24, Color(1.0, 0.6, 0.2))
 			_fx().call("spark", pos, Color(1.0, 0.6, 0.2, 1.0))
 			_audio().call("play", "buff")
 		"T10":
