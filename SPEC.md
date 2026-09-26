@@ -764,7 +764,8 @@ res://
   (Thanks + もう一度 / タイトルへ) へ遷移する。
 - 内容: 担当割当 (yoshuki / Hermes Agent / Google Image・ElevenLabs・Suno (1min-image)) +
   架空役職・ユーモア・主人公/敵10種/ボス2種/カード20種/アイテム紹介・歌詞オマージュ。
-  末尾ブロックと Thanks に「Thank you so much for playing.」を出し、曲終わりと同時に中央に残す。
+  - 末尾演出: Thanks 文字は即表示し、タイトル背景 (`ui/title_art.png`) だけ約2秒でフェードインする。
+    スキップ時は即不透明化する。
 - スキップ: スクロール中の確定キー/クリック/Aボタンで即座に最終画面 (Thanks + ボタン) を出す。
   終了後のボタンはリザルトと同じ retry/title シグナルで `main` がシーン再読込する (曲も止まる)。
 - ポーズメニューはスタッフロール表示中は開かない (`main._unhandled_input` のガードに追加)。

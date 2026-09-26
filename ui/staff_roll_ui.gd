@@ -173,6 +173,7 @@ var _rc: Control = null
 var _header_h: float = 0.0
 
 @onready var bg: ColorRect = $Bg
+@onready var art: TextureRect = $ArtFade
 @onready var scroller: Control = $Scroller
 @onready var vbox: VBoxContainer = $Scroller/ScrollVBox
 @onready var header: RichTextLabel = $Scroller/ScrollVBox/HeaderRoll
@@ -231,6 +232,7 @@ func start_roll(res: CanvasLayer) -> void:
 	music_started = false
 	# 背景は透明のまま (リザルトの Dim が黒)。交換時に不透明化する。
 	bg.modulate.a = 0.0
+	art.modulate.a = 0.0
 	scroller.show()
 	thanks_center.hide()
 	end_row.hide()
@@ -276,6 +278,9 @@ func _process(delta: float) -> void:
 				_swap_to_black()
 		# 曲位置に合わせて歌詞バーを更新する (クレジットとは独立の下部固定表示)。
 		_update_lyrics(st - MUSIC_DELAY)
+	else:
+		# Thanks 表示中はタイトル背景だけフェードインする (文字は即表示のまま)。
+		art.modulate.a = minf(1.0, art.modulate.a + delta / 2.0)
 	# 曲の終わりと同時に最終画面へ。
 	if not ended and elapsed >= FADE_DUR + MUSIC_DELAY + song_len:
 		_finish()
@@ -329,6 +334,7 @@ func _finish() -> void:
 	if player.playing:
 		player.stop()
 	_swap_to_black()
+	art.modulate.a = 1.0
 	lyric_bar.hide()
 	scroller.hide()
 	skip_hint.hide()

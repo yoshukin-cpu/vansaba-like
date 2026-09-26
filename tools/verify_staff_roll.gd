@@ -125,6 +125,8 @@ func _initialize() -> void:
 	_check("end buttons shown after skip", (s.get_node("BottomBox/EndRow") as HBoxContainer).visible)
 	_check("thanks text stays centered",
 		(s.get_node("ThanksCenter/Thanks") as Label).text == "Thank you so much for playing.")
+	_check("art opaque after skip",
+		absf((s.get_node("ArtFade") as TextureRect).modulate.a - 1.0) < 0.01)
 	r2.queue_free()
 	s.queue_free()
 
@@ -148,6 +150,11 @@ func _initialize() -> void:
 	_check("scroll end shows thanks only",
 		bool(s2.get("finale")) and (s2.get_node("ThanksCenter") as CenterContainer).visible
 		and not (s2.get_node("BottomBox/EndRow") as HBoxContainer).visible)
+	# Thanks 文字は即表示、タイトル背景だけ2秒かけてフェードインする。
+	for i: int in range(150):
+		await process_frame
+	_check("title art fades in",
+		absf((s2.get_node("ArtFade") as TextureRect).modulate.a - 1.0) < 0.02)
 	s2.set("elapsed", 1.2 + 2.0 + float(s2.get("song_len")) + 0.05)
 	for i: int in range(3):
 		await process_frame
