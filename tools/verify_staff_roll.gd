@@ -23,22 +23,17 @@ func _full_text(s: Node) -> String:
 
 
 func _initialize() -> void:
-	# 1. リザルト: クリア時はメニューなし、GAME OVER時は従来メニュー。
+	# 1. リザルト: GAME OVER 専用 (クリア時は main が直接スタッフロールへ送る)。
 	var r: CanvasLayer = ResultScene.instantiate()
 	root.add_child(r)
 	for i: int in range(3):
 		await process_frame
-	_check("result has staff_pressed signal", r.has_signal("staff_pressed"))
-	r.call("show_result", true, "10:00", 20, 300, 1000)
-	_check("no menu buttons on clear",
-		not (r.get_node("Center/VBox/RetryBtn") as Button).visible
-		and not (r.get_node("Center/VBox/TitleBtn") as Button).visible)
-	_check("press hint shown on clear", (r.get_node("Center/VBox/PressHint") as Label).visible)
-	r.call("show_result", false, "5:41", 10, 100, 200)
+	_check("result has no staff route", not r.has_signal("staff_pressed"))
+	r.call("show_result", "5:41", 10, 100, 200)
+	_check("gameover title shown", (r.get_node("Center/VBox/Title") as Label).text == "GAME OVER")
 	_check("menu buttons on gameover",
 		(r.get_node("Center/VBox/RetryBtn") as Button).visible
 		and (r.get_node("Center/VBox/TitleBtn") as Button).visible)
-	_check("press hint hidden on gameover", not (r.get_node("Center/VBox/PressHint") as Label).visible)
 	r.queue_free()
 
 
@@ -105,13 +100,20 @@ func _initialize() -> void:
 	for i: int in range(5):
 		await process_frame
 	_check("main has StaffRollUI", m.has_node("StaffRollUI"))
-	_check("main handles staff roll", m.has_method("_on_staff_roll"))
-	var rr: Node = m.get_node("ResultUI")
-	_check("result wired to main",
-		rr.is_connected("staff_pressed", Callable(m, "_on_staff_roll")))
+	_check("main handles staff roll", not m.has_method("_on_staff_roll"))
 	var ss: Node = m.get_node("StaffRollUI")
 	_check("staff retry wired", ss.is_connected("retry_pressed", Callable(m, "_on_retry")))
 	_check("staff title wired", ss.is_connected("title_pressed", Callable(m, "_on_quit_to_title")))
+
+	# 5. クリア時はリザルトを出さずスタッフロールだけ (戦績つき)。
+	m.call("show_result", true)
+	for i: int in range(5):
+		await process_frame
+	var sr: Node = m.get_node("StaffRollUI")
+	_check("clear skips result", not (m.get_node("ResultUI") as CanvasLayer).visible)
+	_check("clear starts staff roll", (sr as CanvasLayer).visible and bool(sr.get("rolling")))
+	_check("stats embedded in roll",
+		"生存時間" in (sr.get_node("Scroller/Roll") as RichTextLabel).text)
 	m.queue_free()
 
 	print("RESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))

@@ -222,7 +222,7 @@ res://
 ### P18 スタッフロール [M17]
 
 - 実装: `ui/staff_roll_ui.tscn` + `staff_roll_ui.gd` 新規 (下→上スクロール・主題歌同期・Thanks終了・スキップ即最終画面) /
-  `result_ui` はクリア時メニューなし (`staff_pressed` は確定/クリック/Aのどれでも発射) /
+  クリア時はリザルトなしで直行 (戦績は `start_roll(stats)` で冒頭に)・リザルトは GAME OVER 専用に整理 /
   `main` に StaffRollUI 配線 (開始・リトライ/タイトル再読込・ポーズガード) /
   主題歌 `audio/music/vansaba_theme_1.mp3` (実測約251秒) をコミット
 - 検証: 新規 `tools/verify_staff_roll.gd` 30件 (出し分け・スクロール・曲長同期・スキップ・自然終了・配線) +

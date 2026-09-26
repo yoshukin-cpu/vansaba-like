@@ -181,7 +181,7 @@ func _on_focus(i: int) -> void:
 	_focus_idx = i
 
 
-func start_roll() -> void:
+func start_roll(stats_text: String = "") -> void:
 	song_len = FALLBACK_LEN
 	if player.stream != null:
 		var l: float = player.stream.get_length()
@@ -189,7 +189,11 @@ func start_roll() -> void:
 			song_len = l
 	scroll_dur = song_len - THANKS_LEAD
 	# 全文を結合し、下から上へスクロールする。速度は曲長から逆算する。
-	roll.text = "\n\n".join(PAGES)
+	# 戦績を渡されたら (クリア直行時)、冒頭ブロックの次に載せる。
+	var parts := PackedStringArray(PAGES)
+	if stats_text != "":
+		parts.insert(1, "[center][font_size=26]" + stats_text + "[/font_size][/center]")
+	roll.text = "\n\n".join(parts)
 	elapsed = 0.0
 	rolling = true
 	finale = false
