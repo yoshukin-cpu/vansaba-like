@@ -103,7 +103,7 @@ func _initialize() -> void:
 	_check("lyrics 41 entries", entries.size() == 41)
 	var l12: Dictionary = ThemeLyrics.line_at(entries, 12.0)
 	_check("lyric at 12s",
-		str(l12["cur"]) == "風が叫ぶ 開戦の鐘" and str(l12["next"]) == "[間奏]")
+		str(l12["cur"]) == "風が叫ぶ 開戦の鐘" and str(l12["next"]) == "【テーマソング：じゅっぷんかんの王国】")
 	_check("lyric hidden before start", str(ThemeLyrics.line_at(entries, 0.0)["cur"]) == "")
 	_check("outro hides lyrics", str(ThemeLyrics.line_at(entries, 240.0)["cur"]) == "")
 	s.set("elapsed", 1.2 + 2.0 + 12.0)

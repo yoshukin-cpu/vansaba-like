@@ -81,7 +81,7 @@ const PAGES: Array[String] = [
 
 [font_size=30]Suno (1min-image)[/font_size]
 
-[font_size=24]「vansaba_theme_1」4分10秒
+[font_size=24]「じゅっぷんかんの王国」4分10秒
 作詞・作曲・編曲・ギターソロ (架空): Suno
 ♪ じゅっぷんかんの王国は 終わらない ♪
 このロールはこの曲の長さに合わせて引き延ばされています。[/font_size][/center]""",
