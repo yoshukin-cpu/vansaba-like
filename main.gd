@@ -72,6 +72,7 @@ func _ready() -> void:
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
 	result_ui.connect("title_pressed", _on_quit_to_title)
+	result_ui.connect("staff_pressed", _on_staff_roll)
 	staff_roll.connect("retry_pressed", _on_retry)
 	staff_roll.connect("title_pressed", _on_quit_to_title)
 	_setup_acquired_marks()
@@ -240,17 +241,8 @@ func show_result(clear: bool) -> void:
 	get_tree().paused = true
 	if warning_label != null:
 		warning_label.hide()
-	if clear:
-		# クリア時はリザルトを出さず、スタッフロールだけ見せる (戦績は渡して冒頭に載せる)。
-		audio.call("play", "clear")
-		var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [
-			_fmt_time(float(director.get("elapsed"))),
-			int(player.get("level")), kills, score]
-		result_ui.hide()
-		staff_roll.call("start_roll", stats)
-		return
-	audio.call("play", "death")
-	result_ui.call("show_result", _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score)
+	audio.call("play", "clear" if clear else "death")
+	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score)
 
 func _on_player_level_up() -> void:
 	if result_shown or levelup_ui.visible:
@@ -290,6 +282,15 @@ func _on_retry() -> void:
 	quick_start = true
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+## リザルト (クリア時のみ) → スタッフロール。戦績を渡して冒頭に載せる。
+func _on_staff_roll() -> void:
+	audio.call("play", "ui")
+	var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [
+		_fmt_time(float(director.get("elapsed"))),
+		int(player.get("level")), kills, score]
+	result_ui.hide()
+	staff_roll.call("start_roll", stats)
 
 func _on_quit_to_title() -> void:
 	quick_start = false

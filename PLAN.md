@@ -221,11 +221,12 @@ res://
 
 ### P18 スタッフロール [M17]
 
-- 実装: `ui/staff_roll_ui.tscn` + `staff_roll_ui.gd` 新規 (下→上スクロール・主題歌同期・Thanks終了・スキップ即最終画面) /
-  クリア時はリザルトなしで直行 (戦績は `start_roll(stats)` で冒頭に)・リザルトは GAME OVER 専用に整理 /
+- 実装: `ui/staff_roll_ui.tscn` + `staff_roll_ui.gd` 新規 /
+  リザルトの「スタッフロールへ」ボタンで進行 (戦績は `start_roll(stats)` でヘッダーに) /
+  開始は CLEAR!/戦績残しフェード+4倍速スクロール (段落間3行空き)・音楽2秒遅延・スキップ即最終画面 /
   `main` に StaffRollUI 配線 (開始・リトライ/タイトル再読込・ポーズガード) /
   主題歌 `audio/music/vansaba_theme_1.mp3` (実測約251秒) をコミット
-- 検証: 新規 `tools/verify_staff_roll.gd` 30件 (出し分け・スクロール・曲長同期・スキップ・自然終了・配線) +
+- 検証: 新規 `tools/verify_staff_roll.gd` 35件 (出し分け・ヘッダー・4倍速・音楽遅延・スキップ・自然終了・配線) +
   全回帰 ALL PASS。`verify_v13` のT10取得待ちを状態ベースに修正
 - **完了条件**: クリア→リザルト→スタッフロールで主題歌が流れ、曲終わりと同時に Thanks が中央に残る
 - 回帰は `--fixed-fps 60` 決め打ち (§5)。高速headlessで固定フレーム待ちが足りず誤失敗するため

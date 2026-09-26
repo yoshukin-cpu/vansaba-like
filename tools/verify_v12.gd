@@ -244,9 +244,5 @@ func _t_clear(player: Node2D, main: Node) -> void:
 		if bool(main.get("result_shown")):
 			break
 	_check("result shown after countdown", bool(main.get("result_shown")))
-	# クリア時はリザルトを出さずスタッフロールだけ (戦績つき)。
-	var sr: Node = main.get_node("StaffRollUI")
-	_check("clear goes to staff roll", (sr as CanvasLayer).visible and bool(sr.get("rolling")))
-	_check("result stays hidden on clear", not (main.get_node("ResultUI") as CanvasLayer).visible)
-	_check("stats embedded in roll",
-		"生存時間" in (sr.get_node("Scroller/Roll") as RichTextLabel).text)
+	var title: String = str(main.get_node("ResultUI/Center/VBox/Title").get("text"))
+	_check("CLEAR! shown (got '%s')" % title, title == "CLEAR!")

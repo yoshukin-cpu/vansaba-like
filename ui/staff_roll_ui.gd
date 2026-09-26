@@ -7,6 +7,10 @@ signal retry_pressed
 signal title_pressed
 
 const THEME_PATH := "res://audio/music/vansaba_theme_1.mp3"
+## フェード時間 / スクロール開始後の音楽開始遅延 / スクロール倍速。
+const FADE_DUR := 1.2
+const MUSIC_DELAY := 2.0
+const SPEED_MULT := 4.0
 ## 曲の残りがこの秒数になったらスクロールを終え、Thanks のみ表示する。
 const THANKS_LEAD := 6.0
 const FALLBACK_LEN := 250.0
@@ -149,17 +153,22 @@ const PAGES: Array[String] = [
 ]
 
 var song_len: float = FALLBACK_LEN
-var scroll_dur: float = 240.0
+var scroll_time: float = 60.0
 var elapsed: float = 0.0
 var rolling: bool = false
 var finale: bool = false
 var ended: bool = false
+var music_started: bool = false
 var _start_y: float = 0.0
 var _end_y: float = 0.0
 var _focus_idx: int = 0
 
+@onready var bg: ColorRect = $Bg
 @onready var scroller: Control = $Scroller
-@onready var roll: RichTextLabel = $Scroller/Roll
+@onready var vbox: VBoxContainer = $Scroller/ScrollVBox
+@onready var header: RichTextLabel = $Scroller/ScrollVBox/HeaderRoll
+@onready var spacer: Control = $Scroller/ScrollVBox/Spacer
+@onready var roll: RichTextLabel = $Scroller/ScrollVBox/MainRoll
 @onready var thanks_center: CenterContainer = $ThanksCenter
 @onready var skip_hint: Label = $BottomBox/SkipHint
 @onready var end_hint: Label = $BottomBox/EndHint
@@ -187,17 +196,25 @@ func start_roll(stats_text: String = "") -> void:
 		var l: float = player.stream.get_length()
 		if l > 30.0:
 			song_len = l
-	scroll_dur = song_len - THANKS_LEAD
-	# 全文を結合し、下から上へスクロールする。速度は曲長から逆算する。
-	# 戦績を渡されたら (クリア直行時)、冒頭ブロックの次に載せる。
-	var parts := PackedStringArray(PAGES)
+	# 4倍速: 曲の尺 (Thanks 分を除く) の1/4で流し切る。
+	scroll_time = (song_len - THANKS_LEAD) / SPEED_MULT
+	# 先頭は CLEAR! + 戦績 (リザルトの文字を残して引き継ぐ)。
+	var head := "[center][font_size=64][color=#ffd75e]CLEAR![/color][/font_size]"
 	if stats_text != "":
-		parts.insert(1, "[center][font_size=26]" + stats_text + "[/font_size][/center]")
-	roll.text = "\n\n".join(parts)
+		head += "\n[font_size=26]" + stats_text + "[/font_size]"
+	head += "[/center]"
+	header.text = head
+	# 段落間を広めに空けて結合する。
+	roll.text = "\n\n\n\n".join(PackedStringArray(PAGES))
+	var vh: float = get_viewport().get_visible_rect().size.y
+	# ヘッダーがスクロールアウトした直後に最初の文言が入るよう、1画面ぶん空ける。
+	spacer.custom_minimum_size = Vector2(0, vh)
 	elapsed = 0.0
 	rolling = true
 	finale = false
 	ended = false
+	music_started = false
+	bg.modulate.a = 0.0
 	scroller.show()
 	thanks_center.hide()
 	end_row.hide()
@@ -208,26 +225,37 @@ func start_roll(stats_text: String = "") -> void:
 	await get_tree().process_frame
 	if not rolling:
 		return
-	var vh: float = get_viewport().get_visible_rect().size.y
-	var ch: float = roll.get_content_height()
-	_start_y = vh + 32.0
-	_end_y = -(ch + 64.0)
+	var header_h: float = header.get_content_height()
+	var total_h: float = vbox.get_combined_minimum_size().y
+	# ヘッダーを中央に置いて開始し、末端が消えるまで流す。
+	_start_y = (vh - header_h) * 0.5
+	_end_y = -(total_h + 64.0)
 	scroller.position.y = _start_y
 	elapsed = 0.0
-	player.play()
 
 
 func _process(delta: float) -> void:
 	if not rolling:
 		return
 	elapsed += delta
+	# 他のグラフィックをフェードアウト (CLEAR!/戦績の文字だけ残す)。
+	bg.modulate.a = clampf(elapsed / FADE_DUR, 0.0, 1.0)
+	var st: float = elapsed - FADE_DUR
+	if st < 0.0:
+		scroller.position.y = _start_y
+		return
+	# 音楽はスクロール開始の2秒後に開始する。
+	if not music_started and st >= MUSIC_DELAY:
+		music_started = true
+		player.play()
 	if not finale:
-		if elapsed >= scroll_dur:
+		if st >= scroll_time:
 			_enter_finale()
 		else:
-			var t: float = clampf(elapsed / scroll_dur, 0.0, 1.0)
+			var t: float = clampf(st / scroll_time, 0.0, 1.0)
 			scroller.position.y = lerpf(_start_y, _end_y, t)
-	if not ended and elapsed >= song_len:
+	# 曲の終わりと同時に最終画面へ。
+	if not ended and elapsed >= FADE_DUR + MUSIC_DELAY + song_len:
 		_finish()
 
 
