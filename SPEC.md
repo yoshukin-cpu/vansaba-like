@@ -744,7 +744,8 @@ res://
 ## 29. スタッフロール (v1.5 追加)
 
 - クリア時のリザルト (CLEAR! + 戦績 + もう一度/スタッフロールへ/タイトルへ) で
-  「スタッフロールへ」を押すとスタッフロールへ進む (GAME OVER 時にボタンは出ない)。
+  「スタッフロールへ」を押すと0.6秒の暗転フェードアウト後にスタッフロールへ進む
+  (GAME OVER 時にボタンは出ない。二重発火防止つき)。
 - `ui/staff_roll_ui` を新設する (CanvasLayer, layer 30, process_mode ALWAYS。paused のままで動く)。
   テーマソング `audio/music/vansaba_theme_1.mp3` (実測 250.97 秒 ≒ 4分10秒) を専用 AudioStreamPlayer で再生する。
 - 開始演出: CLEAR! + 戦績の文字を残し、他のグラフィックを約1.2秒でフェードアウトする
@@ -814,6 +815,6 @@ res://
 - v1.5 実装 — スタッフロール (D32)。クリア時リザルトのボタンで進行。
   開始は CLEAR!/戦績残しフェード、段落間5行空きで曲尺いっぱいにスクロールし
   Thanks が曲終わりに来るよう調整、音楽は2秒遅延、スキップは即最終画面。
-  新規 `tools/verify_staff_roll.gd` 35件 ALL PASS + 全回帰 ALL PASS。
+  リザルト側も暗転フェード (0.6秒) 付きで遷移。新規 `tools/verify_staff_roll.gd` 38件 ALL PASS + 全回帰 ALL PASS。
   回帰は `--fixed-fps 60` 決め打ち運用に変更 (高速headlessで固定フレーム待ちが足りず落ちるため)。
   ついでに `verify_v13` のT10取得待ちを状態ベースに修正 (同原因)。

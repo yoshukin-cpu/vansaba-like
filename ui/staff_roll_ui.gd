@@ -191,7 +191,7 @@ func _on_focus(i: int) -> void:
 	_focus_idx = i
 
 
-func start_roll(stats_text: String = "") -> void:
+func start_roll(stats_text: String = "", instant_bg: bool = false) -> void:
 	song_len = FALLBACK_LEN
 	if player.stream != null:
 		var l: float = player.stream.get_length()
@@ -215,7 +215,8 @@ func start_roll(stats_text: String = "") -> void:
 	finale = false
 	ended = false
 	music_started = false
-	bg.modulate.a = 0.0
+	# リザルトの暗転から来た場合は背景黒のまま即スクロールへ (ゲーム画面のチラ見せ防止)。
+	bg.modulate.a = 1.0 if instant_bg else 0.0
 	scroller.show()
 	thanks_center.hide()
 	end_row.hide()
@@ -232,7 +233,8 @@ func start_roll(stats_text: String = "") -> void:
 	_start_y = snappedf((vh - header_h) * 0.5, 1.0)
 	_end_y = snappedf(-(total_h + 64.0), 1.0)
 	scroller.position.y = _start_y
-	elapsed = 0.0
+	# 暗転引き継ぎ時はフェード済みとしてスクロールから始める。
+	elapsed = FADE_DUR if instant_bg else 0.0
 
 
 func _process(delta: float) -> void:

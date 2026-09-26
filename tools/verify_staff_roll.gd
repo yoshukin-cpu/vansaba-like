@@ -36,6 +36,15 @@ func _initialize() -> void:
 	_check("menu buttons on gameover",
 		(r.get_node("Center/VBox/RetryBtn") as Button).visible
 		and (r.get_node("Center/VBox/TitleBtn") as Button).visible)
+	# ボタン押下→0.6秒の暗転フェード→staff_pressed。
+	r.call("show_result", true, "10:00", 20, 300, 1000)
+	var fired := [false]
+	r.connect("staff_pressed", func() -> void: fired[0] = true)
+	r.call("_on_staff_button")
+	for i: int in range(50):
+		await process_frame
+	_check("fade fires staff_pressed", fired[0])
+	_check("fade reaches black", absf((r.get_node("Fade") as ColorRect).color.a - 1.0) < 0.01)
 	r.queue_free()
 
 
@@ -135,6 +144,7 @@ func _initialize() -> void:
 	var sr: Node = m.get_node("StaffRollUI")
 	_check("staff roll starts", (sr as CanvasLayer).visible and bool(sr.get("rolling")))
 	_check("result hidden behind roll", not (m.get_node("ResultUI") as CanvasLayer).visible)
+	_check("bg stays black from fade", absf((sr.get_node("Bg") as ColorRect).modulate.a - 1.0) < 0.01)
 	m.queue_free()
 
 	print("RESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))
