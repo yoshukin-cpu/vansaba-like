@@ -38,7 +38,7 @@ func _initialize() -> void:
 	_check("menu buttons on gameover",
 		(r.get_node("Center/VBox/RetryBtn") as Button).visible
 		and (r.get_node("Center/VBox/TitleBtn") as Button).visible)
-	# ボタン押下→0.6秒の暗転フェード→staff_pressed。
+	# ボタン押下→Dim のみ不透明化 (CLEAR!/戦績は残る)→staff_pressed。
 	r.call("show_result", true, "10:00", 20, 300, 1000)
 	var fired := [false]
 	r.connect("staff_pressed", func() -> void: fired[0] = true)
@@ -46,11 +46,14 @@ func _initialize() -> void:
 	for i: int in range(50):
 		await process_frame
 	_check("fade fires staff_pressed", fired[0])
-	_check("fade reaches black", absf((r.get_node("Fade") as ColorRect).color.a - 1.0) < 0.01)
+	_check("dim reaches black", absf((r.get_node("Dim") as ColorRect).color.a - 1.0) < 0.01)
+	_check("CLEAR!/stats stay", (r.get_node("Center/VBox/Title") as Label).text == "CLEAR!")
 	r.queue_free()
 
 
-	# 2. スタッフロール単体: 内容・スクロール・曲長同期・スキップ即最終画面。
+	# 2. 単体: リザルト実ノード (CLEAR!/戦績) を引き継いでスクロールする。
+	var r2: CanvasLayer = ResultScene.instantiate()
+	root.add_child(r2)
 	var s: CanvasLayer = StaffRollScene.instantiate()
 	root.add_child(s)
 	for i: int in range(3):
@@ -60,20 +63,23 @@ func _initialize() -> void:
 	for needle: String in ["yoshuki", "Hermes Agent", "Google Image", "ElevenLabs", "Suno",
 			"じゅっぷんかん", "Thank you so much for playing."]:
 		_check("credit mentions " + needle, needle in body)
-	s.call("start_roll", "生存時間 10:00 / Lv 20 / 撃破 300 / スコア 1000")
+	r2.call("show_result", true, "10:00", 20, 300, 1000)
+	for i: int in range(3):
+		await process_frame
+	s.call("start_roll", r2)
 	for i: int in range(5):
 		await process_frame
 	_check("rolling after start", bool(s.get("rolling")))
 	var song_len: float = float(s.get("song_len"))
 	_check("song_len syncs theme (240-262s)", song_len >= 240.0 and song_len <= 262.0)
-	_check("header keeps CLEAR", "CLEAR!" in (s.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel).text)
-	_check("stats handed over",
-		"生存時間" in (s.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel).text)
+	_check("uses real header", s.get("_rc") != null)
+	_check("inner header unused", not (s.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel).visible)
 	_check("scroll fills song", absf(float(s.get("scroll_time")) - (song_len - 6.0)) < 0.01)
-	# フェード (1.2秒) を越えてスクロール区間で移動を測る。
+	# フェード (1.2秒) を越えて: 実ヘッダーと本文が一緒に上がる。
 	s.set("elapsed", 1.2 + 5.0)
 	for i: int in range(3):
 		await process_frame
+	_check("real header scrolls", (r2.get_node("Center") as Control).position.y < 0.0)
 	var y0: float = (s.get_node("Scroller") as Control).position.y
 	for i: int in range(10):
 		await process_frame
@@ -84,6 +90,13 @@ func _initialize() -> void:
 	for i: int in range(3):
 		await process_frame
 	_check("music delayed 2s after scroll", bool(s.get("music_started")))
+	# 実ヘッダー抜け切りで交換 (リザルト非表示+背景黒、Thanks はまだ)。
+	s.set("elapsed", 1.2 + float(s.get("scroll_time")) * 0.5)
+	for i: int in range(3):
+		await process_frame
+	_check("swap hides result", not r2.visible)
+	_check("bg opaque after swap", absf((s.get_node("Bg") as ColorRect).modulate.a - 1.0) < 0.01)
+	_check("thanks not yet", not bool(s.get("finale")))
 	# スキップ1回で最終画面 (Thanks + ボタン)。
 	s.call("_skip")
 	for i: int in range(3):
@@ -93,15 +106,21 @@ func _initialize() -> void:
 	_check("end buttons shown after skip", (s.get_node("BottomBox/EndRow") as HBoxContainer).visible)
 	_check("thanks text stays centered",
 		(s.get_node("ThanksCenter/Thanks") as Label).text == "Thank you so much for playing.")
+	r2.queue_free()
 	s.queue_free()
 
 
 	# 3. 自然終了: スクロール→Thanks→曲終わりでボタン (早送りで再現)。
+	var r3: CanvasLayer = ResultScene.instantiate()
+	root.add_child(r3)
 	var s2: CanvasLayer = StaffRollScene.instantiate()
 	root.add_child(s2)
 	for i: int in range(3):
 		await process_frame
-	s2.call("start_roll", "stats")
+	r3.call("show_result", true, "10:00", 20, 300, 1000)
+	for i: int in range(3):
+		await process_frame
+	s2.call("start_roll", r3)
 	for i: int in range(5):
 		await process_frame
 	s2.set("elapsed", 1.2 + float(s2.get("scroll_time")) + 0.05)
@@ -116,6 +135,7 @@ func _initialize() -> void:
 	_check("natural finish ends roll", bool(s2.get("ended")))
 	_check("thanks visible at natural finish", (s2.get_node("ThanksCenter") as CenterContainer).visible)
 	_check("end buttons at natural finish", (s2.get_node("BottomBox/EndRow") as HBoxContainer).visible)
+	r3.queue_free()
 	s2.queue_free()
 
 
@@ -145,8 +165,13 @@ func _initialize() -> void:
 			break
 	var sr: Node = m.get_node("StaffRollUI")
 	_check("staff roll starts", (sr as CanvasLayer).visible and bool(sr.get("rolling")))
-	_check("result hidden behind roll", not (m.get_node("ResultUI") as CanvasLayer).visible)
-	_check("bg stays black from fade", absf((sr.get_node("Bg") as ColorRect).modulate.a - 1.0) < 0.01)
+	# 実ヘッダーはしばらく残る (背景は透明)。抜け切り後に交換される。
+	_check("result stays for header", (m.get_node("ResultUI") as CanvasLayer).visible)
+	_check("bg transparent early", absf((sr.get_node("Bg") as ColorRect).modulate.a) < 0.01)
+	sr.set("elapsed", 1.2 + float(sr.get("scroll_time")) + 0.05)
+	for i: int in range(3):
+		await process_frame
+	_check("result hidden after scroll", not (m.get_node("ResultUI") as CanvasLayer).visible)
 	m.queue_free()
 
 	print("RESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))

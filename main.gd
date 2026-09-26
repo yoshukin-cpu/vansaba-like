@@ -283,15 +283,11 @@ func _on_retry() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
 
-## リザルト (クリア時のみ) → スタッフロール。戦績を渡して冒頭に載せる。
-## リザルト側で暗転済みのため、背景黒のまま開始する。
+## リザルト (クリア時のみ) → スタッフロール。リザルトは表示したまま渡し、
+## その CLEAR!/戦績ノードをスタッフロール側がそのままスクロールさせる。
 func _on_staff_roll() -> void:
 	audio.call("play", "ui")
-	var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [
-		_fmt_time(float(director.get("elapsed"))),
-		int(player.get("level")), kills, score]
-	result_ui.hide()
-	staff_roll.call("start_roll", stats, true)
+	staff_roll.call("start_roll", result_ui)
 
 func _on_quit_to_title() -> void:
 	quick_start = false

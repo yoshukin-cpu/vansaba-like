@@ -163,6 +163,10 @@ var music_started: bool = false
 var _start_y: float = 0.0
 var _end_y: float = 0.0
 var _focus_idx: int = 0
+## リザルト側の実ノード (CLEAR!/戦績をそのままスクロールさせる)。
+var _res: CanvasLayer = null
+var _rc: Control = null
+var _header_h: float = 0.0
 
 @onready var bg: ColorRect = $Bg
 @onready var scroller: Control = $Scroller
@@ -191,7 +195,9 @@ func _on_focus(i: int) -> void:
 	_focus_idx = i
 
 
-func start_roll(stats_text: String = "", instant_bg: bool = false) -> void:
+## res: リザルト UI。その CLEAR!/戦績ノードをそのままスクロールさせる
+## (位置・大きさ・色が完全に一致する)。背景はリザルトの Dim が黒くする。
+func start_roll(res: CanvasLayer) -> void:
 	song_len = FALLBACK_LEN
 	if player.stream != null:
 		var l: float = player.stream.get_length()
@@ -199,12 +205,11 @@ func start_roll(stats_text: String = "", instant_bg: bool = false) -> void:
 			song_len = l
 	# 曲の尺 (Thanks 分を除く) いっぱいに引き延ばし、Thanks が曲終わりに来るようにする。
 	scroll_time = song_len - THANKS_LEAD
-	# 先頭は CLEAR! + 戦績 (リザルトの文字を残して引き継ぐ)。
-	var head := "[center][font_size=64][color=#ffd75e]CLEAR![/color][/font_size]"
-	if stats_text != "":
-		head += "\n[font_size=26]" + stats_text + "[/font_size]"
-	head += "[/center]"
-	header.text = head
+	_res = res
+	_rc = res.get_node("Center") as Control
+	_header_h = (res.get_node("Center/VBox") as Control).size.y
+	# 内蔵ヘッダーは使わない (実ノードが先頭になる)。
+	header.hide()
 	# 段落間を広めに空けて結合する (空行で時間も稼ぐ)。
 	roll.text = "\n".repeat(GAP_LINES).join(PackedStringArray(PAGES))
 	var vh: float = get_viewport().get_visible_rect().size.y
@@ -215,8 +220,8 @@ func start_roll(stats_text: String = "", instant_bg: bool = false) -> void:
 	finale = false
 	ended = false
 	music_started = false
-	# リザルトの暗転から来た場合は背景黒のまま即スクロールへ (ゲーム画面のチラ見せ防止)。
-	bg.modulate.a = 1.0 if instant_bg else 0.0
+	# 背景は透明のまま (リザルトの Dim が黒)。交換時に不透明化する。
+	bg.modulate.a = 0.0
 	scroller.show()
 	thanks_center.hide()
 	end_row.hide()
@@ -227,25 +232,21 @@ func start_roll(stats_text: String = "", instant_bg: bool = false) -> void:
 	await get_tree().process_frame
 	if not rolling:
 		return
-	var header_h: float = header.get_content_height()
 	var total_h: float = vbox.get_combined_minimum_size().y
-	# ヘッダーを中央に置いて開始し、末端が消えるまで流す (整数pxで文字のにじみ防止)。
-	_start_y = snappedf((vh - header_h) * 0.5, 1.0)
+	# 本文先頭が実ヘッダーの下端から1画面ぶん下に来るよう配置し、末端が消えるまで流す。
+	_start_y = snappedf((vh + _header_h) * 0.5, 1.0)
 	_end_y = snappedf(-(total_h + 64.0), 1.0)
 	scroller.position.y = _start_y
-	# 暗転引き継ぎ時はフェード済みとしてスクロールから始める。
-	elapsed = FADE_DUR if instant_bg else 0.0
+	_rc.position.y = 0.0
+	elapsed = 0.0
 
 
 func _process(delta: float) -> void:
 	if not rolling:
 		return
 	elapsed += delta
-	# 他のグラフィックをフェードアウト (CLEAR!/戦績の文字だけ残す)。
-	bg.modulate.a = clampf(elapsed / FADE_DUR, 0.0, 1.0)
 	var st: float = elapsed - FADE_DUR
 	if st < 0.0:
-		scroller.position.y = _start_y
 		return
 	# 音楽はスクロール開始の2秒後に開始する。
 	if not music_started and st >= MUSIC_DELAY:
@@ -256,15 +257,32 @@ func _process(delta: float) -> void:
 			_enter_finale()
 		else:
 			var t: float = clampf(st / scroll_time, 0.0, 1.0)
-			scroller.position.y = snappedf(lerpf(_start_y, _end_y, t), 1.0)
+			var y: float = snappedf(lerpf(_start_y, _end_y, t), 1.0)
+			scroller.position.y = y
+			# 実ヘッダー (リザルトの文字) を同じ量だけ上げ、完全一致でスクロールさせる。
+			if _rc != null:
+				_rc.position.y = snappedf(y - _start_y, 1.0)
+			# 実ヘッダーが抜け切ったらリザルトを隠し、背景を不透明化する。
+			if y <= 0.0:
+				_swap_to_black()
 	# 曲の終わりと同時に最終画面へ。
 	if not ended and elapsed >= FADE_DUR + MUSIC_DELAY + song_len:
 		_finish()
 
 
+## 実ヘッダー抜け切り: リザルトを隠し、背景を黒にする (同フレームで違和感なし)。
+func _swap_to_black() -> void:
+	bg.modulate.a = 1.0
+	if _res != null:
+		_res.hide()
+		_res = null
+	_rc = null
+
+
 ## スクロール終了。Thanks のみを中央に残す (曲はまだ鳴っている)。
 func _enter_finale() -> void:
 	finale = true
+	_swap_to_black()
 	scroller.hide()
 	thanks_center.show()
 	skip_hint.hide()
@@ -278,6 +296,7 @@ func _finish() -> void:
 	rolling = false
 	if player.playing:
 		player.stop()
+	_swap_to_black()
 	scroller.hide()
 	skip_hint.hide()
 	thanks_center.show()

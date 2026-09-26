@@ -14,7 +14,10 @@ var _leaving: bool = false
 @onready var stats_label: Label = $Center/VBox/Stats
 @onready var retry_btn: Button = $Center/VBox/RetryBtn
 @onready var title_btn: Button = $Center/VBox/TitleBtn
-@onready var fade: ColorRect = $Fade
+@onready var dim: ColorRect = $Dim
+
+## Dim の通常濃度。フェードではここから不透明にする。
+const DIM_ALPHA := 0.75
 
 func _ready() -> void:
 	visible = false
@@ -26,7 +29,7 @@ func _ready() -> void:
 func _on_focus(i: int) -> void:
 	focus_idx = i
 
-## スタッフロールへ: 暗転フェードアウトしてから通知する (二重発火防止つき)。
+## スタッフロールへ: CLEAR!/戦績は残し、Dim を不透明にして他を消してから通知する。
 func _on_staff_button() -> void:
 	if _leaving or not visible:
 		return
@@ -34,7 +37,7 @@ func _on_staff_button() -> void:
 	retry_btn.disabled = true
 	title_btn.disabled = true
 	var tw: Tween = create_tween()
-	tw.tween_property(fade, "color:a", 1.0, 0.6)
+	tw.tween_property(dim, "color:a", 1.0, 0.6)
 	tw.tween_callback(func() -> void: staff_pressed.emit())
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -73,7 +76,7 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	retry_btn.visible = not clear
 	title_btn.visible = not clear
 	_leaving = false
-	fade.color.a = 0.0
+	dim.color.a = DIM_ALPHA
 	retry_btn.disabled = false
 	title_btn.disabled = false
 	visible = true
