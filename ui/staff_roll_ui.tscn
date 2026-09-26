@@ -98,17 +98,18 @@ theme_override_constants/separation = 12
 alignment = 1
 
 [node name="SkipHint" type="Label" parent="."]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = -124.0
-offset_right = 320.0
-offset_bottom = -80.0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 8.0
+offset_right = -12.0
+offset_bottom = 64.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 14
 text = "クリック / Enter / Aボタン:
 スキップ"
+horizontal_alignment = 2
 
 [node name="EndHint" type="Label" parent="BottomBox"]
 visible = false
