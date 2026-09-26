@@ -23,16 +23,18 @@ func _full_text(s: Node) -> String:
 
 
 func _initialize() -> void:
-	# 1. リザルト: クリア時のみスタッフボタン、GAME OVER時は従来メニュー。
+	# 1. リザルト: クリア時はメニューなし+ヒント、GAME OVER時は従来メニュー。
 	var r: CanvasLayer = ResultScene.instantiate()
 	root.add_child(r)
 	for i: int in range(3):
 		await process_frame
 	_check("result has staff_pressed signal", r.has_signal("staff_pressed"))
 	r.call("show_result", true, "10:00", 20, 300, 1000)
-	_check("staff btn visible on clear", (r.get_node("Center/VBox/StaffBtn") as Button).visible)
+	_check("no menu on clear",
+		not (r.get_node("Center/VBox/RetryBtn") as Button).visible
+		and not (r.get_node("Center/VBox/TitleBtn") as Button).visible)
+	_check("press hint on clear", (r.get_node("Center/VBox/PressHint") as Label).visible)
 	r.call("show_result", false, "5:41", 10, 100, 200)
-	_check("staff btn hidden on gameover", not (r.get_node("Center/VBox/StaffBtn") as Button).visible)
 	_check("menu buttons on gameover",
 		(r.get_node("Center/VBox/RetryBtn") as Button).visible
 		and (r.get_node("Center/VBox/TitleBtn") as Button).visible)
@@ -131,16 +133,16 @@ func _initialize() -> void:
 	_check("staff retry wired", ss.is_connected("retry_pressed", Callable(m, "_on_retry")))
 	_check("staff title wired", ss.is_connected("title_pressed", Callable(m, "_on_quit_to_title")))
 
-	# 5. クリア時はリザルト経由でスタッフロールへ (戦績つき)。
+	# 5. クリア時はリザルトのボタン押下経路でスタッフロールへ (戦績つき)。
 	m.call("show_result", true)
 	for i: int in range(5):
 		await process_frame
 	_check("clear shows result", (m.get_node("ResultUI") as CanvasLayer).visible)
-	_check("staff btn on clear",
-		(m.get_node("ResultUI/Center/VBox/StaffBtn") as Button).visible)
-	m.call("_on_staff_roll")
-	for i: int in range(5):
+	(m.get_node("ResultUI") as CanvasLayer).call("_on_staff_button")
+	for i: int in range(60):
 		await process_frame
+		if bool((m.get_node("StaffRollUI") as CanvasLayer).get("rolling")):
+			break
 	var sr: Node = m.get_node("StaffRollUI")
 	_check("staff roll starts", (sr as CanvasLayer).visible and bool(sr.get("rolling")))
 	_check("result hidden behind roll", not (m.get_node("ResultUI") as CanvasLayer).visible)

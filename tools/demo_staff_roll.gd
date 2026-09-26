@@ -27,8 +27,13 @@ func _initialize() -> void:
 		player.set("hp", player.get("max_hp"))
 		await process_frame
 	var staff: Node = main.get_node("StaffRollUI")
-	print("result shown, pressing on to staff roll.")
-	main.call("_on_staff_roll")
+	var result: Node = main.get_node("ResultUI")
+	print("result shown, pressing button to staff roll.")
+	# 実プレイヤーと同じく、リザルトのボタン押下経路で進む (直接呼び出しはしない)。
+	result.call("_on_staff_button")
+	var t1: int = Time.get_ticks_msec()
+	while not bool(staff.get("rolling")) and Time.get_ticks_msec() - t1 < 10000:
+		await process_frame
 	print("staff roll playing (full length). window stays open at the finale.")
 	# 最後まで再生し、最終画面で待機する (閉じるのはユーザー)。
 	while not bool(staff.get("ended")):
