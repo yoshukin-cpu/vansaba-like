@@ -33,7 +33,7 @@ func _initialize() -> void:
 	_check("no menu on clear",
 		not (r.get_node("Center/VBox/RetryBtn") as Button).visible
 		and not (r.get_node("Center/VBox/TitleBtn") as Button).visible)
-	_check("press hint on clear", (r.get_node("Center/VBox/PressHint") as Label).visible)
+	_check("press hint removed", r.get_node_or_null("Center/VBox/PressHint") == null)
 	r.call("show_result", false, "5:41", 10, 100, 200)
 	_check("menu buttons on gameover",
 		(r.get_node("Center/VBox/RetryBtn") as Button).visible

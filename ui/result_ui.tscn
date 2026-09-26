@@ -43,14 +43,6 @@ theme_override_font_sizes/font_size = 26
 text = "もう一度"
 size_flags_horizontal = 4
 
-[node name="PressHint" type="Label" parent="Center/VBox"]
-visible = false
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
-theme_override_font_sizes/font_size = 24
-text = "ボタンを押すとスタッフロールへ"
-horizontal_alignment = 1
-
 [node name="TitleBtn" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(280, 64)
 theme_override_font_sizes/font_size = 26

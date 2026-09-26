@@ -12,7 +12,6 @@ var _leaving: bool = false
 
 @onready var title_label: Label = $Center/VBox/Title
 @onready var stats_label: Label = $Center/VBox/Stats
-@onready var press_hint: Label = $Center/VBox/PressHint
 @onready var retry_btn: Button = $Center/VBox/RetryBtn
 @onready var title_btn: Button = $Center/VBox/TitleBtn
 @onready var fade: ColorRect = $Fade
@@ -71,7 +70,6 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	is_clear = clear
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
 	stats_label.text = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
-	press_hint.visible = clear
 	retry_btn.visible = not clear
 	title_btn.visible = not clear
 	_leaving = false
