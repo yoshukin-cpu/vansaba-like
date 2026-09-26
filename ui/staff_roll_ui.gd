@@ -7,10 +7,11 @@ signal retry_pressed
 signal title_pressed
 
 const THEME_PATH := "res://audio/music/vansaba_theme_1.mp3"
-## フェード時間 / スクロール開始後の音楽開始遅延 / スクロール倍速。
+## フェード時間 / スクロール開始後の音楽開始遅延。
 const FADE_DUR := 1.2
 const MUSIC_DELAY := 2.0
-const SPEED_MULT := 4.0
+## 段落間の空行数。曲の終わりに Thanks が来るよう、全体は曲尺いっぱいに引き延ばす。
+const GAP_LINES := 6
 ## 曲の残りがこの秒数になったらスクロールを終え、Thanks のみ表示する。
 const THANKS_LEAD := 6.0
 const FALLBACK_LEN := 250.0
@@ -196,16 +197,16 @@ func start_roll(stats_text: String = "") -> void:
 		var l: float = player.stream.get_length()
 		if l > 30.0:
 			song_len = l
-	# 4倍速: 曲の尺 (Thanks 分を除く) の1/4で流し切る。
-	scroll_time = (song_len - THANKS_LEAD) / SPEED_MULT
+	# 曲の尺 (Thanks 分を除く) いっぱいに引き延ばし、Thanks が曲終わりに来るようにする。
+	scroll_time = song_len - THANKS_LEAD
 	# 先頭は CLEAR! + 戦績 (リザルトの文字を残して引き継ぐ)。
 	var head := "[center][font_size=64][color=#ffd75e]CLEAR![/color][/font_size]"
 	if stats_text != "":
 		head += "\n[font_size=26]" + stats_text + "[/font_size]"
 	head += "[/center]"
 	header.text = head
-	# 段落間を広めに空けて結合する。
-	roll.text = "\n\n\n\n".join(PackedStringArray(PAGES))
+	# 段落間を広めに空けて結合する (空行で時間も稼ぐ)。
+	roll.text = "\n".repeat(GAP_LINES).join(PackedStringArray(PAGES))
 	var vh: float = get_viewport().get_visible_rect().size.y
 	# ヘッダーがスクロールアウトした直後に最初の文言が入るよう、1画面ぶん空ける。
 	spacer.custom_minimum_size = Vector2(0, vh)
@@ -227,9 +228,9 @@ func start_roll(stats_text: String = "") -> void:
 		return
 	var header_h: float = header.get_content_height()
 	var total_h: float = vbox.get_combined_minimum_size().y
-	# ヘッダーを中央に置いて開始し、末端が消えるまで流す。
-	_start_y = (vh - header_h) * 0.5
-	_end_y = -(total_h + 64.0)
+	# ヘッダーを中央に置いて開始し、末端が消えるまで流す (整数pxで文字のにじみ防止)。
+	_start_y = snappedf((vh - header_h) * 0.5, 1.0)
+	_end_y = snappedf(-(total_h + 64.0), 1.0)
 	scroller.position.y = _start_y
 	elapsed = 0.0
 
@@ -253,7 +254,7 @@ func _process(delta: float) -> void:
 			_enter_finale()
 		else:
 			var t: float = clampf(st / scroll_time, 0.0, 1.0)
-			scroller.position.y = lerpf(_start_y, _end_y, t)
+			scroller.position.y = snappedf(lerpf(_start_y, _end_y, t), 1.0)
 	# 曲の終わりと同時に最終画面へ。
 	if not ended and elapsed >= FADE_DUR + MUSIC_DELAY + song_len:
 		_finish()

@@ -58,7 +58,7 @@ func _initialize() -> void:
 	_check("header keeps CLEAR", "CLEAR!" in (s.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel).text)
 	_check("stats handed over",
 		"生存時間" in (s.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel).text)
-	_check("scroll 4x", absf(float(s.get("scroll_time")) - (song_len - 6.0) / 4.0) < 0.01)
+	_check("scroll fills song", absf(float(s.get("scroll_time")) - (song_len - 6.0)) < 0.01)
 	# フェード (1.2秒) を越えてスクロール区間で移動を測る。
 	s.set("elapsed", 1.2 + 5.0)
 	for i: int in range(3):
