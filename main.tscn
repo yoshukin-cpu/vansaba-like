@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://ui/title_ui.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://ui/pause_ui.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://ui/result_ui.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://ui/staff_roll_ui.tscn" id="14"]
 [ext_resource type="Script" path="res://systems/pool.gd" id="10"]
 [ext_resource type="Script" path="res://systems/combat_fx.gd" id="11"]
 [ext_resource type="Script" path="res://systems/audio_manager.gd" id="12"]
@@ -72,6 +73,8 @@ script = ExtResource("12")
 [node name="PauseUI" parent="." instance=ExtResource("8")]
 
 [node name="ResultUI" parent="." instance=ExtResource("9")]
+
+[node name="StaffRollUI" parent="." instance=ExtResource("14")]
 
 [node name="LevelUpUI" parent="." instance=ExtResource("5")]
 

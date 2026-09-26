@@ -26,6 +26,7 @@ static var quick_start: bool = false
 @onready var title_ui: CanvasLayer = $TitleUI
 @onready var pause_ui: CanvasLayer = $PauseUI
 @onready var result_ui: CanvasLayer = $ResultUI
+@onready var staff_roll: CanvasLayer = $StaffRollUI
 @onready var audio: Node = $AudioManager
 @onready var chest_director: Node = $ChestDirector
 @onready var score_label: Label = $HUD/ScoreLabel
@@ -71,6 +72,9 @@ func _ready() -> void:
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
 	result_ui.connect("title_pressed", _on_quit_to_title)
+	result_ui.connect("staff_pressed", _on_staff_roll)
+	staff_roll.connect("retry_pressed", _on_retry)
+	staff_roll.connect("title_pressed", _on_quit_to_title)
 	_setup_acquired_marks()
 	director.set("running", false)
 	chest_director.set("running", false)
@@ -279,6 +283,12 @@ func _on_retry() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
 
+## リザルト (クリア時のみ) → スタッフロール。曲とページ送りは向こうが管理する。
+func _on_staff_roll() -> void:
+	audio.call("play", "ui")
+	result_ui.hide()
+	staff_roll.call("start_roll")
+
 func _on_quit_to_title() -> void:
 	quick_start = false
 	get_tree().paused = false
@@ -286,7 +296,7 @@ func _on_quit_to_title() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause_game"):
-		if title_ui.visible or levelup_ui.visible or result_ui.visible:
+		if title_ui.visible or levelup_ui.visible or result_ui.visible or staff_roll.visible:
 			return
 		if get_tree().paused:
 			pause_ui.call("close")

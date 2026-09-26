@@ -219,6 +219,17 @@ res://
 - **完了条件**: 選択画面の3枚に大きめのマークが出て、取得した順に下部へ小マークが複数行で並ぶ
 - デバッグ文は右下・履歴の上へ移動。T09/R_WEAPON の武器強化も履歴に記録する
 
+### P18 スタッフロール [M17]
+
+- 実装: `ui/staff_roll_ui.tscn` + `staff_roll_ui.gd` 新規 (21ページ送り・主題歌同期・Thanks終了・スキップ) /
+  `result_ui` にクリア時のみ「スタッフロールへ」ボタン (`staff_pressed`) /
+  `main` に StaffRollUI 配線 (開始・リトライ/タイトル再読込・ポーズガード) /
+  主題歌 `audio/music/vansaba_theme_1.mp3` (実測約251秒) をコミット
+- 検証: 新規 `tools/verify_staff_roll.gd` 26件 (出し分け・人名・曲長同期・スキップ・自然終了・配線) +
+  全回帰 ALL PASS。`verify_v13` のT10取得待ちを状態ベースに修正
+- **完了条件**: クリア→リザルト→スタッフロールで主題歌が流れ、曲終わりと同時に Thanks が中央に残る
+- 回帰は `--fixed-fps 60` 決め打ち (§5)。高速headlessで固定フレーム待ちが足りず誤失敗するため
+
 ## 3. 並行可能タスク
 
 - P10 (素材生成) は P8/P9 と並行可 (仮タイルで先にロジックを通すため)
@@ -242,7 +253,8 @@ res://
 - 構築: `create_scene`, `batch_add_nodes`, `create_script`, `attach_script`, `save_scene`
 - 実行: `play_scene` → `simulate_key/mouse_click/action` → `get_game_screenshot/capture_frames/monitor_properties/assert_node_state` → `stop_scene`
 - 調査: `get_scene_tree`, `read_script`, `get_editor_errors`, `get_output_log`
-- ヘッドレス (MCP経由が不安定なとき): `godot --headless --path <proj> --script res://tools/verify_*.gd`
+- ヘッドレス (MCP経由が不安定なとき): `godot --headless --fixed-fps 60 --path <proj> --script res://tools/verify_*.gd`
+  (`--fixed-fps 60` 必須。固定フレーム待ちのテストが高速headlessでは短時間化して誤失敗するため。v1.5で判明)
 - 注意: ヘッドレス起動で `project.godot` の `[autoload]` が落ちることがある → コミット前に `git checkout -- project.godot`
 
 ## 6. 次アクション提案

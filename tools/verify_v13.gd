@@ -105,10 +105,13 @@ func _t_nova_item(player: Node2D, director: Node) -> void:
 	_check("T10 uses nova art", tex != null and tex.resource_path.ends_with("item_nova.png"))
 	# 取得でノヴァが発動する (敵を置いて確認)
 	var v: Node2D = _spawn_slime(player.global_position + Vector2(200, 0))
-	for i: int in range(40):
+	# headless は fps が不定のため、固定フレーム数ではなく状態が変わるまで待つ。
+	var guard := 0
+	while is_instance_valid(it) and guard < 900:
+		player.global_position = (it as Node2D).global_position
 		await process_frame
-	player.global_position = (it as Node2D).global_position
-	for i: int in range(15):
+		guard += 1
+	for i: int in range(30):
 		await process_frame
 	_check("T10 pickup fires nova", not is_instance_valid(v))
 	for n: Node in get_nodes_in_group("enemies"):

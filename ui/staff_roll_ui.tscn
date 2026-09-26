@@ -1,0 +1,81 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/staff_roll_ui.gd" id="1"]
+[ext_resource type="AudioStream" path="res://audio/music/vansaba_theme_1.mp3" id="2"]
+
+[node name="StaffRollUI" type="CanvasLayer"]
+layer = 30
+process_mode = 3
+script = ExtResource("1")
+
+[node name="Bg" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Page" type="RichTextLabel" parent="Center"]
+custom_minimum_size = Vector2(1000, 0)
+bbcode_enabled = true
+text = "loading..."
+scroll_active = false
+autowrap_mode = 2
+fit_content = true
+
+[node name="ThanksCenter" type="CenterContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Thanks" type="Label" parent="ThanksCenter"]
+theme_override_font_sizes/font_size = 56
+text = "Thank you so much for playing."
+horizontal_alignment = 1
+
+[node name="BottomBox" type="VBoxContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -190.0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="SkipHint" type="Label" parent="BottomBox"]
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 20
+text = "クリック / Enter / Aボタン: スキップ"
+horizontal_alignment = 1
+
+[node name="EndHint" type="Label" parent="BottomBox"]
+visible = false
+theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
+theme_override_font_sizes/font_size = 24
+text = "おつかれさまでした! つづきは二周目で。"
+horizontal_alignment = 1
+
+[node name="EndRow" type="HBoxContainer" parent="BottomBox"]
+visible = false
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="RetryBtn" type="Button" parent="BottomBox/EndRow"]
+custom_minimum_size = Vector2(280, 64)
+theme_override_font_sizes/font_size = 26
+text = "もう一度"
+
+[node name="TitleBtn" type="Button" parent="BottomBox/EndRow"]
+custom_minimum_size = Vector2(280, 64)
+theme_override_font_sizes/font_size = 26
+text = "タイトルへ"
+
+[node name="ThemePlayer" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("2")
+volume_db = -6.0

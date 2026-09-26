@@ -17,7 +17,7 @@
 - **v1.0 実装済み** (P0〜P7): 移動/カメラ、武器6種、敵10種、カード20種、ボス2種、勝敗、プール、演出。
 - スプライト差し替え済み: プレイヤー (4方向walk/idle)、敵10種 (2フレーム前後)、ボス2種、弾4種、スピンソード、火炎放射。
 - v1.1 実装完了 (P8〜P12)。**v1.2 実装完了 (P13〜P15)**。**v1.3 実装完了 (P16)**。
-  **v1.4 カードマーク表示 (D31) 実装済み**。
+  **v1.4 カードマーク表示 (D31) 実装済み**。**v1.5 スタッフロール (D32) 実装済み**。
 - `IDEA.md` の新要望は設計反映済み (D27のみ対象外で再検討待ち)。
 
 ### 実装済みの検証値 (P8〜P12)
@@ -42,7 +42,8 @@
 - 実行ファイル: `<godot-install-dir>/Godot_v4.7.2-stable_win64.exe`
 - 起動 (タイトルから): `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --path <repo-root>`
 - 即ゲーム開始 (タイトルスキップ): 末尾に `-- --autostart` を付ける
-- ヘッドレス検証: `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --headless --path <repo-root> --script res://tools/verify_*.gd`
+- ヘッドレス検証: `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --headless --fixed-fps 60 --path <repo-root> --script res://tools/verify_*.gd`
+  (`--fixed-fps 60` 必須。固定フレーム待ちが高速headlessで短時間化して誤失敗するため)
   - 素材を差し替えた後は `--headless --import` を忘れると古い絵が描画され続ける
 - 注意: ヘッドレス起動で `project.godot` の `[autoload]` 行が落ちることがある → コミット前に `git checkout -- project.godot`
 
@@ -83,6 +84,7 @@
 | D29 | タイトル終了メニュー (終了ボタン→quit) | ✅ 推奨 |
 | D30 | タイトル画像 (ピクセルアート・Dim 0.55) | ✅ 推奨 |
 | D31 | カードマーク表示 (24px生成・選択画面は約112px・履歴は下部取得順/複数行) | ✅ 推奨 |
+| D32 | スタッフロール (クリア時ボタン・主題歌同期21ページ+Thanks・スキップ) | ✅ 推奨 |
 
 ## リポジトリ
 
