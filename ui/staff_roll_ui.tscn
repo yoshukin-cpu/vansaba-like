@@ -1,7 +1,18 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/staff_roll_ui.gd" id="1"]
 [ext_resource type="AudioStream" path="res://audio/music/vansaba_theme_1.mp3" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="LyricPanel"]
+bg_color = Color(0, 0, 0, 0.55)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_right = 24.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
 
 [node name="StaffRollUI" type="CanvasLayer"]
 layer = 30
@@ -46,6 +57,40 @@ text = "loading..."
 fit_content = true
 scroll_active = false
 autowrap_mode = 2
+
+[node name="LyricBar" type="PanelContainer" parent="."]
+visible = false
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -296.0
+offset_right = 420.0
+offset_bottom = -200.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("LyricPanel")
+
+[node name="LyricVBox" type="VBoxContainer" parent="LyricBar"]
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="LyricCur" type="Label" parent="LyricBar/LyricVBox"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.91, 0.66, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+
+[node name="LyricNext" type="Label" parent="LyricBar/LyricVBox"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
 
 [node name="ThanksCenter" type="CenterContainer" parent="."]
 visible = false

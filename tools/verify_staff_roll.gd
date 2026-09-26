@@ -6,6 +6,7 @@ extends SceneTree
 const StaffRollScene: PackedScene = preload("res://ui/staff_roll_ui.tscn")
 const ResultScene: PackedScene = preload("res://ui/result_ui.tscn")
 const MainScene: PackedScene = preload("res://main.tscn")
+const ThemeLyrics := preload("res://data/theme_lyrics.gd")
 
 var fails := 0
 
@@ -97,6 +98,24 @@ func _initialize() -> void:
 	_check("swap hides result", not r2.visible)
 	_check("bg opaque after swap", absf((s.get_node("Bg") as ColorRect).modulate.a - 1.0) < 0.01)
 	_check("thanks not yet", not bool(s.get("finale")))
+	# 歌詞バー: 時刻付き歌詞の読み込みと追従 (アウトロ以降は非表示)。
+	var entries: Array = ThemeLyrics.load_timed()
+	_check("lyrics 41 entries", entries.size() == 41)
+	var l12: Dictionary = ThemeLyrics.line_at(entries, 12.0)
+	_check("lyric at 12s",
+		str(l12["cur"]) == "風が叫ぶ 開戦の鐘" and str(l12["next"]) == "[間奏]")
+	_check("lyric hidden before start", str(ThemeLyrics.line_at(entries, 0.0)["cur"]) == "")
+	_check("outro hides lyrics", str(ThemeLyrics.line_at(entries, 240.0)["cur"]) == "")
+	s.set("elapsed", 1.2 + 2.0 + 12.0)
+	for i: int in range(3):
+		await process_frame
+	_check("lyric bar follows song",
+		(s.get_node("LyricBar") as PanelContainer).visible
+		and (s.get_node("LyricBar/LyricVBox/LyricCur") as Label).text == "風が叫ぶ 開戦の鐘")
+	s.set("elapsed", 1.2 + 2.0 + 240.0)
+	for i: int in range(3):
+		await process_frame
+	_check("lyric bar hidden at outro", not (s.get_node("LyricBar") as PanelContainer).visible)
 	# スキップ1回で最終画面 (Thanks + ボタン)。
 	s.call("_skip")
 	for i: int in range(3):

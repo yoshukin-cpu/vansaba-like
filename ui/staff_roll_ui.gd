@@ -7,6 +7,7 @@ signal retry_pressed
 signal title_pressed
 
 const THEME_PATH := "res://audio/music/vansaba_theme_1.mp3"
+const LyricDB := preload("res://data/theme_lyrics.gd")
 ## フェード時間 / スクロール開始後の音楽開始遅延。
 const FADE_DUR := 1.2
 const MUSIC_DELAY := 2.0
@@ -163,6 +164,9 @@ var music_started: bool = false
 var _start_y: float = 0.0
 var _end_y: float = 0.0
 var _focus_idx: int = 0
+## 時刻付き歌詞と表示中行のキー (無駄な書き換え防止)。
+var _lyrics: Array = []
+var _lyric_key := ""
 ## リザルト側の実ノード (CLEAR!/戦績をそのままスクロールさせる)。
 var _res: CanvasLayer = null
 var _rc: Control = null
@@ -181,6 +185,9 @@ var _header_h: float = 0.0
 @onready var retry_btn: Button = $BottomBox/EndRow/RetryBtn
 @onready var title_btn: Button = $BottomBox/EndRow/TitleBtn
 @onready var player: AudioStreamPlayer = $ThemePlayer
+@onready var lyric_bar: PanelContainer = $LyricBar
+@onready var lyric_cur: Label = $LyricBar/LyricVBox/LyricCur
+@onready var lyric_next: Label = $LyricBar/LyricVBox/LyricNext
 
 
 func _ready() -> void:
@@ -210,6 +217,9 @@ func start_roll(res: CanvasLayer) -> void:
 	_header_h = (res.get_node("Center/VBox") as Control).size.y
 	# 内蔵ヘッダーは使わない (実ノードが先頭になる)。
 	header.hide()
+	_lyrics = LyricDB.load_timed()
+	_lyric_key = ""
+	lyric_bar.hide()
 	# 段落間を広めに空けて結合する (空行で時間も稼ぐ)。
 	roll.text = "\n".repeat(GAP_LINES).join(PackedStringArray(PAGES))
 	var vh: float = get_viewport().get_visible_rect().size.y
@@ -265,6 +275,8 @@ func _process(delta: float) -> void:
 			# 実ヘッダーが抜け切ったらリザルトを隠し、背景を不透明化する。
 			if y <= 0.0:
 				_swap_to_black()
+		# 曲位置に合わせて歌詞バーを更新する (クレジットとは独立の下部固定表示)。
+		_update_lyrics(st - MUSIC_DELAY)
 	# 曲の終わりと同時に最終画面へ。
 	if not ended and elapsed >= FADE_DUR + MUSIC_DELAY + song_len:
 		_finish()
@@ -279,10 +291,32 @@ func _swap_to_black() -> void:
 	_rc = null
 
 
+## 曲位置 (曲頭からの秒) に合わせて歌詞バーを更新する。空行は非表示。
+func _update_lyrics(song_pos: float) -> void:
+	if song_pos < 0.0:
+		lyric_bar.hide()
+		_lyric_key = ""
+		return
+	var line: Dictionary = LyricDB.line_at(_lyrics, song_pos)
+	var cur: String = str(line["cur"])
+	if cur == "":
+		lyric_bar.hide()
+		_lyric_key = ""
+		return
+	var key: String = cur + "\n" + str(line["next"])
+	if key == _lyric_key:
+		return
+	_lyric_key = key
+	lyric_cur.text = cur
+	lyric_next.text = str(line["next"])
+	lyric_bar.show()
+
+
 ## スクロール終了。Thanks のみを中央に残す (曲はまだ鳴っている)。
 func _enter_finale() -> void:
 	finale = true
 	_swap_to_black()
+	lyric_bar.hide()
 	scroller.hide()
 	thanks_center.show()
 	skip_hint.hide()
@@ -297,6 +331,7 @@ func _finish() -> void:
 	if player.playing:
 		player.stop()
 	_swap_to_black()
+	lyric_bar.hide()
 	scroller.hide()
 	skip_hint.hide()
 	thanks_center.show()
