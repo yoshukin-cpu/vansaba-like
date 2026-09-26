@@ -179,15 +179,14 @@ var _header_h: float = 0.0
 @onready var spacer: Control = $Scroller/ScrollVBox/Spacer
 @onready var roll: RichTextLabel = $Scroller/ScrollVBox/MainRoll
 @onready var thanks_center: CenterContainer = $ThanksCenter
-@onready var skip_hint: Label = $BottomBox/SkipHint
+@onready var skip_hint: Label = $SkipHint
 @onready var end_hint: Label = $BottomBox/EndHint
 @onready var end_row: HBoxContainer = $BottomBox/EndRow
 @onready var retry_btn: Button = $BottomBox/EndRow/RetryBtn
 @onready var title_btn: Button = $BottomBox/EndRow/TitleBtn
 @onready var player: AudioStreamPlayer = $ThemePlayer
 @onready var lyric_bar: PanelContainer = $LyricBar
-@onready var lyric_cur: Label = $LyricBar/LyricVBox/LyricCur
-@onready var lyric_next: Label = $LyricBar/LyricVBox/LyricNext
+@onready var lyric_cur: Label = $LyricBar/LyricCur
 
 
 func _ready() -> void:
@@ -303,12 +302,11 @@ func _update_lyrics(song_pos: float) -> void:
 		lyric_bar.hide()
 		_lyric_key = ""
 		return
-	var key: String = cur + "\n" + str(line["next"])
+	var key: String = cur
 	if key == _lyric_key:
 		return
 	_lyric_key = key
 	lyric_cur.text = cur
-	lyric_next.text = str(line["next"])
 	lyric_bar.show()
 
 

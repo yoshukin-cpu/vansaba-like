@@ -111,7 +111,7 @@ func _initialize() -> void:
 		await process_frame
 	_check("lyric bar follows song",
 		(s.get_node("LyricBar") as PanelContainer).visible
-		and (s.get_node("LyricBar/LyricVBox/LyricCur") as Label).text == "風が叫ぶ 開戦の鐘")
+		and (s.get_node("LyricBar/LyricCur") as Label).text == "風が叫ぶ 開戦の鐘")
 	s.set("elapsed", 1.2 + 2.0 + 240.0)
 	for i: int in range(3):
 		await process_frame
