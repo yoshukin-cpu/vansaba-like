@@ -12,20 +12,25 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Scroller" type="Control" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 
-[node name="Page" type="RichTextLabel" parent="Center"]
-custom_minimum_size = Vector2(1000, 0)
+[node name="Roll" type="RichTextLabel" parent="Scroller"]
+anchor_right = 1.0
+offset_left = 176.0
+offset_right = -176.0
+mouse_filter = 2
 bbcode_enabled = true
 text = "loading..."
+fit_content = true
 scroll_active = false
 autowrap_mode = 2
-fit_content = true
 
 [node name="ThanksCenter" type="CenterContainer" parent="."]
 visible = false
@@ -44,10 +49,12 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -190.0
+mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
 
 [node name="SkipHint" type="Label" parent="BottomBox"]
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 20
 text = "クリック / Enter / Aボタン: スキップ"
@@ -55,6 +62,7 @@ horizontal_alignment = 1
 
 [node name="EndHint" type="Label" parent="BottomBox"]
 visible = false
+mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
 theme_override_font_sizes/font_size = 24
 text = "おつかれさまでした! つづきは二周目で。"

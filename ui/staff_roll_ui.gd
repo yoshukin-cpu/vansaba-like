@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## クリア後のスタッフロール。テーマソング (約4分10秒) の長さに合わせて
-## 1ページずつ切り替え、曲の終わりと同時に Thanks を中央に残す。
+## 全文を下から上へスクロールし、曲の終わりと同時に Thanks を中央に残す。
 ## ツリーが paused でも動くよう process_mode は ALWAYS (tscn 側で設定)。
 
 signal retry_pressed
@@ -149,16 +149,17 @@ const PAGES: Array[String] = [
 ]
 
 var song_len: float = FALLBACK_LEN
-var page_dur: float = 12.0
+var scroll_dur: float = 240.0
 var elapsed: float = 0.0
 var rolling: bool = false
 var finale: bool = false
 var ended: bool = false
-var _last_idx: int = -1
+var _start_y: float = 0.0
+var _end_y: float = 0.0
 var _focus_idx: int = 0
 
-@onready var center: CenterContainer = $Center
-@onready var page: RichTextLabel = $Center/Page
+@onready var scroller: Control = $Scroller
+@onready var roll: RichTextLabel = $Scroller/Roll
 @onready var thanks_center: CenterContainer = $ThanksCenter
 @onready var skip_hint: Label = $BottomBox/SkipHint
 @onready var end_hint: Label = $BottomBox/EndHint
@@ -186,19 +187,29 @@ func start_roll() -> void:
 		var l: float = player.stream.get_length()
 		if l > 30.0:
 			song_len = l
-	page_dur = (song_len - THANKS_LEAD) / float(PAGES.size())
+	scroll_dur = song_len - THANKS_LEAD
+	# 全文を結合し、下から上へスクロールする。速度は曲長から逆算する。
+	roll.text = "\n\n".join(PAGES)
 	elapsed = 0.0
 	rolling = true
 	finale = false
 	ended = false
-	_last_idx = -1
-	center.show()
-	page.text = ""
+	scroller.show()
 	thanks_center.hide()
 	end_row.hide()
 	end_hint.hide()
 	skip_hint.show()
 	visible = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not rolling:
+		return
+	var vh: float = get_viewport().get_visible_rect().size.y
+	var ch: float = roll.get_content_height()
+	_start_y = vh + 32.0
+	_end_y = -(ch + 64.0)
+	scroller.position.y = _start_y
+	elapsed = 0.0
 	player.play()
 
 
@@ -207,13 +218,11 @@ func _process(delta: float) -> void:
 		return
 	elapsed += delta
 	if not finale:
-		if elapsed >= song_len - THANKS_LEAD:
+		if elapsed >= scroll_dur:
 			_enter_finale()
 		else:
-			var idx: int = mini(int(elapsed / page_dur), PAGES.size() - 1)
-			if idx != _last_idx:
-				_last_idx = idx
-				page.text = PAGES[idx]
+			var t: float = clampf(elapsed / scroll_dur, 0.0, 1.0)
+			scroller.position.y = lerpf(_start_y, _end_y, t)
 	if not ended and elapsed >= song_len:
 		_finish()
 
@@ -221,12 +230,12 @@ func _process(delta: float) -> void:
 ## スクロール終了。Thanks のみを中央に残す (曲はまだ鳴っている)。
 func _enter_finale() -> void:
 	finale = true
-	center.hide()
+	scroller.hide()
 	thanks_center.show()
 	skip_hint.hide()
 
 
-## 曲の終わりと同時。ボタンと締めの文言を出す。
+## 曲の終わりと同時。Thanks + ボタンの最終画面を出す。
 func _finish() -> void:
 	if ended:
 		return
@@ -234,22 +243,20 @@ func _finish() -> void:
 	rolling = false
 	if player.playing:
 		player.stop()
+	scroller.hide()
+	skip_hint.hide()
+	thanks_center.show()
 	end_hint.show()
 	end_row.show()
 	_focus_idx = 0
 	retry_btn.grab_focus()
 
 
-## スキップ: スクロール中は Thanks 直前へ、Thanks 中は即終了。
+## スキップ: 即座に最終画面 (Thanks + ボタン) を出す。
 func _skip() -> void:
 	if ended or not rolling:
 		return
-	if finale:
-		elapsed = song_len
-		_finish()
-	else:
-		elapsed = song_len - THANKS_LEAD
-		_enter_finale()
+	_finish()
 
 
 func _unhandled_input(event: InputEvent) -> void:

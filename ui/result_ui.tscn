@@ -11,37 +11,44 @@ script = ExtResource("1")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 color = Color(0, 0, 0, 0.75)
 
 [node name="Center" type="CenterContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="VBox" type="VBoxContainer" parent="Center"]
+mouse_filter = 2
 theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Title" type="Label" parent="Center/VBox"]
+mouse_filter = 2
 theme_override_font_sizes/font_size = 64
 text = "GAME OVER"
 horizontal_alignment = 1
 
 [node name="Stats" type="Label" parent="Center/VBox"]
+mouse_filter = 2
 theme_override_font_sizes/font_size = 26
 text = "stats"
+horizontal_alignment = 1
+
+[node name="PressHint" type="Label" parent="Center/VBox"]
+visible = false
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
+theme_override_font_sizes/font_size = 24
+text = "ボタンを押すとスタッフロールへ (主題歌つき)"
 horizontal_alignment = 1
 
 [node name="RetryBtn" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(280, 64)
 theme_override_font_sizes/font_size = 26
 text = "もう一度"
-size_flags_horizontal = 4
-
-[node name="StaffBtn" type="Button" parent="Center/VBox"]
-custom_minimum_size = Vector2(280, 64)
-theme_override_font_sizes/font_size = 26
-text = "スタッフロールへ"
 size_flags_horizontal = 4
 
 [node name="TitleBtn" type="Button" parent="Center/VBox"]
