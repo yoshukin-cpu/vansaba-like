@@ -29,7 +29,7 @@ func _ready() -> void:
 	# D45: 解放条件の有無でレイアウトが動かないよう、行の高さを固定して常時表示する。
 	diff_lock.custom_minimum_size = Vector2(0, 22)
 	diff_lock.show()
-	_refresh_difficulty()
+	refresh_difficulty()
 	start_btn.grab_focus()
 
 ## D46: スティックがニュートラルに戻ったら再び切替可能にする。
@@ -40,7 +40,8 @@ func _process(_delta: float) -> void:
 		_diff_axis_armed = true
 
 ## セーブの解放状況から表示リストを作り、前回選択 (last) にカーソルを合わせる。
-func _refresh_difficulty() -> void:
+## 起動時 (_ready) と、main がセーブ/CLI を適用した後に呼ばれる (§31.6)。
+func refresh_difficulty() -> void:
 	_entries = DiffDB.selector_entries(SaveData.cleared, SaveData.insane_cleared)
 	var start_key: String = SaveData.last
 	if not _is_playable(start_key):

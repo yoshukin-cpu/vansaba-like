@@ -945,6 +945,7 @@ res://
   - `{"version": 1, "cleared": ["normal", "hard"], "insane_cleared": 0, "last": "hard"}`
   - `cleared` は ノーマル〜インセイン のクリア済みキー (インセインN は含めない)。`insane_cleared` は インセインN の最大クリア N。
   - 書き込み: クリア時 (リザルトへ入る時) と、難易度を決めて開始した時 (`last`)。読み込み: 起動時。壊れていれば初期状態 (ノーマルのみ) に戻す。
+  - 読み込みの順序 (v1.7修正): セーブは `main._enter_tree` で読む。子 (TitleUI) の `_ready` は親の `_ready` より先に走るため、`_ready` で読むとタイトルが未ロードの解放状況を表示してしまう (起動直後に「1度クリアすると…」・解放済みでもハードがロック)。CLI (`--unlock-all`) の適用後に `title_ui.refresh_difficulty()` で再計算する。
 - テスト用フラグ: `--difficulty <key|insaneN>` (例: `--difficulty hard`・`--difficulty insane3`) と `--unlock-all`。通常起動の挙動は変えない。
 - §16 対象外の扱いを更新: セーブは「難易度の解放状況と前回選択のみ」に限定して追加。メタ成長は対象外のまま。
 

@@ -48,7 +48,10 @@ var _cli_difficulty: String = ""
 
 ## ラン開始時に地形シードを決める。`_enter_tree` は子ノード (World) の `_ready` より
 ## 先に呼ばれるため、World が地形を生成する前にシードが確定する (§27.1)。
+## セーブもここで読む: 子 (TitleUI) の `_ready` は親の `_ready` より先に走るため、
+## `_ready` ではタイトルが未ロードの解放状況を表示してしまう (§31.6)。
 func _enter_tree() -> void:
+	SaveData.load_save()
 	var map_seed: int = CG.begin_run(_pick_map_seed())
 	print("[world] map seed = %d" % map_seed)
 
@@ -68,8 +71,9 @@ func _ready() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	if "--autostart" in args:
 		quick_start = true
-	SaveData.load_save()
 	_parse_cli_args(args)
+	# CLI (--unlock-all 等) の適用後にタイトルの解放表示を再計算する (§31.6)。
+	title_ui.call("refresh_difficulty")
 	# CLI の難易度は常に反映する (テスト・計測用)。未指定なら前回の難易度を維持する。
 	if _cli_difficulty != "":
 		_set_difficulty(_cli_difficulty, false)
