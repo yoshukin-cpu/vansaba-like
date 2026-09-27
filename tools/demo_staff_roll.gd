@@ -6,9 +6,12 @@ extends SceneTree
 ## 実行: Godot --path <proj> --script res://tools/demo_staff_roll.gd [-- --mute]
 
 const MainScene: PackedScene = preload("res://main.tscn")
+const SaveData := preload("res://systems/save_data.gd")
 
 
 func _initialize() -> void:
+	# デモのクリア記録が実セーブを汚さないよう、専用パスを使う (v1.6)。
+	SaveData.path = "user://demo_save.json"
 	if "--mute" in OS.get_cmdline_user_args():
 		AudioServer.set_bus_mute(0, true)
 	var main: Node = MainScene.instantiate()

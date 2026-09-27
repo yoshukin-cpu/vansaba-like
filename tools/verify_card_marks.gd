@@ -26,7 +26,7 @@ func _initialize() -> void:
 func _t_marks() -> void:
 	print("\n=== 1) 24pxマーク生成 ===")
 	var ids: Array = CardMarks.all_ids()
-	_check("マークは20種+HEALの21種", ids.size() == 21)
+	_check("マークは20種+フォールバック3種の23種", ids.size() == 23)
 	var sigs := {}
 	for card_id: String in ids:
 		var tex: Texture2D = CardMarks.texture_for(card_id)

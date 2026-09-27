@@ -5,6 +5,9 @@ extends SceneTree
 ## 全ケースPASSで終了コード0、失敗があれば1。
 
 const MainScene: PackedScene = preload("res://main.tscn")
+const SaveData := preload("res://systems/save_data.gd")
+
+const TEST_SAVE := "user://test_title_input_save.json"
 
 var fails := 0
 var starts := 0
@@ -20,6 +23,11 @@ func _check(label: String, cond: bool) -> void:
 
 
 func _initialize() -> void:
+	# 開始時の last 保存が実セーブを汚さないよう、一時パスを使う (v1.6)。
+	SaveData.path = TEST_SAVE
+	if FileAccess.file_exists(TEST_SAVE):
+		DirAccess.remove_absolute(TEST_SAVE)
+	SaveData.reset()
 	await _case("1) はじめる + Enter", "start", "key", true)
 	await _case("2) 終了 (直接フォーカス) + Enter", "quit", "key", false)
 	await _case("3) 終了 (直接フォーカス) + Space", "quit", "space", false)
@@ -28,6 +36,10 @@ func _initialize() -> void:
 	await _case("6) ui_down で 終了 に移動 + Enter", "nav_key", "key", false)
 	await _case("7) パッド十字↓で 終了 に移動 + パッドA", "nav_pad", "pad", false)
 	await _case("8) はじめる (直接フォーカス) + Space", "start", "space", true)
+	SaveData.path = SaveData.DEFAULT_PATH
+	SaveData.reset()
+	if FileAccess.file_exists(TEST_SAVE):
+		DirAccess.remove_absolute(TEST_SAVE)
 	print("RESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))
 	quit(0 if fails == 0 else 1)
 

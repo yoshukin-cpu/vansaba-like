@@ -1,6 +1,7 @@
 extends Node
 
 const WavesDB := preload("res://data/waves_db.gd")
+const DiffDB := preload("res://data/difficulty_db.gd")
 
 @export var spawn_radius: float = 780.0
 
@@ -10,6 +11,14 @@ var next_elite_at: float = 120.0
 var running: bool = true
 var boss1_spawned: bool = false
 var boss2_spawned: bool = false
+
+func _ready() -> void:
+	# エリートの出現頻度は難易度で変わる (SPEC §31.4)。
+	next_elite_at = DiffDB.cur_elite_interval()
+
+## その時間帯の同時上限 (難易度の出現量を掛けて 400 でクランプ)。
+func cap_for_band(b: Dictionary) -> int:
+	return DiffDB.cur_cap(int(b["cap"]))
 
 func _process(delta: float) -> void:
 	if not running:
@@ -27,12 +36,12 @@ func _process(delta: float) -> void:
 	timer -= delta
 	if timer > 0.0:
 		return
-	timer = float(b["interval"])
-	if get_tree().get_nodes_in_group("enemies").size() >= int(b["cap"]):
+	timer = maxf(DiffDB.MIN_INTERVAL, float(b["interval"]) * DiffDB.cur_interval_mult())
+	if get_tree().get_nodes_in_group("enemies").size() >= cap_for_band(b):
 		return
 	if elapsed >= next_elite_at:
 		while elapsed >= next_elite_at:
-			next_elite_at += 120.0
+			next_elite_at += DiffDB.cur_elite_interval()
 		_spawn_elite()
 		return
 	var batch: Array = b["batch"] as Array

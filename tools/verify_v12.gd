@@ -6,11 +6,17 @@ extends SceneTree
 const SlimeScene: PackedScene = preload("res://enemies/slime.tscn")
 const ArcherScene: PackedScene = preload("res://enemies/archer.tscn")
 const B02Scene: PackedScene = preload("res://enemies/boss_void_emperor.tscn")
+const SaveData := preload("res://systems/save_data.gd")
 
 var failures := 0
 
 
 func _init() -> void:
+	# クリア記録が実セーブを汚さないよう、一時パスを使う (v1.6)。
+	SaveData.path = "user://test_v12_save.json"
+	if FileAccess.file_exists(SaveData.path):
+		DirAccess.remove_absolute(SaveData.path)
+	SaveData.reset()
 	var main := (load("res://main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	current_scene = main
@@ -40,6 +46,10 @@ func _init() -> void:
 	await _t_archer(player)
 	await _t_clear(player, main)
 
+	SaveData.path = SaveData.DEFAULT_PATH
+	SaveData.reset()
+	if FileAccess.file_exists("user://test_v12_save.json"):
+		DirAccess.remove_absolute("user://test_v12_save.json")
 	print("RESULT: ", "ALL PASS" if failures == 0 else "%d FAILURE(S)" % failures)
 	quit(1 if failures > 0 else 0)
 

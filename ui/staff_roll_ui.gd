@@ -3,7 +3,6 @@ extends CanvasLayer
 ## 全文を下から上へスクロールし、曲の終わりと同時に Thanks を中央に残す。
 ## ツリーが paused でも動くよう process_mode は ALWAYS (tscn 側で設定)。
 
-signal retry_pressed
 signal title_pressed
 
 const THEME_PATH := "res://audio/music/vansaba_theme_1.mp3"
@@ -163,7 +162,6 @@ var ended: bool = false
 var music_started: bool = false
 var _start_y: float = 0.0
 var _end_y: float = 0.0
-var _focus_idx: int = 0
 ## 時刻付き歌詞と表示中行のキー (無駄な書き換え防止)。
 var _lyrics: Array = []
 var _lyric_key := ""
@@ -183,7 +181,6 @@ var _header_h: float = 0.0
 @onready var skip_hint: Label = $SkipHint
 @onready var end_hint: Label = $BottomBox/EndHint
 @onready var end_row: HBoxContainer = $BottomBox/EndRow
-@onready var retry_btn: Button = $BottomBox/EndRow/RetryBtn
 @onready var title_btn: Button = $BottomBox/EndRow/TitleBtn
 @onready var player: AudioStreamPlayer = $ThemePlayer
 @onready var lyric_bar: PanelContainer = $LyricBar
@@ -192,14 +189,7 @@ var _header_h: float = 0.0
 
 func _ready() -> void:
 	visible = false
-	retry_btn.pressed.connect(func() -> void: retry_pressed.emit())
 	title_btn.pressed.connect(func() -> void: title_pressed.emit())
-	retry_btn.focus_entered.connect(_on_focus.bind(0))
-	title_btn.focus_entered.connect(_on_focus.bind(1))
-
-
-func _on_focus(i: int) -> void:
-	_focus_idx = i
 
 
 ## res: リザルト UI。その CLEAR!/戦績ノードをそのままスクロールさせる
@@ -214,7 +204,12 @@ func start_roll(res: CanvasLayer) -> void:
 	scroll_time = song_len - THANKS_LEAD
 	_res = res
 	_rc = res.get_node("Center") as Control
-	_header_h = (res.get_node("Center/VBox") as Control).size.y
+	# 解放通知行は流さない (一時的な通知のため。D41)。
+	if res.has_method("hide_unlock_notice"):
+		res.call("hide_unlock_notice")
+	_layout_art()
+	if not get_viewport().size_changed.is_connected(_layout_art):
+		get_viewport().size_changed.connect(_layout_art)
 	# 内蔵ヘッダーは使わない (実ノードが先頭になる)。
 	header.hide()
 	_lyrics = LyricDB.load_timed()
@@ -243,12 +238,17 @@ func start_roll(res: CanvasLayer) -> void:
 	await get_tree().process_frame
 	if not rolling:
 		return
+	# レイアウト確定後にもう一度測る (解放通知の非表示で高さが変わるため。D41)。
+	if _res != null and is_instance_valid(_res):
+		_header_h = (_res.get_node("Center/VBox") as Control).size.y
 	var total_h: float = vbox.get_combined_minimum_size().y
 	# 本文先頭が実ヘッダーの下端から1画面ぶん下に来るよう配置し、末端が消えるまで流す。
 	_start_y = snappedf((vh + _header_h) * 0.5, 1.0)
 	_end_y = snappedf(-(total_h + 64.0), 1.0)
 	scroller.position.y = _start_y
-	_rc.position.y = 0.0
+	# 2フレーム待ちの間にスキップ/早送りでロールが終わることがある (テストの早送り)。
+	if _rc != null:
+		_rc.position.y = 0.0
 	elapsed = 0.0
 
 
@@ -293,6 +293,24 @@ func _swap_to_black() -> void:
 		_res.hide()
 		_res = null
 	_rc = null
+
+
+## 背景は「画面トップ = 画像トップ」で置く (D43)。カバーと同じ倍率で拡大し、
+## 上端を y=0 に合わせ、横は中央にする (画像上部の月を見せるため)。
+## タイトル画面の背景 (title_ui) はこの方式に変更しない。
+func _layout_art() -> void:
+	if art == null or art.texture == null:
+		return
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var ts: Vector2 = art.texture.get_size()
+	if ts.x <= 0.0 or ts.y <= 0.0:
+		return
+	var s: float = maxf(vp.x / ts.x, vp.y / ts.y)
+	var sz: Vector2 = ts * s
+	art.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	art.stretch_mode = TextureRect.STRETCH_SCALE
+	art.size = sz
+	art.position = Vector2((vp.x - sz.x) * 0.5, 0.0)
 
 
 ## 曲位置 (曲頭からの秒) に合わせて歌詞バーを更新する。空行は非表示。
@@ -341,8 +359,7 @@ func _finish() -> void:
 	thanks_center.show()
 	end_hint.show()
 	end_row.show()
-	_focus_idx = 0
-	retry_btn.grab_focus()
+	title_btn.grab_focus()
 
 
 ## スキップ: 即座に最終画面 (Thanks + ボタン) を出す。
@@ -361,10 +378,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event is InputEventJoypadButton and event.pressed:
 			if (event as InputEventJoypadButton).button_index == JOY_BUTTON_A:
 				get_viewport().set_input_as_handled()
-				if _focus_idx == 0:
-					retry_pressed.emit()
-				else:
-					title_pressed.emit()
+				title_pressed.emit()
 		return
 	if not rolling:
 		return

@@ -12,6 +12,7 @@ var _leaving: bool = false
 
 @onready var title_label: Label = $Center/VBox/Title
 @onready var stats_label: Label = $Center/VBox/Stats
+@onready var unlock_label: Label = $Center/VBox/UnlockLabel
 @onready var retry_btn: Button = $Center/VBox/RetryBtn
 @onready var title_btn: Button = $Center/VBox/TitleBtn
 @onready var dim: ColorRect = $Dim
@@ -69,10 +70,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				title_pressed.emit()
 
-func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0) -> void:
+func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0, difficulty: String = "", unlock_text: String = "") -> void:
 	is_clear = clear
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
-	stats_label.text = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
+	var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
+	if difficulty != "":
+		stats = "難易度: %s\n%s" % [difficulty, stats]
+	stats_label.text = stats
+	# クリアで新規解放があれば「解放: ○○!」を1行足す (D41)。
+	unlock_label.text = unlock_text
+	unlock_label.visible = unlock_text != ""
 	retry_btn.visible = not clear
 	title_btn.visible = not clear
 	_leaving = false
@@ -83,3 +90,7 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	focus_idx = 0
 	if not clear:
 		retry_btn.grab_focus()
+
+## スタッフロール開始時に解放通知を消す (一時的な通知のため。D41・§31.8)。
+func hide_unlock_notice() -> void:
+	unlock_label.hide()

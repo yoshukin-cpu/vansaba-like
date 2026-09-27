@@ -6,7 +6,6 @@ extends RefCounted
 const CardsDB := preload("res://data/cards_db.gd")
 
 const MARK_SIZE := 24
-const HEAL_ID := "HEAL"
 
 const INK := Color(0.07, 0.08, 0.12)
 const PAPER := Color(0.93, 0.94, 0.97)
@@ -16,19 +15,28 @@ const LEAF_FILL := Color(0.13, 0.20, 0.15)
 const LEAF_EDGE := Color(0.58, 0.68, 0.55)
 const AID_FILL := Color(0.24, 0.12, 0.13)
 const AID_EDGE := Color(0.86, 0.55, 0.56)
+## フォールバック3種 (D34) の台座色: 修練の書=濃緑 / ノヴァ=氷青。
+const XP_FILL := Color(0.10, 0.24, 0.14)
+const XP_EDGE := Color(0.45, 0.95, 0.55)
+const NOVA_FILL := Color(0.10, 0.13, 0.24)
+const NOVA_EDGE := Color(0.72, 0.88, 1.0)
+
+## フォールバック3種 (D34) の表示名と台座種別。
+const FALLBACK_LABELS := {"HEAL": "応急手当", "CXP": "修練の書", "CNOVA": "ノヴァ"}
+const FALLBACK_KINDS := {"HEAL": "heal", "CXP": "xp", "CNOVA": "nova"}
 
 static var _cache: Dictionary = {}
 
 
 static func all_ids() -> Array:
 	var ids: Array = CardsDB.DEFS.keys()
-	ids.append(HEAL_ID)
+	ids.append_array(FALLBACK_LABELS.keys())
 	return ids
 
 
 static func label_for(card_id: String) -> String:
-	if card_id == HEAL_ID:
-		return "応急手当"
+	if FALLBACK_LABELS.has(card_id):
+		return str(FALLBACK_LABELS[card_id])
 	var d: Dictionary = CardsDB.get_def(card_id)
 	if d.is_empty():
 		return card_id
@@ -36,8 +44,8 @@ static func label_for(card_id: String) -> String:
 
 
 static func kind_for(card_id: String) -> String:
-	if card_id == HEAL_ID:
-		return "heal"
+	if FALLBACK_KINDS.has(card_id):
+		return str(FALLBACK_KINDS[card_id])
 	var d: Dictionary = CardsDB.get_def(card_id)
 	return str(d.get("kind", "stat"))
 
@@ -89,8 +97,12 @@ static func texture_for(card_id: String) -> Texture2D:
 			_draw_magnet(img)
 		"C20":
 			_draw_study(img)
-		HEAL_ID:
+		"HEAL":
 			_draw_heal(img)
+		"CXP":
+			_draw_xp_book(img)
+		"CNOVA":
+			_draw_nova(img)
 		_:
 			_draw_unknown(img)
 	var tex := ImageTexture.create_from_image(img)
@@ -124,6 +136,12 @@ static func _plate(img: Image, kind: String) -> void:
 	elif kind == "heal":
 		fill = AID_FILL
 		edge = AID_EDGE
+	elif kind == "xp":
+		fill = XP_FILL
+		edge = XP_EDGE
+	elif kind == "nova":
+		fill = NOVA_FILL
+		edge = NOVA_EDGE
 	_fill_rect(img, 3, 1, 18, 22, fill)
 	_fill_rect(img, 1, 3, 22, 18, fill)
 	_hline(img, 3, 20, 1, edge)
@@ -337,6 +355,41 @@ static func _draw_heal(img: Image) -> void:
 	_fill_rect(img, 11, 7, 2, 10, Color(0.35, 0.85, 0.40))
 	_fill_rect(img, 7, 11, 10, 2, Color(0.35, 0.85, 0.40))
 	_px(img, 12, 12, PAPER)
+
+
+## 修練の書 (CXP): 開いた本 + 浮かぶ緑の結晶。
+static func _draw_xp_book(img: Image) -> void:
+	var paper := Color(0.94, 0.95, 0.98)
+	var gem := Color(0.40, 0.95, 0.50)
+	# 浮かぶ結晶
+	_polyline(img, [Vector2i(12, 3), Vector2i(16, 7), Vector2i(12, 11), Vector2i(8, 7), Vector2i(12, 3)], INK)
+	_disc(img, 12, 7, 2, gem)
+	_px(img, 11, 6, PAPER)
+	# 開いた本 (左右のページと背)
+	_fill_rect(img, 4, 13, 16, 6, INK)
+	_fill_rect(img, 5, 14, 6, 4, paper)
+	_fill_rect(img, 13, 14, 6, 4, paper)
+	_vline(img, 12, 13, 18, INK)
+
+
+## ノヴァ (CNOVA): 白い十字の光。
+static func _draw_nova(img: Image) -> void:
+	var light := Color(1, 1, 1)
+	var glow := Color(0.72, 0.90, 1.0)
+	# 縁取りつきの十字
+	_fill_rect(img, 4, 10, 17, 5, INK)
+	_fill_rect(img, 10, 4, 5, 17, INK)
+	_fill_rect(img, 5, 11, 15, 3, light)
+	_fill_rect(img, 11, 5, 3, 15, light)
+	# 斜めの短い光
+	_line(img, 7, 7, 9, 9, glow)
+	_line(img, 16, 7, 14, 9, glow)
+	_line(img, 7, 16, 9, 14, glow)
+	_line(img, 16, 16, 14, 14, glow)
+	# 中心
+	_disc(img, 12, 12, 3, INK)
+	_disc(img, 12, 12, 2, light)
+	_px(img, 12, 12, glow)
 
 
 static func _draw_unknown(img: Image) -> void:

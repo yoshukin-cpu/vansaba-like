@@ -2,6 +2,8 @@ extends Node2D
 
 const CG := preload("res://world/chunk_gen.gd")
 const CardMarks := preload("res://data/card_marks.gd")
+const DiffDB := preload("res://data/difficulty_db.gd")
+const SaveData := preload("res://systems/save_data.gd")
 
 const MARK_CELL := 24.0
 const MARK_GAP := 6.0
@@ -30,6 +32,7 @@ static var quick_start: bool = false
 @onready var audio: Node = $AudioManager
 @onready var chest_director: Node = $ChestDirector
 @onready var score_label: Label = $HUD/ScoreLabel
+@onready var diff_label: Label = $HUD/DiffLabel
 @onready var acquired_marks: GridContainer = $HUD/AcquiredMarks
 
 var kills: int = 0
@@ -40,6 +43,8 @@ var result_shown: bool = false
 ## B02撃破後のクリアカウントダウン (D25)。-1.0で非動作。
 var clear_countdown: float = -1.0
 var _last_count: int = -1
+## CLI の --difficulty (テスト・計測用)。
+var _cli_difficulty: String = ""
 
 ## ラン開始時に地形シードを決める。`_enter_tree` は子ノード (World) の `_ready` より
 ## 先に呼ばれるため、World が地形を生成する前にシードが確定する (§27.1)。
@@ -63,6 +68,11 @@ func _ready() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	if "--autostart" in args:
 		quick_start = true
+	SaveData.load_save()
+	_parse_cli_args(args)
+	# CLI の難易度は常に反映する (テスト・計測用)。未指定なら前回の難易度を維持する。
+	if _cli_difficulty != "":
+		_set_difficulty(_cli_difficulty, false)
 	card_manager.call("setup", player)
 	player.connect("level_up", _on_player_level_up)
 	levelup_ui.connect("choice_selected", _on_card_chosen)
@@ -73,21 +83,40 @@ func _ready() -> void:
 	result_ui.connect("retry_pressed", _on_retry)
 	result_ui.connect("title_pressed", _on_quit_to_title)
 	result_ui.connect("staff_pressed", _on_staff_roll)
-	staff_roll.connect("retry_pressed", _on_retry)
 	staff_roll.connect("title_pressed", _on_quit_to_title)
 	_setup_acquired_marks()
 	director.set("running", false)
 	chest_director.set("running", false)
 	if quick_start:
+		# --autostart / リトライ: そのまま開始 (リトライは同じ難易度で再開する。D37)。
 		start_game()
 	else:
 		get_tree().paused = true
+
+## CLI: `--difficulty <key|insaneN>` (例: --difficulty hard・--difficulty insane3) と
+## `--unlock-all` (全難易度を解放表示。保存はしない)。テスト・計測用 (§31.6)。
+func _parse_cli_args(args: PackedStringArray) -> void:
+	for i: int in range(args.size() - 1):
+		if args[i] == "--difficulty" and DiffDB.is_valid(args[i + 1]):
+			_cli_difficulty = args[i + 1]
+	if "--unlock-all" in args:
+		SaveData.unlock_all()
+
+## ランの難易度を確定する。タイトル経由では前回選択 (last) として保存する。
+func _set_difficulty(key: String, save_last: bool) -> void:
+	if not DiffDB.is_valid(key):
+		key = "normal"
+	DiffDB.current_key = key
+	if save_last:
+		SaveData.set_last(key)
 
 func start_game() -> void:
 	title_ui.hide()
 	get_tree().paused = false
 	director.set("running", true)
 	chest_director.set("running", true)
+	if diff_label != null:
+		diff_label.text = DiffDB.display_name(DiffDB.current_key)
 
 func _process(_delta: float) -> void:
 	_tick_clear(_delta)
@@ -242,7 +271,10 @@ func show_result(clear: bool) -> void:
 	if warning_label != null:
 		warning_label.hide()
 	audio.call("play", "clear" if clear else "death")
-	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score)
+	var unlock_text := ""
+	if clear:
+		unlock_text = SaveData.record_clear(DiffDB.current_key)
+	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score, DiffDB.display_name(DiffDB.current_key), unlock_text)
 
 func _on_player_level_up() -> void:
 	if result_shown or levelup_ui.visible:
@@ -268,6 +300,11 @@ func _on_card_chosen(card_id: String) -> void:
 
 func _on_start() -> void:
 	audio.call("play", "ui")
+	var key: String = str(title_ui.call("selected_key"))
+	# ロック中の難易度が選ばれていたら開始しない (ボタン経由では起きないが保険)。
+	if not DiffDB.is_unlocked(key, SaveData.cleared, SaveData.insane_cleared):
+		key = "normal"
+	_set_difficulty(key, true)
 	start_game()
 
 ## タイトル「終了」→ デスクトップに戻る (D29)。

@@ -1,31 +1,80 @@
 extends Area2D
 
-@export var value: int = 1
-
 const COLLECT_RADIUS := 22.0
 const ATTRACT_INITIAL_SPEED := 180.0
 const ATTRACT_MAX_SPEED := 600.0
 const ATTRACT_ACCEL := 1500.0
 const FALLBACK_MAGNET_RADIUS := 110.0
 
+## 経験値量による3段階色 (D35): 1=緑 / 5=赤 / 20=白。
+const TIER_SMALL := Color(0.30, 1.00, 0.40)
+const TIER_MID := Color(1.00, 0.32, 0.26)
+const TIER_BIG := Color(1.00, 1.00, 1.00)
+## きらめき (金色の十字) の周期・点灯時間・本体の拡縮。
+const SPARKLE_PERIOD := 1.4
+const SPARKLE_TIME := 0.2
+const SPARKLE_POP := 0.12
+
+@export var value: int = 1:
+	set(v):
+		value = v
+		_refresh_visual()
+
 var attracted: bool = false
 var attract_speed: float = ATTRACT_INITIAL_SPEED
 var active: bool = true
 var home_pool: Node = null
+var sparkle_phase: float = 0.0
 
 @onready var shape_node: CollisionShape2D = $CollisionShape2D
+@onready var visual: Polygon2D = $Visual
+@onready var sparkle: Polygon2D = $Sparkle
 
 func _ready() -> void:
 	add_to_group("gems")
 	collision_layer = 16
 	collision_mask = 0
 	monitoring = false
+	sparkle.modulate.a = 0.0
+	_refresh_visual()
+
+## 値 → 色 (低→高で 緑→赤→白。D35)。
+static func color_for_value(v: int) -> Color:
+	if v >= 20:
+		return TIER_BIG
+	if v >= 5:
+		return TIER_MID
+	return TIER_SMALL
+
+## 色の反映。setter はシーン読込順で子ノードより先に走るためガードする。
+func _refresh_visual() -> void:
+	if not is_node_ready() or visual == null:
+		return
+	visual.color = color_for_value(value)
+
+## きらめき (D35): 約1.4秒ごとに0.2秒だけ金色の十字が光り、本体が一瞬膨らむ。
+func _process(delta: float) -> void:
+	if not active or sparkle == null:
+		return
+	sparkle_phase += delta
+	var t: float = fmod(sparkle_phase, SPARKLE_PERIOD)
+	if t < SPARKLE_TIME:
+		var a: float = sin(t / SPARKLE_TIME * PI)
+		sparkle.modulate.a = a
+		sparkle.scale = Vector2.ONE * (0.6 + 0.6 * a)
+		visual.scale = Vector2.ONE * (1.0 + SPARKLE_POP * a)
+	else:
+		sparkle.modulate.a = 0.0
+		sparkle.scale = Vector2.ONE
+		visual.scale = Vector2.ONE
 
 func activate() -> void:
 	active = true
 	visible = true
 	attracted = false
 	attract_speed = ATTRACT_INITIAL_SPEED
+	sparkle_phase = randf() * SPARKLE_PERIOD
+	_refresh_visual()
 	set_deferred("monitorable", true)
 	shape_node.set_deferred("disabled", false)
 
@@ -34,6 +83,11 @@ func deactivate() -> void:
 	visible = false
 	attracted = false
 	attract_speed = ATTRACT_INITIAL_SPEED
+	if sparkle != null:
+		sparkle.modulate.a = 0.0
+		sparkle.scale = Vector2.ONE
+	if visual != null:
+		visual.scale = Vector2.ONE
 	set_deferred("monitorable", false)
 	# プール待機中はコリジョンを無効化する。原点などに重なったまま残すと
 	# マグネット側の重複ペアが古い状態で保持され、再利用時に吸い寄せが

@@ -1,5 +1,7 @@
 extends Area2D
 
+const DiffDB := preload("res://data/difficulty_db.gd")
+
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = 220.0
 var damage: float = 8.0
@@ -30,8 +32,10 @@ func deactivate() -> void:
 func setup(dir: Vector2, spd: float, dmg: float) -> void:
 	if dir.length() > 0.001:
 		direction = dir.normalized()
-	speed = spd
-	damage = dmg
+	# 難易度の弾速・ダメージはここで一括適用する (SPEC §31.5)。
+	# 生成箇所が敵・ボス・弾幕と多いため、この1点に集約する。
+	speed = spd * DiffDB.cur_bullet_speed_mult()
+	damage = dmg * DiffDB.cur_damage_mult()
 	rotation = direction.angle()
 
 ## スピンソードで消去されるときに呼ばれる (D18)。プールに返却する。

@@ -3,6 +3,17 @@ extends Node
 const CardsDB := preload("res://data/cards_db.gd")
 const CardMarks := preload("res://data/card_marks.gd")
 
+## プール枯渇時のフォールバック3種 (D34)。カード20種 (C01〜C20) には数えない。
+const FALLBACK_IDS := ["HEAL", "CXP", "CNOVA"]
+const FALLBACK_DEFS := {
+	"HEAL": {"name": "応急手当", "detail": "HPを30回復する\n(満タンなら小XP宝石に変換)", "level_text": ""},
+	"CXP": {"name": "修練の書", "detail": "経験値を+100獲得する", "level_text": ""},
+	"CNOVA": {"name": "ノヴァ", "detail": "画面内の敵にダメージ\n敵弾をすべて消す", "level_text": "即時発動"},
+}
+## 修練の書の獲得経験値と応急手当の回復量 (初版。P19 の計測で調整可)。
+const CXP_XP := 100
+const HEAL_AMOUNT := 30.0
+
 var player: Node2D = null
 var stat_levels := {"C07": 0, "C08": 0, "C09": 0, "C10": 0, "C11": 0, "C12": 0, "C13": 0, "C14": 0, "C15": 0, "C16": 0, "C17": 0, "C18": 0, "C19": 0, "C20": 0}
 
@@ -24,6 +35,8 @@ func weapon_count() -> int:
 		return 99
 	return player.get_node("Weapons").get_child_count()
 
+## 提示する3枚を組む。MAX到達カードは入れない (D33)。プールが3未満なら
+## フォールバック3種 (応急手当/修練の書/ノヴァ) から重複なしで補充する (D34)。
 func get_offers() -> Array:
 	var pool: Array = []
 	for cid: String in CardsDB.WEAPON_IDS:
@@ -34,18 +47,29 @@ func get_offers() -> Array:
 		elif int(w.get("weapon_level")) < CardsDB.WEAPON_MAX_LEVEL:
 			pool.append(_entry(cid, false, int(w.get("weapon_level"))))
 	for cid: String in CardsDB.STAT_IDS:
-		if int(stat_levels.get(cid, 0)) < int(CardsDB.DEFS[cid]["max"]):
-			pool.append(_entry(cid, false, int(stat_levels.get(cid, 0))))
+		var sl: int = int(stat_levels.get(cid, 0))
+		if sl < int(CardsDB.DEFS[cid]["max"]):
+			pool.append(_entry(cid, sl == 0, sl))
 	pool.shuffle()
 	var offers: Array = pool.slice(0, 3)
-	while offers.size() < 3:
-		offers.append({"id": "HEAL", "name": "応急手当", "detail": "HPを30回復する", "level_text": "", "icon": CardMarks.texture_for("HEAL")})
+	var fb: Array = FALLBACK_IDS.duplicate()
+	fb.shuffle()
+	var fi: int = 0
+	while offers.size() < 3 and fi < fb.size():
+		offers.append(_fallback_entry(str(fb[fi])))
+		fi += 1
 	return offers
 
 func _entry(card_id: String, is_new: bool, lv: int) -> Dictionary:
+	# 表示は「実際の遷移」に合わせる (D33)。武器の weapon_level は1始まり、
+	# ステータスの stat_levels は0始まりのため、どちらも lv→lv+1 が正しい。
 	var d: Dictionary = CardsDB.get_def(card_id)
-	var text: String = "新規取得!" if is_new else ("Lv%d→%d" % [lv + 1, lv + 2])
+	var text: String = "新規取得!" if is_new else ("Lv%d→%d" % [lv, lv + 1])
 	return {"id": card_id, "name": str(d["name"]), "detail": str(d["detail"]), "level_text": text, "icon": CardMarks.texture_for(card_id)}
+
+func _fallback_entry(card_id: String) -> Dictionary:
+	var d: Dictionary = FALLBACK_DEFS[card_id]
+	return {"id": card_id, "name": str(d["name"]), "detail": str(d["detail"]), "level_text": str(d["level_text"]), "icon": CardMarks.texture_for(card_id)}
 
 func apply_card(card_id: String) -> void:
 	if player == null:
@@ -105,7 +129,26 @@ func apply_card(card_id: String) -> void:
 			_bump(card_id)
 			player.set("xp_mult", float(player.get("xp_mult")) + 0.25)
 		"HEAL":
-			player.call("heal", 30.0)
+			_heal_or_gem(HEAL_AMOUNT)
+		"CXP":
+			player.call("add_xp", CXP_XP)
+		"CNOVA":
+			# ノヴァは取得と同時に発動する (T10 と同効果。D34・§31.2)。
+			var cd: Node = get_tree().get_first_node_in_group("chest_director")
+			if cd != null:
+				cd.call("apply_item", "T10", player.global_position)
+
+## HP満タンなら小XP宝石 (+1) に変換する (T01 と同じ規則、D34)。
+func _heal_or_gem(amount: float) -> void:
+	if float(player.get("hp")) >= float(player.get("max_hp")):
+		var pool: Node = get_tree().get_first_node_in_group("pool_gems")
+		if pool != null:
+			var g: Area2D = pool.call("acquire") as Area2D
+			if g != null:
+				g.global_position = player.global_position
+				g.set("value", 1)
+	else:
+		player.call("heal", amount)
 
 func _bump(card_id: String) -> void:
 	stat_levels[card_id] = int(stat_levels.get(card_id, 0)) + 1

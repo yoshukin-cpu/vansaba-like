@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 const GEM_SCENE: PackedScene = preload("res://pickups/xp_gem.tscn")
 const ENEMY_SHOT_SCRIPT := preload("res://projectiles/enemy_shot.gd")
+const DiffDB := preload("res://data/difficulty_db.gd")
 
 ## SpriteFrames のアニメ速度の基準 (anim_fps は speed_scale で反映する)
 const BASE_ANIM_FPS := 6.0
@@ -48,13 +49,24 @@ var _prev_valid: bool = false
 @onready var hitbox: Area2D = $Hitbox
 
 func _ready() -> void:
-	hp = max_hp
 	add_to_group("enemies")
+	_apply_difficulty()
+	hp = max_hp
 	_apply_sprite()
 	hitbox.area_entered.connect(_on_hitbox_area)
 	shot_cd = shot_interval * (0.5 + randf() * 0.5)
 	dash_cd = dash_interval
 	strafe_phase = randf() * TAU
+
+## 難易度の乗数を焼き込む (SPEC §31.5)。ここに寄せることで、奇襲 (T04)・
+## スプリッター分裂・ボス召喚で生まれる個体にも自動で掛かる。
+## 弾の速度とダメージは enemy_shot.setup 側で掛ける (二重掛け防止)。
+func _apply_difficulty() -> void:
+	max_hp *= DiffDB.cur_hp_mult()
+	contact_damage *= DiffDB.cur_damage_mult()
+	var spd: float = DiffDB.cur_enemy_speed_mult()
+	speed *= spd
+	dash_speed *= spd
 
 ## frames_path の SpriteFrames を Body に適用する (未指定なら何もしない)
 func _apply_sprite() -> void:
@@ -191,7 +203,9 @@ func apply_scaling(hp_mult: float, dmg_mult: float) -> void:
 	shot_damage *= dmg_mult
 
 func make_elite() -> void:
-	apply_scaling(5.0, 1.5)
+	# エリートは「敵の硬さ + エリート・ボスの硬さ」の加算式になるよう、
+	# 通常敵に焼いた分との比を掛ける (SPEC §31.5)。
+	apply_scaling(5.0 * DiffDB.cur_elite_ratio(), 1.5)
 	set("xp_value", xp_value * 5)
 	scale = Vector2(1.5, 1.5)
 	if body != null:

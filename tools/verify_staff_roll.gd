@@ -7,6 +7,9 @@ const StaffRollScene: PackedScene = preload("res://ui/staff_roll_ui.tscn")
 const ResultScene: PackedScene = preload("res://ui/result_ui.tscn")
 const MainScene: PackedScene = preload("res://main.tscn")
 const ThemeLyrics := preload("res://data/theme_lyrics.gd")
+const SaveData := preload("res://systems/save_data.gd")
+
+const TEST_SAVE := "user://test_staff_roll_save.json"
 
 var fails := 0
 
@@ -24,6 +27,11 @@ func _full_text(s: Node) -> String:
 
 
 func _initialize() -> void:
+	# クリア記録が実セーブを汚さないよう、一時パスを使う (v1.6)。
+	SaveData.path = TEST_SAVE
+	if FileAccess.file_exists(TEST_SAVE):
+		DirAccess.remove_absolute(TEST_SAVE)
+	SaveData.reset()
 	# 1. リザルト: クリア時はメニューなし+ヒント、GAME OVER時は従来メニュー。
 	var r: CanvasLayer = ResultScene.instantiate()
 	root.add_child(r)
@@ -71,6 +79,12 @@ func _initialize() -> void:
 	for i: int in range(5):
 		await process_frame
 	_check("rolling after start", bool(s.get("rolling")))
+	# 背景は「画面トップ = 画像トップ」・横中央・画面を覆う (D43)。
+	var art: TextureRect = s.get_node("ArtFade") as TextureRect
+	var vp: Vector2 = s.get_viewport().get_visible_rect().size
+	_check("art top-aligned (y=%.1f)" % art.position.y, absf(art.position.y) < 0.5)
+	_check("art centered horizontally", absf(art.position.x - (vp.x - art.size.x) * 0.5) < 0.5)
+	_check("art covers screen", art.size.x >= vp.x - 0.5 and art.size.y >= vp.y - 0.5)
 	var song_len: float = float(s.get("song_len"))
 	_check("song_len syncs theme (240-262s)", song_len >= 240.0 and song_len <= 262.0)
 	_check("uses real header", s.get("_rc") != null)
@@ -176,7 +190,8 @@ func _initialize() -> void:
 	_check("result wired to main",
 		rr.is_connected("staff_pressed", Callable(m, "_on_staff_roll")))
 	var ss: Node = m.get_node("StaffRollUI")
-	_check("staff retry wired", ss.is_connected("retry_pressed", Callable(m, "_on_retry")))
+	_check("staff retry removed", not ss.has_signal("retry_pressed") and not ss.has_node("BottomBox/EndRow/RetryBtn"))
+	_check("staff end row is title only", (ss.get_node("BottomBox/EndRow") as HBoxContainer).get_child_count() == 1)
 	_check("staff title wired", ss.is_connected("title_pressed", Callable(m, "_on_quit_to_title")))
 
 	# 5. クリア時はリザルトのボタン押下経路でスタッフロールへ (戦績つき)。
@@ -184,6 +199,11 @@ func _initialize() -> void:
 	for i: int in range(5):
 		await process_frame
 	_check("clear shows result", (m.get_node("ResultUI") as CanvasLayer).visible)
+	_check("result shows difficulty row",
+		"難易度:" in str((m.get_node("ResultUI/Center/VBox/Stats") as Label).text))
+	_check("unlock notice on first clear",
+		(m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).visible
+		and str((m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).text) == "解放: 難易度選択!")
 	(m.get_node("ResultUI") as CanvasLayer).call("_on_staff_button")
 	for i: int in range(60):
 		await process_frame
@@ -198,7 +218,14 @@ func _initialize() -> void:
 	for i: int in range(3):
 		await process_frame
 	_check("result hidden after scroll", not (m.get_node("ResultUI") as CanvasLayer).visible)
+	_check("unlock notice hidden in roll",
+		not (m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).visible)
 	m.queue_free()
+
+	SaveData.path = SaveData.DEFAULT_PATH
+	SaveData.reset()
+	if FileAccess.file_exists(TEST_SAVE):
+		DirAccess.remove_absolute(TEST_SAVE)
 
 	print("RESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))
 	quit(0 if fails == 0 else 1)

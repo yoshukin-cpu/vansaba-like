@@ -18,8 +18,9 @@
 - スプライト差し替え済み: プレイヤー (4方向walk/idle)、敵10種 (2フレーム前後)、ボス2種、弾4種、スピンソード、火炎放射。
 - v1.1 実装完了 (P8〜P12)。**v1.2 実装完了 (P13〜P15)**。**v1.3 実装完了 (P16)**。
   **v1.4 カードマーク表示 (D31) 実装済み**。**v1.5 スタッフロール (D32) 実装済み**。
-- **v1.6 設計済み** (バージョンアップ案4: カード上限とLv表記の修正 / フォールバック3種 (応急手当・修練の書・ノヴァ) /
-  経験値ジェムの3段階色 (緑/赤/白) + きらめき / 難易度7段階+インセインN と解放セーブ / エンディング後のボタンを「タイトルへ」のみに / エンディング背景を上端合わせに)。実装は P19 (未着手)。
+- **v1.6 実装完了 (P19)**: 難易度7段階+インセインN (解放セーブ `user://vansaba_save.json`)、タイトル難易度セレクタ (◀▶・鍵・右側パラメータ)、
+  カードLv表記の1段ずれ修正+フォールバック3種 (応急手当/修練の書/ノヴァ)、経験値ジェム3段階色+きらめき、
+  リザルトの難易度行+解放通知、エンディング後のボタンを「タイトルへ」のみに、エンディング背景の上端合わせ (月が見える)。
 - `IDEA.md` の新要望は設計反映済み (D27のみ対象外で再検討待ち)。
 
 ### 実装済みの検証値 (P8〜P12)
@@ -36,6 +37,9 @@
 | アイテム爆弾 | 範囲200dmgでスライム撃破・破片12発・プレイヤー無傷・爆発後に解放 |
 | オートエイム | 敵なし→宝箱、敵あり→敵 (チェインライトニングは敵専用のまま) |
 | 通しプレイ | 宝箱なし4:08死亡 / あり9:02死亡(調整前)・5:28死亡(調整後・cap+12%)。不死11分走行で297体・60fps・エラー0 |
+| 難易度の乗数 (v1.6) | hard: 敵HP×1.25・エリート/ボス×1.5 (加算)・弾速×1.1・上限22→24。insane: 敵HP×4・上限280→400クランプ (verify_v16で実測) |
+| 通しプレイ (v1.6) | ノーマル 8:42死亡 (Lv10/597kill) / ハード 8:36死亡 (Lv6/191kill・撃破 -68%)。インセイン+不死11分: 敵427体・fps99〜127 (headless) |
+| 検証スクリプト (v1.6) | `tools/verify_v16.gd` (107件 ALL PASS)。`capture_title_diff.gd` / `capture_finale.gd` (窓ありで目視確認) |
 | 検証スクリプト | `tools/verify_world.gd` (headless) / `verify_obstacles.gd` / `verify_obstacle_block.gd` / `verify_terrain.gd` / `verify_chests.gd` (32件) / `verify_chest_look.gd` / `verify_card_marks.gd` / `capture_test.gd` |
 
 
@@ -44,9 +48,13 @@
 - 実行ファイル: `<godot-install-dir>/Godot_v4.7.2-stable_win64.exe`
 - 起動 (タイトルから): `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --path <repo-root>`
 - 即ゲーム開始 (タイトルスキップ): 末尾に `-- --autostart` を付ける
+- 難易度の指定 (テスト・計測用): `-- --difficulty hard`・`-- --difficulty insane3` (v1.6)。
+  `-- --unlock-all` でタイトルの全難易度を解放表示 (保存はしない)
 - ヘッドレス検証: `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --headless --fixed-fps 60 --path <repo-root> --script res://tools/verify_*.gd`
   (`--fixed-fps 60` 必須。固定フレーム待ちが高速headlessで短時間化して誤失敗するため)
   - 素材を差し替えた後は `--headless --import` を忘れると古い絵が描画され続ける
+  - `verify_obstacles` / `verify_terrain` / `verify_walk` などの**実機キャプチャ系は headless 不可**
+    (`root.get_texture().get_image()` が null になる)。窓ありで実行する
 - 注意: ヘッドレス起動で `project.godot` の `[autoload]` 行が落ちることがある → コミット前に `git checkout -- project.godot`
 
 ## 決定事項ステータス (v1.1〜v1.6)

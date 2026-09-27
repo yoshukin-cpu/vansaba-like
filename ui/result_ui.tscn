@@ -37,6 +37,14 @@ theme_override_font_sizes/font_size = 26
 text = "stats"
 horizontal_alignment = 1
 
+[node name="UnlockLabel" type="Label" parent="Center/VBox"]
+visible = false
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
+theme_override_font_sizes/font_size = 26
+text = "解放: エキスパート!"
+horizontal_alignment = 1
+
 [node name="RetryBtn" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(280, 64)
 theme_override_font_sizes/font_size = 26

@@ -17,6 +17,12 @@ var mv_spd: float = 0.0
 func _ready() -> void:
 	super._ready()
 	add_to_group("bosses")
+	# ボスはエリートと同じ「加算式」の硬さにする (SPEC §31.5)。
+	# 通常敵ぶんは super._ready() で適用済みなので、比だけを追加で掛ける。
+	var ratio: float = DiffDB.cur_elite_ratio()
+	if not is_equal_approx(ratio, 1.0):
+		max_hp *= ratio
+		hp = max_hp
 	charge_cd = 6.0
 	summon_cd = 12.0 if boss_id == "B02" else 10.0
 

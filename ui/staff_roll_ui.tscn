@@ -126,18 +126,13 @@ visible = false
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.84, 0.37, 1)
 theme_override_font_sizes/font_size = 24
-text = "おつかれさまでした! つづきは二周目で。"
+text = "おつかれさまでした! つづきはタイトルで難易度を選んでどうぞ。"
 horizontal_alignment = 1
 
 [node name="EndRow" type="HBoxContainer" parent="BottomBox"]
 visible = false
 theme_override_constants/separation = 24
 alignment = 1
-
-[node name="RetryBtn" type="Button" parent="BottomBox/EndRow"]
-custom_minimum_size = Vector2(280, 64)
-theme_override_font_sizes/font_size = 26
-text = "もう一度"
 
 [node name="TitleBtn" type="Button" parent="BottomBox/EndRow"]
 custom_minimum_size = Vector2(280, 64)
