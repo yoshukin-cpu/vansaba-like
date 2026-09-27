@@ -79,13 +79,17 @@ func _physics_process(delta: float) -> void:
 	if target != null and (not is_instance_valid(target) or bool(target.get("dead"))):
 		target = null
 	if target == null:
-		target = _find_nearest(700.0)
+		target = _find_nearest(_search_range())
 	if target != null:
 		var want: Vector2 = target.global_position - global_position
 		if want.length() > 1.0:
 			direction = direction.lerp(want.normalized(), clampf(turn_rate * delta, 0.0, 1.0)).normalized()
 			rotation = direction.angle()
 	super._physics_process(delta)
+
+## D70: 追尾の再探索は「残り寿命 × 速度」に制限する (到達できない敵を狙わない)。
+func _search_range() -> float:
+	return minf(700.0, maxf(0.0, (life - age)) * speed)
 
 func _find_nearest(max_range: float) -> Node2D:
 	var best: Node2D = null

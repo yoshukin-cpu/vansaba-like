@@ -13,6 +13,7 @@ const SpawnDirectorScript := preload("res://systems/spawn_director.gd")
 const MainScene: PackedScene = preload("res://main.tscn")
 const SlimeScene: PackedScene = preload("res://enemies/slime.tscn")
 const B01Scene: PackedScene = preload("res://enemies/boss_golem_king.tscn")
+const B02Scene: PackedScene = preload("res://enemies/boss_void_emperor.tscn")
 
 const TEST_SAVE := "user://test_v16_save.json"
 const FALLBACK_IDS := ["HEAL", "CXP", "CNOVA"]
@@ -62,8 +63,10 @@ func _t_diff_table() -> void:
 	_check("normal は全部 0", DiffDB.values("normal") == [0, 0, 0, 0, 0, 0, 0])
 	_check("hard の値", DiffDB.values("hard") == [25, 25, 10, 20, 20, 5, 25])
 	_check("hard の敵HP ×1.25", _near(DiffDB.hp_mult("hard"), 1.25))
-	_check("hard のエリート・ボス ×1.5 (加算)", _near(DiffDB.elite_boss_hp_mult("hard"), 1.5))
-	_check("hard のエリート比 1.2", _near(DiffDB.elite_ratio("hard"), 1.2))
+	_check("hard のエリート・ボス ×1.5 (加算・生パラメータ)", _near(DiffDB.elite_boss_hp_mult("hard"), 1.5))
+	_check("hard のエリート比 2.4 (v1.8: ×2)", _near(DiffDB.elite_ratio("hard"), 2.4))
+	_check("hard の中ボス比 1.2 (据え置き)", _near(DiffDB.boss_ratio("hard", false), 1.2))
+	_check("hard の最終ボス比 2.4 (v1.8: ×2)", _near(DiffDB.boss_ratio("hard", true), 2.4))
 	_check("insane3 = 300+90", int(DiffDB.values("insane3")[0]) == 390)
 	_check("insane3 の敵HP ×4.9", _near(DiffDB.hp_mult("insane3"), 4.9))
 	_check("insane の湧き間隔 ×1/3", _near(DiffDB.interval_mult("insane"), 1.0 / 3.0))
@@ -173,14 +176,20 @@ func _t_game_difficulty() -> void:
 	_check("hard: 接触 9.6±30%", 9.6 * 0.7 <= float(s1.get("contact_damage")) and float(s1.get("contact_damage")) <= 9.6 * 1.3)
 	_check("hard: 速度 73.5±30%", 73.5 * 0.7 <= float(s1.get("speed")) and float(s1.get("speed")) <= 73.5 * 1.3)
 	s1.call("make_elite")
-	_check("hard: エリート 90±30%", 90.0 * 0.7 <= float(s1.get("max_hp")) and float(s1.get("max_hp")) <= 90.0 * 1.3)
+	_check("hard: エリート 180±30% (v1.8: ×2)", 180.0 * 0.7 <= float(s1.get("max_hp")) and float(s1.get("max_hp")) <= 180.0 * 1.3)
 	s1.queue_free()
 
 	var b: Node2D = B01Scene.instantiate() as Node2D
 	(current_scene as Node).add_child(b)
 	b.global_position = player.global_position + Vector2(400, 0)
-	_check("hard: B01 1500×1.5=2250", _near(float(b.get("max_hp")), 2250.0))
+	_check("hard: B01 1500×1.5=2250 (中ボスは据え置き)", _near(float(b.get("max_hp")), 2250.0))
 	b.queue_free()
+
+	var b2: Node2D = B02Scene.instantiate() as Node2D
+	(current_scene as Node).add_child(b2)
+	b2.global_position = player.global_position + Vector2(400, 0)
+	_check("hard: B02 5000×3.0=15000 (v1.8: ×2)", _near(float(b2.get("max_hp")), 15000.0))
+	b2.queue_free()
 
 	var pool: Node = get_first_node_in_group("pool_enemy_shots")
 	var shot: Node2D = pool.call("acquire") as Node2D

@@ -4,6 +4,7 @@ const CG := preload("res://world/chunk_gen.gd")
 const CardMarks := preload("res://data/card_marks.gd")
 const DiffDB := preload("res://data/difficulty_db.gd")
 const SaveData := preload("res://systems/save_data.gd")
+const MetaDB := preload("res://data/meta_upgrades.gd")
 
 const MARK_CELL := 24.0
 const MARK_GAP := 6.0
@@ -32,11 +33,19 @@ static var quick_start: bool = false
 @onready var audio: Node = $AudioManager
 @onready var chest_director: Node = $ChestDirector
 @onready var score_label: Label = $HUD/ScoreLabel
+@onready var coin_label: Label = $HUD/CoinLabel
 @onready var diff_label: Label = $HUD/DiffLabel
 @onready var acquired_marks: GridContainer = $HUD/AcquiredMarks
+@onready var bgm: Node = $BGM
+@onready var options_ui: CanvasLayer = $OptionsUI
+@onready var upgrade_ui: CanvasLayer = $UpgradeUI
 
 var kills: int = 0
 var score: int = 0
+## ラン中の入手コイン (v1.8・D65)。金運 (M08) の倍率込みの実数で持ち、表示と確定で floor する。
+var run_coins: float = 0.0
+## 金運 (M08) の倍率 (start_game で確定)。
+var run_coin_mult: float = 1.0
 var acquired_cards: Array[String] = []
 var warning_time: float = 0.0
 var result_shown: bool = false
@@ -52,6 +61,8 @@ var _cli_difficulty: String = ""
 ## `_ready` ではタイトルが未ロードの解放状況を表示してしまう (§31.6)。
 func _enter_tree() -> void:
 	SaveData.load_save()
+	# 保存されたオプション (表示・音量) を起動時に適用する (v1.8・§35.9)。
+	SaveData.apply_options()
 	var map_seed: int = CG.begin_run(_pick_map_seed())
 	print("[world] map seed = %d" % map_seed)
 
@@ -82,6 +93,11 @@ func _ready() -> void:
 	levelup_ui.connect("choice_selected", _on_card_chosen)
 	title_ui.connect("start_pressed", _on_start)
 	title_ui.connect("quit_pressed", _on_desktop_quit)
+	title_ui.connect("upgrade_pressed", _on_upgrade)
+	title_ui.connect("options_pressed", _on_options)
+	options_ui.connect("closed", _on_options_closed)
+	options_ui.connect("staff_replay_pressed", _on_staff_replay)
+	upgrade_ui.connect("closed", _on_upgrade_closed)
 	pause_ui.connect("resume_pressed", _on_resume)
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
@@ -96,13 +112,17 @@ func _ready() -> void:
 		start_game()
 	else:
 		get_tree().paused = true
+		# タイトルBGM (v1.8・D61)。
+		bgm.call("set_state", "title")
 
 ## CLI: `--difficulty <key|insaneN>` (例: --difficulty hard・--difficulty insane3) と
-## `--unlock-all` (全難易度を解放表示。保存はしない)。テスト・計測用 (§31.6)。
+## `--unlock-all` (全難易度を解放表示。保存はしない)・`--coins <N>` (所持コインを与える。保存はしない)。
 func _parse_cli_args(args: PackedStringArray) -> void:
 	for i: int in range(args.size() - 1):
 		if args[i] == "--difficulty" and DiffDB.is_valid(args[i + 1]):
 			_cli_difficulty = args[i + 1]
+		if args[i] == "--coins" and args[i + 1].is_valid_int():
+			SaveData.coins = maxi(0, args[i + 1].to_int())
 	if "--unlock-all" in args:
 		SaveData.unlock_all()
 
@@ -119,8 +139,16 @@ func start_game() -> void:
 	get_tree().paused = false
 	director.set("running", true)
 	chest_director.set("running", true)
+	# 恒久パワーアップを反映する (v1.8・D67)。Lv0 は完全 no-op。
+	MetaDB.apply_to(player, SaveData.upgrades)
+	run_coin_mult = MetaDB.coin_mult(SaveData.upgrades)
+	run_coins = 0.0
+	if coin_label != null:
+		coin_label.text = "COIN 0"
 	if diff_label != null:
 		diff_label.text = DiffDB.display_name(DiffDB.current_key)
+	# ゲーム中BGM (v1.8・D61)。
+	bgm.call("set_state", "game")
 
 func _process(_delta: float) -> void:
 	_tick_clear(_delta)
@@ -151,6 +179,8 @@ func _process(_delta: float) -> void:
 		lv_label.text = "Lv %d" % int(player.get("level"))
 	if score_label != null:
 		score_label.text = "SCORE %d" % score
+	if coin_label != null:
+		coin_label.text = "COIN %d" % int(floor(run_coins))
 	if timer_label != null and director != null:
 		timer_label.text = _fmt_time(float(director.get("elapsed")))
 	if warning_label != null:
@@ -186,6 +216,10 @@ func add_kill() -> void:
 
 func add_score(v: int) -> void:
 	score += v
+
+## コインの入手 (v1.8・D65)。金運 (M08) の倍率を掛けて加算する。確定はリザルト時 (D66)。
+func add_coins(n: float) -> void:
+	run_coins += n * run_coin_mult
 
 ## 取得カードの履歴表示。デバッグ文は左上の InfoLabel に集約し、
 ## ここは画面下部に取得順のマークだけを並べる。行数は表示幅から求め、
@@ -275,10 +309,19 @@ func show_result(clear: bool) -> void:
 	if warning_label != null:
 		warning_label.hide()
 	audio.call("play", "clear" if clear else "death")
+	# BGM はフェードアウト (v1.8・D61)。
+	bgm.call("set_state", "silent")
 	var unlock_text := ""
 	if clear:
 		unlock_text = SaveData.record_clear(DiffDB.current_key)
-	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score, DiffDB.display_name(DiffDB.current_key), unlock_text)
+	# コインはリザルト表示時に確定する (v1.8・D66): floor(入手 × 難易度倍率)。
+	var mult: float = DiffDB.cur_coin_mult()
+	var gained: int = int(floor(run_coins * mult))
+	var coin_text := ""
+	if run_coins >= 1.0 or gained > 0:
+		SaveData.add_coins(gained)
+		coin_text = "コイン %d ×%.1f = %d (所持 %d)" % [int(floor(run_coins)), mult, gained, SaveData.coins]
+	result_ui.call("show_result", clear, _fmt_time(float(director.get("elapsed"))), int(player.get("level")), kills, score, DiffDB.display_name(DiffDB.current_key), unlock_text, coin_text)
 
 func _on_player_level_up() -> void:
 	if result_shown or levelup_ui.visible:
@@ -330,6 +373,31 @@ func _on_staff_roll() -> void:
 	audio.call("play", "ui")
 	staff_roll.call("start_roll", result_ui)
 
+## タイトル「強化」(v1.8・D68)。
+func _on_upgrade() -> void:
+	audio.call("play", "ui")
+	upgrade_ui.call("open")
+
+func _on_upgrade_closed() -> void:
+	# 購入の反映 (所持コイン表示)。
+	title_ui.call("refresh_coins")
+
+## タイトル「オプション」(v1.8・D63)。
+func _on_options() -> void:
+	audio.call("play", "ui")
+	options_ui.call("open")
+
+func _on_options_closed() -> void:
+	title_ui.call("refresh_coins")
+
+## オプションの「スタッフロール再演」(v1.8・D64)。何も保存せず再生するだけ。
+func _on_staff_replay() -> void:
+	audio.call("play", "ui")
+	options_ui.call("close")
+	title_ui.hide()
+	bgm.call("set_state", "silent")
+	staff_roll.call("start_roll", null)
+
 func _on_quit_to_title() -> void:
 	quick_start = false
 	get_tree().paused = false
@@ -338,6 +406,8 @@ func _on_quit_to_title() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause_game"):
 		if title_ui.visible or levelup_ui.visible or result_ui.visible or staff_roll.visible:
+			return
+		if options_ui.visible or upgrade_ui.visible:
 			return
 		if get_tree().paused:
 			pause_ui.call("close")

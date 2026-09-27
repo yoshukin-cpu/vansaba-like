@@ -167,8 +167,10 @@ func _t_items(player: Node2D, director: Node, main: Node) -> void:
 	_check("T09 upgrades a weapon", int(w1.get("weapon_level")) == 2 or int(w2.get("weapon_level")) == 2)
 	# レア枠
 	var s0: int = int(main.get("score"))
+	var c0: float = float(main.get("run_coins"))
 	director.call("apply_item", "R_COIN", pp)
 	_check("R_COIN score+1000", int(main.get("score")) == s0 + 1000)
+	_check("R_COIN coin +10 (v1.8)", absf(float(main.get("run_coins")) - c0 - 10.0) < 0.001)
 	player.set("hp", 10.0)
 	director.call("apply_item", "R_HEAL", pp)
 	_check("R_HEAL full heal", absf(float(player.get("hp")) - float(player.get("max_hp"))) < 0.01)

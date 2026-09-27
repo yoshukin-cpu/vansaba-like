@@ -70,7 +70,7 @@ func _initialize() -> void:
 	_check("pages fill the song (>=15)", (s.get("PAGES") as Array).size() >= 15)
 	var body: String = _full_text(s)
 	for needle: String in ["yoshuki", "Hermes Agent", "Google Image", "ElevenLabs", "Suno",
-			"じゅっぷんかん", "Thank you so much for playing."]:
+			"じゅっぷんかん", "BGM", "コイン", "Thank you so much for playing."]:
 		_check("credit mentions " + needle, needle in body)
 	r2.call("show_result", true, "10:00", 20, 300, 1000)
 	for i: int in range(3):
@@ -221,6 +221,33 @@ func _initialize() -> void:
 	_check("unlock notice stays in roll (D44)",
 		(m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).visible)
 	m.queue_free()
+
+	# 6. 再演モード (オプションの「スタッフロール再演」・D64): 実ノード無しで流れ、何も保存しない。
+	SaveData.reset()
+	var s3: CanvasLayer = StaffRollScene.instantiate()
+	root.add_child(s3)
+	for i: int in range(3):
+		await process_frame
+	var cleared_before: Array = SaveData.cleared.duplicate()
+	var coins_before: int = SaveData.coins
+	s3.call("start_roll", null)
+	for i: int in range(5):
+		await process_frame
+	_check("replay: rolling", bool(s3.get("rolling")))
+	_check("replay: replay_mode が立つ", bool(s3.get("replay_mode")))
+	_check("replay: 実ノード無し (_rc == null)", s3.get("_rc") == null)
+	var hdr: RichTextLabel = s3.get_node("Scroller/ScrollVBox/HeaderRoll") as RichTextLabel
+	_check("replay: 内蔵ヘッダーを使う (実ノード版は隠す)", hdr.visible and "再演" in hdr.text)
+	_check("replay: 背景は最初から黒", absf((s3.get_node("Bg") as ColorRect).modulate.a - 1.0) < 0.01)
+	_check("replay: 何も保存しない (cleared/coins 不変)",
+		SaveData.cleared == cleared_before and SaveData.coins == coins_before)
+	s3.call("_skip")
+	for i: int in range(3):
+		await process_frame
+	_check("replay: スキップで最終画面", bool(s3.get("ended")) and (s3.get_node("ThanksCenter") as CenterContainer).visible)
+	_check("replay: 終了ボタンはタイトルのみ", (s3.get_node("BottomBox/EndRow") as HBoxContainer).get_child_count() == 1)
+	_check("replay: クリア扱いにならない (cleared 空のまま)", SaveData.cleared.is_empty())
+	s3.queue_free()
 
 	SaveData.path = SaveData.DEFAULT_PATH
 	SaveData.reset()

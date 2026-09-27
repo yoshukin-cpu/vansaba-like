@@ -107,11 +107,13 @@ func apply_item(item_id: String, pos: Vector2) -> String:
 			_audio().call("play", "heal")
 		"T02":
 			_game().call("add_score", 100)
+			_game().call("add_coins", 1.0)
 			_fx().call("damage_number", pos, 100.0, false)
 			_fx().call("spark", pos, Color(1.0, 0.85, 0.2, 1.0))
 			_audio().call("play", "coin")
 		"R_COIN":
 			_game().call("add_score", 1000)
+			_game().call("add_coins", 10.0)
 			_fx().call("damage_number", pos, 1000.0, false)
 			_fx().call("spark", pos, Color(1.0, 0.85, 0.2, 1.0))
 			_audio().call("play", "coin")

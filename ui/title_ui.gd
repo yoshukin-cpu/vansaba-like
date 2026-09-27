@@ -2,12 +2,19 @@ extends CanvasLayer
 
 signal start_pressed
 signal quit_pressed
+## v1.8: タイトルの「強化」「オプション」(SPEC §35.8)。
+signal upgrade_pressed
+signal options_pressed
 
 const DiffDB := preload("res://data/difficulty_db.gd")
 const SaveData := preload("res://systems/save_data.gd")
 
 @onready var start_btn: Button = $Center/VBox/StartBtn
-@onready var quit_btn: Button = $Center/VBox/QuitBtn
+## v1.8 (D73): 終了は VBox を出して画面左下に固定 (デフォルト解像度で VBox が見切れるため)。
+@onready var quit_btn: Button = $QuitBtn
+@onready var upgrade_btn: Button = $Center/VBox/MenuRow/UpgradeBtn
+@onready var options_btn: Button = $Center/VBox/MenuRow/OptionsBtn
+@onready var coin_label: Label = $Center/VBox/CoinLabel
 @onready var left_btn: Button = $Center/VBox/DiffRow/LeftBtn
 @onready var right_btn: Button = $Center/VBox/DiffRow/RightBtn
 @onready var diff_name: Label = $Center/VBox/DiffRow/DiffName
@@ -24,17 +31,41 @@ var _diff_axis_armed: bool = true
 func _ready() -> void:
 	start_btn.pressed.connect(func() -> void: start_pressed.emit())
 	quit_btn.pressed.connect(func() -> void: quit_pressed.emit())
+	upgrade_btn.pressed.connect(func() -> void: upgrade_pressed.emit())
+	options_btn.pressed.connect(func() -> void: options_pressed.emit())
 	left_btn.pressed.connect(func() -> void: _cycle(-1))
 	right_btn.pressed.connect(func() -> void: _cycle(1))
+	# D73: 左下に固定した「終了」を含む上下ナビゲーションを明示配線する
+	# (VBox の外に出したため、自動の幾何探索では 強化 → 終了 に飛んでしまう)。
+	start_btn.focus_neighbor_bottom = start_btn.get_path_to(upgrade_btn)
+	start_btn.focus_neighbor_top = start_btn.get_path_to(quit_btn)
+	upgrade_btn.focus_neighbor_bottom = upgrade_btn.get_path_to(options_btn)
+	upgrade_btn.focus_neighbor_top = upgrade_btn.get_path_to(start_btn)
+	options_btn.focus_neighbor_bottom = options_btn.get_path_to(quit_btn)
+	options_btn.focus_neighbor_top = options_btn.get_path_to(start_btn)
+	quit_btn.focus_neighbor_top = quit_btn.get_path_to(options_btn)
+	quit_btn.focus_neighbor_bottom = quit_btn.get_path_to(start_btn)
 	# D45: 解放条件の有無でレイアウトが動かないよう、行の高さを固定して常時表示する。
 	diff_lock.custom_minimum_size = Vector2(0, 22)
 	diff_lock.show()
 	refresh_difficulty()
 	start_btn.grab_focus()
 
+## 開いているモーダル (オプション/強化) があれば入力を譲る (v1.8)。
+func _modal_open() -> bool:
+	for n: Node in get_tree().get_nodes_in_group("modal_ui"):
+		if n is CanvasLayer and (n as CanvasLayer).visible:
+			return true
+	return false
+
+## 所持コインの表示 (v1.8・D65)。強化で購入した後に main から呼ばれる。
+func refresh_coins() -> void:
+	if coin_label != null:
+		coin_label.text = "所持コイン %d" % SaveData.coins
+
 ## D46: スティックがニュートラルに戻ったら再び切替可能にする。
 func _process(_delta: float) -> void:
-	if not visible:
+	if not visible or _modal_open():
 		return
 	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_X)) < 0.2:
 		_diff_axis_armed = true
@@ -52,6 +83,7 @@ func refresh_difficulty() -> void:
 			_idx = i
 			break
 	_update_display()
+	refresh_coins()
 
 func _is_playable(key: String) -> bool:
 	for e: Dictionary in _entries:
@@ -112,7 +144,7 @@ func _update_display() -> void:
 ## パッドの A は既定の ui_accept に含まれておらずボタンが反応しないため、
 ## フォーカス中のボタンへ明示的に振り分ける (§27.2)。
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not visible or _modal_open():
 		return
 	if event is InputEventKey and (event as InputEventKey).echo:
 		return
@@ -146,8 +178,15 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 選んでいる間はパッドのAが「終了」でも握りつぶされ、終われなくなる (キー/マウスは
 ## ボタン自身が処理するため、パッドのみで起きる不具合)。
 func confirm_focused() -> void:
-	if get_viewport().gui_get_focus_owner() == quit_btn:
+	var f: Control = get_viewport().gui_get_focus_owner()
+	if f == quit_btn:
 		quit_btn.pressed.emit()
+		return
+	if f == upgrade_btn:
+		upgrade_btn.pressed.emit()
+		return
+	if f == options_btn:
+		options_btn.pressed.emit()
 		return
 	if start_btn.disabled:
 		return

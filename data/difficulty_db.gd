@@ -35,6 +35,16 @@ const CAP_CLAMP := 400.0
 const ELITE_BASE_INTERVAL := 120.0
 ## 湧き間隔の下限 (秒)。
 const MIN_INTERVAL := 0.05
+## エリート/ボスの実効倍率 (v1.8・D71)。中ボス (B01) は据え置き・最終ボス (B02) は ×2。
+const ELITE_SCALE := 2.0
+const MID_BOSS_SCALE := 1.0
+const FINAL_BOSS_SCALE := 2.0
+## コイン倍率 (v1.8・D66)。インセインN は基底 + 0.2N。
+const COIN_BASE := {
+	"normal": 1.0, "hard": 1.2, "expert": 1.5, "nightmare": 1.8,
+	"inferno": 2.2, "lunatic": 2.6, "insane": 3.0,
+}
+const COIN_INSANE_STEP := 0.2
 
 ## ランの開始時に確定する現在の難易度 ("hard"、"insane3" など)。
 static var current_key: String = "normal"
@@ -113,9 +123,21 @@ static func elite_boss_hp_mult(key: String) -> float:
 	return 1.0 + (float(v[0]) + float(v[1])) / 100.0
 
 
-## 通常敵に焼いた分との比。エリート/ボス側で追加適用すると加算式になる。
+## 通常敵に焼いた分との比。エリート側で追加適用すると「エリートの実効倍率 = 2×W」になる (v1.8・D71)。
 static func elite_ratio(key: String) -> float:
-	return elite_boss_hp_mult(key) / hp_mult(key)
+	return ELITE_SCALE * elite_boss_hp_mult(key) / hp_mult(key)
+
+
+## ボスに追加適用する比。中ボスは据え置き・最終ボスは ×2 (v1.8・D71)。
+static func boss_ratio(key: String, is_final: bool) -> float:
+	var sc: float = FINAL_BOSS_SCALE if is_final else MID_BOSS_SCALE
+	return sc * elite_boss_hp_mult(key) / hp_mult(key)
+
+
+## コイン倍率 (v1.8・D66)。インセインN は基底 + 0.2N。
+static func coin_mult(key: String) -> float:
+	var p: Dictionary = parse_key(key)
+	return float(COIN_BASE[str(p["key"])]) + COIN_INSANE_STEP * float(p["insane"])
 
 
 static func bullet_speed_mult(key: String) -> float:
@@ -162,6 +184,14 @@ static func cur_hp_mult() -> float:
 
 static func cur_elite_ratio() -> float:
 	return elite_ratio(current_key)
+
+
+static func cur_boss_ratio(is_final: bool) -> float:
+	return boss_ratio(current_key, is_final)
+
+
+static func cur_coin_mult() -> float:
+	return coin_mult(current_key)
 
 
 static func cur_damage_mult() -> float:

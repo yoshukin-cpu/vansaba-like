@@ -1,9 +1,13 @@
 extends RefCounted
-## 難易度の解放状況と前回選択のみを保存する (SPEC §31.6、v1.6/案4)。
-## キャラ成長・コイン持ち越し等のメタ成長は対象外のまま (SPEC §16)。
+## セーブ (`user://vansaba_save.json`)。v1.8 で v2 に拡張 (SPEC §35.9)。
+## v2: 難易度の解放状況+前回選択 (v1) + コイン / 恒久パワーアップ / オプション。
+## v1 ファイル (coins/upgrades/options なし) も読める (欠けている項目は既定値)。
 
 const DiffDB := preload("res://data/difficulty_db.gd")
+const MetaDB := preload("res://data/meta_upgrades.gd")
+const OptDB := preload("res://data/options_db.gd")
 
+const SAVE_VERSION := 2
 const DEFAULT_PATH := "user://vansaba_save.json"
 
 ## 保存先。検証スクリプトは一時パスへ差し替える。
@@ -14,12 +18,30 @@ static var cleared: Array = []
 static var insane_cleared: int = 0
 ## 前回選んだ難易度 (タイトルの初期カーソル)。
 static var last: String = "normal"
+## 所持コイン (v1.8・D65/D66)。
+static var coins: int = 0
+## 恒久パワーアップのレベル {"M01": 2, ...} (v1.8・D67)。
+static var upgrades: Dictionary = {}
+## オプション (表示・音量) (v1.8・D62/D63/D69)。
+static var options: Dictionary = {}
+
+
+static func default_options() -> Dictionary:
+	return {
+		"mode": OptDB.MODE_WINDOW,
+		"resolution": "1152x648",
+		"bgm": OptDB.DEFAULT_BGM,
+		"se": OptDB.DEFAULT_SE,
+	}
 
 
 static func reset() -> void:
 	cleared = []
 	insane_cleared = 0
 	last = "normal"
+	coins = 0
+	upgrades = {}
+	options = default_options()
 
 
 ## 起動時の読み込み。壊れていれば初期状態 (ノーマルのみ) に戻す。
@@ -48,6 +70,34 @@ static func load_save() -> void:
 	var l: Variant = d.get("last", "normal")
 	if l is String and DiffDB.is_valid(str(l)):
 		last = str(l)
+	# --- v1.8 で追加 (v1 ファイルでは既定値のまま) ---
+	var c: Variant = d.get("coins", 0)
+	if c is float or c is int:
+		coins = maxi(0, int(c))
+	var up: Variant = d.get("upgrades", {})
+	if up is Dictionary:
+		for k: Variant in (up as Dictionary).keys():
+			var id: String = str(k)
+			if MetaDB.has_id(id):
+				var lv: Variant = (up as Dictionary)[k]
+				if lv is float or lv is int:
+					upgrades[id] = clampi(int(lv), 0, MetaDB.max_level(id))
+	var op: Variant = d.get("options", {})
+	if op is Dictionary:
+		_merge_options(op as Dictionary)
+
+
+static func _merge_options(op: Dictionary) -> void:
+	var m: String = str(op.get("mode", options["mode"]))
+	if m == OptDB.MODE_WINDOW or m == OptDB.MODE_FULLSCREEN:
+		options["mode"] = m
+	var r: String = str(op.get("resolution", options["resolution"]))
+	if OptDB.is_valid_resolution(r):
+		options["resolution"] = r
+	if op.has("bgm"):
+		options["bgm"] = OptDB.clamp_volume(float(op["bgm"]))
+	if op.has("se"):
+		options["se"] = OptDB.clamp_volume(float(op["se"]))
 
 
 static func save_now() -> void:
@@ -55,10 +105,13 @@ static func save_now() -> void:
 	if f == null:
 		return
 	f.store_string(JSON.stringify({
-		"version": 1,
+		"version": SAVE_VERSION,
 		"cleared": cleared,
 		"insane_cleared": insane_cleared,
 		"last": last,
+		"coins": coins,
+		"upgrades": upgrades,
+		"options": options,
 	}))
 	f.close()
 
@@ -88,6 +141,51 @@ static func record_clear(key: String) -> String:
 static func set_last(key: String) -> void:
 	last = key
 	save_now()
+
+
+# --- コイン (v1.8・D65/D66) ---
+
+static func add_coins(n: int) -> void:
+	coins = maxi(0, coins + n)
+	save_now()
+
+
+## コインを消費する (保存は呼び出し側に任せる。purchase() は内部で保存する)。
+static func spend_coins(n: int) -> bool:
+	if n < 0 or coins < n:
+		return false
+	coins -= n
+	return true
+
+
+# --- 恒久パワーアップ (v1.8・D67) ---
+
+## 1回購入して保存する。成功したら true。
+static func purchase(id: String) -> bool:
+	if not MetaDB.has_id(id):
+		return false
+	var lv: int = MetaDB.level_of(upgrades, id)
+	if lv >= MetaDB.max_level(id):
+		return false
+	var cost: int = MetaDB.cost(id, lv)
+	if not spend_coins(cost):
+		return false
+	upgrades[id] = lv + 1
+	save_now()
+	return true
+
+
+# --- オプション (v1.8・D62/D63/D69) ---
+
+static func set_option(key: String, value: Variant) -> void:
+	options[key] = value
+	save_now()
+
+
+## 保存されたオプションを実際の表示・音量へ適用する (起動時と変更時に呼ぶ)。
+static func apply_options() -> void:
+	OptDB.apply_volume(float(options.get("bgm", OptDB.DEFAULT_BGM)), float(options.get("se", OptDB.DEFAULT_SE)))
+	OptDB.apply_display(str(options.get("mode", OptDB.MODE_WINDOW)), str(options.get("resolution", "1152x648")))
 
 
 ## テスト用: 全難易度を解放した状態にする (保存はしない)。

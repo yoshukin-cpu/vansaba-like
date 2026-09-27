@@ -14,6 +14,7 @@ func _ready() -> void:
 	for i: int in range(8):
 		var p := AudioStreamPlayer.new()
 		p.volume_db = -10.0
+		p.bus = "SE"
 		add_child(p)
 		players.append(p)
 	for k: String in SFX_KEYS:

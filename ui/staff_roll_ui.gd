@@ -22,8 +22,7 @@ const PAGES: Array[String] = [
 [font_size=26]10分間生き残った勇者に、この約4分間を贈ります。
 テーマソングとともに、スタッフロールをお楽しみください。
 
-[color=#888888]※ トイレは今のうちにどうぞ[/color][/font_size][/center]""",
-"""[center][font_size=40][color=#ffd75e]総合プロデューサー[/color][/font_size]
+[color=#888888]※ トイレは今のうちにどうぞ[/color][/font_size][/center]""","""[center][font_size=40][color=#ffd75e]総合プロデューサー[/color][/font_size]
 
 [font_size=30]yoshuki[/font_size]
 
@@ -74,6 +73,7 @@ const PAGES: Array[String] = [
 [font_size=30]ElevenLabs (1min-image)[/font_size]
 
 [font_size=24]宝石のキラーン / 爆発のドーン / レベルアップのジャーン
+[color=#ffd75e]BGM[/color]: Suno (1min-image) — タイトル/道中/ボスの3曲 (インスト)
 [color=#ffd75e]声の出演[/color]: スライム役・スライム (本人)
 [color=#ffd75e]断末魔の演技指導[/color]: ElevenLabs (スパルタ)[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]テーマソング[/color][/font_size]
@@ -84,6 +84,13 @@ const PAGES: Array[String] = [
 作詞・作曲・編曲・ギターソロ (架空): Suno
 ♪ じゅっぷんかんの王国は 終わらない ♪
 このロールはこの曲の長さに合わせて引き延ばされています。[/font_size][/center]""",
+"""[center][font_size=40][color=#ffd75e]BGM[/color][/font_size]
+
+[font_size=30]Suno (1min-image)[/font_size]
+
+[font_size=24]タイトル「静かなピアノ」/ 道中「控えめの行進曲」/ ボス「巨大な存在」
+3曲ともインスト・ループ前提。ボスで曲が切り替わるのがこだわりです。
+[color=#ffd75e]切替[/color]: フェードで自然に。倒したら続きから流れます。[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]出演 : 主人公[/color][/font_size]
 
 [font_size=24]HP120 / 移動230px/s / 特技:自動で弾を撃つ (意思とは無関係)
@@ -126,6 +133,11 @@ const PAGES: Array[String] = [
 全ジェム回収 / 宝箱ラッシュ / 武器Lv+1 / ノヴァ (画面一掃)
 ハズレ枠のコインは「開けたのにハズレという小さな失望」(仕様です)。
 レア枠: 全回復・大金貨・武器強化 (5%の奇跡)。[/font_size][/center]""",
+"""[center][font_size=40][color=#ffd75e]コインと強化[/color][/font_size]
+
+[font_size=24]コインは拾って貯めて、強化画面で使うもの。大金貨は10コイン分。
+同じ項目を買うほど値段は上がります。少しずつ、しかし確実に。
+[color=#ffd75e]金運[/color]: 上げすぎると宝箱を開けるのが楽しくなります (仕様)[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]世界・美術[/color][/font_size]
 
 [font_size=24]無限ループ世界 13,824px (約1分で一周)
@@ -153,6 +165,9 @@ const PAGES: Array[String] = [
 """[center][font_size=56][color=#ffd75e]Thank you so much for playing.[/color][/font_size][/center]""",
 ]
 
+## 再演モード (res == null) のヘッダー文言 (D64)。
+const HEADER_REPLAY := "[center][font_size=48][color=#ffd75e]クリアおめでとう! (再演)[/color][/font_size]\n\n[font_size=26]本編は10分生き残ると見られます。どうぞお楽しみください。[/font_size][/center]"
+
 var song_len: float = FALLBACK_LEN
 var scroll_time: float = 60.0
 var elapsed: float = 0.0
@@ -160,6 +175,8 @@ var rolling: bool = false
 var finale: bool = false
 var ended: bool = false
 var music_started: bool = false
+## 再演モード (= 実ノード無し・D64)。検証用に公開する。
+var replay_mode: bool = false
 var _start_y: float = 0.0
 var _end_y: float = 0.0
 ## 時刻付き歌詞と表示中行のキー (無駄な書き換え防止)。
@@ -194,6 +211,8 @@ func _ready() -> void:
 
 ## res: リザルト UI。その CLEAR!/戦績ノードをそのままスクロールさせる
 ## (位置・大きさ・色が完全に一致する)。背景はリザルトの Dim が黒くする。
+## res == null は再演モード (オプションの「スタッフロール再演」・D64)。
+## 実ノードが無いため内蔵ヘッダーを使い、最初から黒背景で流す。何も保存しない。
 func start_roll(res: CanvasLayer) -> void:
 	song_len = FALLBACK_LEN
 	if player.stream != null:
@@ -203,14 +222,19 @@ func start_roll(res: CanvasLayer) -> void:
 	# 曲の尺 (Thanks 分を除く) いっぱいに引き延ばし、Thanks が曲終わりに来るようにする。
 	scroll_time = song_len - THANKS_LEAD
 	_res = res
-	_rc = res.get_node("Center") as Control
-	# 解放通知行もそのまま残して一緒にスクロールさせる (D44)。
-	# 実ノードをそのまま流用するため、位置・大きさ・色は完全一致のまま流れる。
+	_rc = null
+	replay_mode = res == null
+	if res != null:
+		# 解放通知行もそのまま残して一緒にスクロールさせる (D44)。
+		# 実ノードをそのまま流用するため、位置・大きさ・色は完全一致のまま流れる。
+		_rc = res.get_node("Center") as Control
+		header.hide()
+	else:
+		header.text = HEADER_REPLAY
+		header.show()
 	_layout_art()
 	if not get_viewport().size_changed.is_connected(_layout_art):
 		get_viewport().size_changed.connect(_layout_art)
-	# 内蔵ヘッダーは使わない (実ノードが先頭になる)。
-	header.hide()
 	_lyrics = LyricDB.load_timed()
 	_lyric_key = ""
 	lyric_bar.hide()
@@ -224,8 +248,8 @@ func start_roll(res: CanvasLayer) -> void:
 	finale = false
 	ended = false
 	music_started = false
-	# 背景は透明のまま (リザルトの Dim が黒)。交換時に不透明化する。
-	bg.modulate.a = 0.0
+	# 背景: 実ノード版は透明のまま (リザルトの Dim が黒)。再演モードは最初から黒。
+	bg.modulate.a = 0.0 if res != null else 1.0
 	art.modulate.a = 0.0
 	scroller.show()
 	thanks_center.hide()

@@ -146,6 +146,7 @@ func _t_item_pickup(player: Node2D, director: Node, main: Node) -> void:
 	for i: int in range(15):
 		await process_frame
 	_check("coin pickup +100", int(main.get("score")) == s0 + 100 and not is_instance_valid(it))
+	_check("coin pickup: コイン +1 (v1.8)", absf(float(main.get("run_coins")) - 1.0) < 0.001)
 	# 爆弾は開封時即時 (取得不要): apply_item 直呼びで設置される
 	var b0: int = get_nodes_in_group("item_bombs").size()
 	director.call("apply_item", "T03", player.global_position)

@@ -6,7 +6,8 @@ const COUNT_TABLE := [2, 2, 3, 3, 4, 4, 5, 6]
 const DMG_TABLE := [8.0, 10.0, 12.0, 14.0, 16.0, 17.0, 18.0, 20.0]
 
 @export var projectile_speed: float = 420.0
-@export var projectile_lifetime: float = 3.0
+## D70: 初期射程 630px (横は画面端を少し越えるが、追尾で曲がるため長めでよい)。
+@export var projectile_lifetime: float = 1.5
 
 func _ready() -> void:
 	super._ready()
@@ -15,6 +16,10 @@ func _ready() -> void:
 	cooldown = 2.0
 	damage = DMG_TABLE[0]
 	timer = 1.2
+
+## D70: 実効射程 = 弾速 × 寿命 (倍率込み)。オートエイムもここまでに制限する。
+func aim_range() -> float:
+	return projectile_speed * pstat("bullet_speed_mult", 1.0) * projectile_lifetime * pstat("duration_mult", 1.0)
 
 func upgrade() -> void:
 	super.upgrade()

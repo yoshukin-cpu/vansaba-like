@@ -141,5 +141,6 @@ text = "タイトルへ"
 
 [node name="ThemePlayer" type="AudioStreamPlayer" parent="."]
 process_mode = 3
+bus = "BGM"
 stream = ExtResource("2")
 volume_db = -6.0

@@ -125,7 +125,7 @@ func _t_nova_item(player: Node2D, director: Node) -> void:
 ## 4) タイトル: 終了ボタン・quit接続・絵・Dim
 func _t_title(main: Node) -> void:
 	var title: CanvasLayer = main.get_node("TitleUI")
-	_check("quit button exists", title.get_node_or_null("Center/VBox/QuitBtn") != null)
+	_check("quit button exists", title.get_node_or_null("QuitBtn") != null)
 	_check("quit_pressed connected", title.is_connected("quit_pressed", Callable(main, "_on_desktop_quit")))
 	var art: TextureRect = title.get_node_or_null("Art") as TextureRect
 	_check("title art shown", art != null and art.texture != null)

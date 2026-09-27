@@ -5,7 +5,8 @@ const ProjectileScene: PackedScene = preload("res://projectiles/projectile.tscn"
 @export var projectile_speed: float = 500.0
 @export var projectile_count: int = 1
 @export var spread: float = 0.12
-@export var projectile_lifetime: float = 2.0
+## D70: 初期射程が画面内 (500px) に収まる寿命。C11 持続UP で画面外まで伸びる。
+@export var projectile_lifetime: float = 1.0
 @export var pierce: int = 1
 
 func _ready() -> void:
@@ -15,6 +16,10 @@ func _ready() -> void:
 	cooldown = 1.0
 	damage = 10.0
 	timer = 0.7
+
+## D70: 実効射程 = 弾速 × 寿命 (倍率込み)。オートエイムもここまでに制限する。
+func aim_range() -> float:
+	return projectile_speed * pstat("bullet_speed_mult", 1.0) * projectile_lifetime * pstat("duration_mult", 1.0)
 
 func upgrade() -> void:
 	super.upgrade()

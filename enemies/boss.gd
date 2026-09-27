@@ -21,7 +21,8 @@ func _ready() -> void:
 	add_to_group("bosses")
 	# ボスはエリートと同じ「加算式」の硬さにする (SPEC §31.5)。
 	# 通常敵ぶんは super._ready() で適用済みなので、比だけを追加で掛ける。
-	var ratio: float = DiffDB.cur_elite_ratio()
+	# v1.8・D71: 中ボス (B01) は据え置き・最終ボス (B02) は ×2。
+	var ratio: float = DiffDB.cur_boss_ratio(boss_id == "B02")
 	if not is_equal_approx(ratio, 1.0):
 		max_hp *= ratio
 		hp = max_hp

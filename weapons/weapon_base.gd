@@ -80,13 +80,18 @@ func ammo_pool(group_name: String) -> Node:
 func kb_mult() -> float:
 	return pstat("knockback_mult", 1.0)
 
+## オートエイムの探索射程 (D70)。C02/C03 は実効射程 (弾速×寿命) で上書きする。
+## 射程外の敵を狙って必ず外す撃ち方をなくすため。
+func aim_range() -> float:
+	return 900.0
+
 func get_fire_direction() -> Vector2:
 	var joy: Vector2 = Input.get_vector("aim_left", "aim_right", "aim_up", "aim_down")
 	if joy.length() > 0.2:
 		return joy.normalized()
 	if player != null and player.has_method("is_mouse_aim_fresh") and bool(player.call("is_mouse_aim_fresh")):
 		return (player.get("aim_direction") as Vector2)
-	var near: Node2D = find_nearest_enemy(900.0, true)
+	var near: Node2D = find_nearest_enemy(aim_range(), true)
 	if near != null and player != null:
 		var d: Vector2 = near.global_position - player.global_position
 		if d.length() > 1.0:

@@ -12,6 +12,7 @@ var _leaving: bool = false
 
 @onready var title_label: Label = $Center/VBox/Title
 @onready var stats_label: Label = $Center/VBox/Stats
+@onready var coin_label: Label = $Center/VBox/CoinLabel
 @onready var unlock_label: Label = $Center/VBox/UnlockLabel
 @onready var retry_btn: Button = $Center/VBox/RetryBtn
 @onready var title_btn: Button = $Center/VBox/TitleBtn
@@ -70,7 +71,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				title_pressed.emit()
 
-func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0, difficulty: String = "", unlock_text: String = "") -> void:
+func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0, difficulty: String = "", unlock_text: String = "", coins_text: String = "") -> void:
 	is_clear = clear
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
 	var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
@@ -80,6 +81,9 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	# クリアで新規解放があれば「解放: ○○!」を1行足す (D41)。
 	unlock_label.text = unlock_text
 	unlock_label.visible = unlock_text != ""
+	# コイン確定行 (v1.8・D66)。実ノード流用のためスタッフロールにもそのまま載る。
+	coin_label.text = coins_text
+	coin_label.visible = coins_text != ""
 	retry_btn.visible = not clear
 	title_btn.visible = not clear
 	_leaving = false
