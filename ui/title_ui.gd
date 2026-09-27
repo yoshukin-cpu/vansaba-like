@@ -27,12 +27,14 @@ var _entries: Array = []
 var _idx: int = 0
 ## D46: スティック連続切替防止のラッチ。Motion で切替えたらニュートラルまで無効。
 var _diff_axis_armed: bool = true
+## モーダル (強化/オプション) を開く直前にフォーカスしていたボタン (閉じた後の戻り先)。
+var _last_focus: Button = null
 
 func _ready() -> void:
 	start_btn.pressed.connect(func() -> void: start_pressed.emit())
 	quit_btn.pressed.connect(func() -> void: quit_pressed.emit())
-	upgrade_btn.pressed.connect(func() -> void: upgrade_pressed.emit())
-	options_btn.pressed.connect(func() -> void: options_pressed.emit())
+	upgrade_btn.pressed.connect(func() -> void: _remember_focus(); upgrade_pressed.emit())
+	options_btn.pressed.connect(func() -> void: _remember_focus(); options_pressed.emit())
 	left_btn.pressed.connect(func() -> void: _cycle(-1))
 	right_btn.pressed.connect(func() -> void: _cycle(1))
 	# D83: 左側に縦並びにしたメニューの上下移動を明示配線する (左右では動かさない)。
@@ -59,11 +61,34 @@ func _modal_open() -> bool:
 	return false
 
 ## モーダル (オプション/強化) を閉じた後にフォーカスを戻す (v1.8・D74)。
+## 修正: 「はじめる」が無効 (ロック中の難易度) のときは、開く前にフォーカスしていた
+## 有効なボタン (無ければ左メニューの先頭) へ戻す。以前は disabled のとき何もしなかったため、
+## フォーカスが空のままになり、囲みが消えて ↑↓ でも移動できなくなっていた (パッド不具合)。
 func focus_start() -> void:
 	if not visible:
 		return
+	_focus_fallback()
+
+
+## モーダルを開く直前にフォーカスしていたボタンを記憶する (閉じた後の戻り先)。
+func _remember_focus() -> void:
+	var f: Control = get_viewport().gui_get_focus_owner()
+	if f is Button and not (f as Button).disabled:
+		_last_focus = f as Button
+
+
+## フォーカスが空のときに入れるボタン: はじめる (有効時) → 直前のボタン → 左メニュー先頭。
+func _focus_fallback() -> void:
 	if not start_btn.disabled:
 		start_btn.grab_focus()
+		return
+	if _last_focus != null and is_instance_valid(_last_focus) and not _last_focus.disabled:
+		_last_focus.grab_focus()
+		return
+	for b: Button in [upgrade_btn, options_btn, quit_btn]:
+		if not b.disabled:
+			b.grab_focus()
+			return
 
 ## 所持コインの表示 (v1.8・D65)。強化で購入した後に main から呼ばれる。
 func refresh_coins() -> void:
@@ -158,6 +183,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible or _modal_open():
 		return
 	if event is InputEventKey and (event as InputEventKey).echo:
+		return
+	# 保険: フォーカスが空 (モーダルを閉じた直後など) でも ↑↓ でメニューに入れるようにする。
+	# フォーカスがあるときの移動は Godot のフォーカス移動に任せる (ここでは何もしない)。
+	var up_pressed: bool = event.is_action_pressed("ui_up") or event.is_action_pressed("move_up")
+	var down_pressed: bool = event.is_action_pressed("ui_down") or event.is_action_pressed("move_down")
+	if up_pressed or down_pressed:
+		if get_viewport().gui_get_focus_owner() == null:
+			get_viewport().set_input_as_handled()
+			_focus_fallback()
 		return
 	# 難易度の左右切替 (←→ / 十字キー / 左スティック)。ロック中は _cycle が無効。
 	# D46: Motion 由来 (スティック) は倒しっぱなしで連続発火するため、ラッチで1回だけにする。

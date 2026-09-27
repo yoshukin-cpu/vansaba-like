@@ -39,6 +39,8 @@ func _initialize() -> void:
 	await _case("8) はじめる (直接フォーカス) + Space", "start", "space", true)
 	await _case9_locked_quit()
 	await _case10_locked_start()
+	await _case11_locked_upgrade_back()
+	await _case12_locked_options_back()
 	SaveData.path = SaveData.DEFAULT_PATH
 	SaveData.reset()
 	if FileAccess.file_exists(TEST_SAVE):
@@ -233,3 +235,54 @@ func _case10_locked_start() -> void:
 	_check("10: ゲームが始まらない (title visible=%s)" % str(title.visible), title.visible)
 	_check("10: start=0 quit=0 (何も起きない)", starts == 0 and quits == 0)
 	_check("10: 押されたボタンは0回", btn_pressed == 0)
+
+
+## 11) ロック中の難易度 + 強化画面 → B で戻る → フォーカスが戻り ↑↓で移動できる (修正の回帰)。
+func _case11_locked_upgrade_back() -> void:
+	print("\n=== 11) ロック中の難易度 + 強化画面 + B で戻る ===")
+	var m: Node = await _setup_locked()
+	var title: CanvasLayer = m.get_node("TitleUI")
+	var upgrade_ui: CanvasLayer = m.get_node("UpgradeUI")
+	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
+	var ubtn: Button = title.get_node("LeftMenu/UpgradeBtn")
+	_check("11: ロック中で開始が無効", sbtn.disabled)
+	await _action("ui_down")
+	var f1: Control = root.gui_get_focus_owner()
+	_check("11: ↓ で 強化 に移動 (%s)" % str(f1 != null and f1.name), f1 == ubtn)
+	await _pad_a()
+	_check("11: 強化画面が開く", upgrade_ui.visible)
+	_check("11: 開くとフォーカスは解放", root.gui_get_focus_owner() == null)
+	await _action("ui_cancel")
+	_check("11: B で閉じる", not upgrade_ui.visible)
+	var f2: Control = root.gui_get_focus_owner()
+	_check("11: 閉じたら有効なボタンへフォーカスが戻る (%s)" % str(f2 != null and f2.name),
+		f2 is Button and not (f2 as Button).disabled)
+	await _action("ui_down")
+	var f3: Control = root.gui_get_focus_owner()
+	_check("11: 戻った後に ↓ で移動できる (%s → %s)" % [str(f2 != null and f2.name), str(f3 != null and f3.name)],
+		f3 != null and f3 != f2)
+
+
+## 12) ロック中の難易度 + オプション画面 → B で戻る → 同様にフォーカスが戻ること。
+func _case12_locked_options_back() -> void:
+	print("\n=== 12) ロック中の難易度 + オプション画面 + B で戻る ===")
+	var m: Node = await _setup_locked()
+	var title: CanvasLayer = m.get_node("TitleUI")
+	var options_ui: CanvasLayer = m.get_node("OptionsUI")
+	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
+	var obtn: Button = title.get_node("LeftMenu/OptionsBtn")
+	_check("12: ロック中で開始が無効", sbtn.disabled)
+	await _action("ui_down")
+	await _action("ui_down")
+	var f1: Control = root.gui_get_focus_owner()
+	_check("12: ↓↓ で オプション に移動 (%s)" % str(f1 != null and f1.name), f1 == obtn)
+	await _pad_a()
+	_check("12: オプション画面が開く", options_ui.visible)
+	await _action("ui_cancel")
+	_check("12: B で閉じる", not options_ui.visible)
+	var f2: Control = root.gui_get_focus_owner()
+	_check("12: 閉じたら有効なボタンへフォーカスが戻る (%s)" % str(f2 != null and f2.name),
+		f2 is Button and not (f2 as Button).disabled)
+	await _action("ui_down")
+	var f3: Control = root.gui_get_focus_owner()
+	_check("12: 戻った後に ↓ で移動できる", f3 != null and f3 != f2)
