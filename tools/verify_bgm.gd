@@ -56,9 +56,9 @@ func _t_static() -> void:
 		_check("%s は MP3" % k, s is AudioStreamMP3)
 	_check("BGM バスがある", AudioServer.get_bus_index("BGM") >= 0)
 	_check("SE バスがある", AudioServer.get_bus_index("SE") >= 0)
-	_check("基準音量 title -8 / game -14 / boss -10",
+	_check("基準音量 title -8 / game -10 / boss -10 (D80)",
 		float(BgmScript.TRACK_DB["title"]) == -8.0
-		and float(BgmScript.TRACK_DB["game"]) == -14.0
+		and float(BgmScript.TRACK_DB["game"]) == -10.0
 		and float(BgmScript.TRACK_DB["boss"]) == -10.0)
 
 
@@ -91,7 +91,7 @@ func _t_states() -> void:
 	_check("game 状態", int(bgm.get("state")) == BgmScript.State.GAME)
 	_check("ゲーム曲が鳴っている", pg.playing)
 	await _frames(55)
-	_check("game のフェードイン完了 ≈ -14dB (%.2f)" % pg.volume_db, absf(pg.volume_db - (-14.0)) <= 0.3)
+	_check("game のフェードイン完了 ≈ -10dB (%.2f)" % pg.volume_db, absf(pg.volume_db - (-10.0)) <= 0.3)
 	_check("title はフェードアウトして停止", not pt.playing)
 
 	# ボス出現 → boss (フェードアウト時に再生位置を保存する)

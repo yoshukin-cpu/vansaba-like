@@ -10,10 +10,10 @@ const DiffDB := preload("res://data/difficulty_db.gd")
 const SaveData := preload("res://systems/save_data.gd")
 
 @onready var start_btn: Button = $Center/VBox/StartBtn
-## v1.8 (D73): 終了は VBox を出して画面左下に固定 (デフォルト解像度で VBox が見切れるため)。
-@onready var quit_btn: Button = $QuitBtn
-@onready var upgrade_btn: Button = $Center/VBox/MenuRow/UpgradeBtn
-@onready var options_btn: Button = $Center/VBox/MenuRow/OptionsBtn
+## v1.8 追補3 (D83): 強化/オプション/終了は画面左側に縦並び (LeftMenu)。
+@onready var quit_btn: Button = $LeftMenu/QuitBtn
+@onready var upgrade_btn: Button = $LeftMenu/UpgradeBtn
+@onready var options_btn: Button = $LeftMenu/OptionsBtn
 @onready var coin_label: Label = $Center/VBox/CoinLabel
 @onready var left_btn: Button = $Center/VBox/DiffRow/LeftBtn
 @onready var right_btn: Button = $Center/VBox/DiffRow/RightBtn
@@ -35,8 +35,8 @@ func _ready() -> void:
 	options_btn.pressed.connect(func() -> void: options_pressed.emit())
 	left_btn.pressed.connect(func() -> void: _cycle(-1))
 	right_btn.pressed.connect(func() -> void: _cycle(1))
-	# D73: 左下に固定した「終了」を含む上下ナビゲーションを明示配線する
-	# (VBox の外に出したため、自動の幾何探索では 強化 → 終了 に飛んでしまう)。
+	# D83: 左側に縦並びにしたメニューの上下移動を明示配線する (左右では動かさない)。
+	# 中央の「はじめる」→ 左メニューを ↓ で降り、↑ で戻る。端では循環する。
 	start_btn.focus_neighbor_bottom = start_btn.get_path_to(upgrade_btn)
 	start_btn.focus_neighbor_top = start_btn.get_path_to(quit_btn)
 	upgrade_btn.focus_neighbor_bottom = upgrade_btn.get_path_to(options_btn)
@@ -126,8 +126,12 @@ func _update_display() -> void:
 	var unlocked: bool = bool(cur["unlocked"])
 	var selector_on: bool = not SaveData.cleared.is_empty()
 	diff_name.text = DiffDB.display_name(key)
-	# ロック中は暗くして鍵マークを出す (要求どおり)。
-	diff_name.modulate = Color(1, 1, 1, 1) if unlocked else Color(0.42, 0.42, 0.48, 1)
+	# ロック中は暗くする (要求どおり)。D81: 難易度選択自体が無効な間 (未クリア) は「ノーマル」も暗くする。
+	var dim: bool = (not selector_on) or (not unlocked)
+	diff_name.modulate = Color(0.42, 0.42, 0.48, 1) if dim else Color(1, 1, 1, 1)
+	# D81: 選択自体が無効な間は ◀▶ も無効表示 (押しても何も起きないことを見た目で示す)。
+	left_btn.disabled = not selector_on
+	right_btn.disabled = not selector_on
 	# D45: 表示の有無にかかわらず他の表示位置を固定するため、hide() せず空行で領域を残す。
 	if not selector_on:
 		diff_lock.text = "🔒 1度クリアすると難易度選択が解放されます"

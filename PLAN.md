@@ -356,6 +356,18 @@ res://
   環境の注意: headless はマウス入力が GUI に届かず、ルート viewport も 100×100 のため、クリック系は窓ありで検証する
   (stretch keep の座標変換 = キャンバス座標×等比+中央寄せが必要)。
 
+### P24 アプリ名・BGM音量・難易度ロック表示・スティックラッチ・タイトルのメニュー配置 [M20-4] (v1.8 追補3・D79〜D83)
+
+- 実装: `project.godot` (`application/config/name = "Vansaba Like!"`) / `systems/save_data.gd` (`_migrate_legacy_save()` =
+  旧名セーブの一度きりの引継ぎ。`legacy_path` は検証から差し替え可) / `systems/bgm_manager.gd` (`TRACK_DB["game"] = -10.0`) /
+  `ui/title_ui.tscn` (左側の `LeftMenu` に 強化/オプション/終了 を縦並び・中央の `MenuRow` を削除) /
+  `ui/title_ui.gd` (フォーカス配線・ロック中の「ノーマル」を暗く + ◀▶ 無効) / `ui/options_ui.gd` (左右のスティックラッチ `_axis_armed_h`)
+- 検証: `tools/verify_v13.gd` (アプリ名・左カラムの縦並びと座標・難易度ロック中の暗色と ◀▶ 無効)・
+  `tools/test_title_input.gd` (左カラム経由の ↓ 移動で 終了)・`tools/verify_options.gd` (スティック倒しっぱなしで1回だけ変化)・
+  `tools/verify_bgm.gd` (game −10dB)・`tools/verify_options.gd` に旧セーブ引継ぎ・全回帰
+- **完了条件**: ウィンドウタイトルが「Vansaba Like!」。既存セーブが引き継がれる。ゲーム中の BGM が聞き取りやすい。
+  初期状態 (未クリア) で「ノーマル」が暗い。オプションの◀▶がスティック倒しっぱなしで連続しない。タイトルのメニューが左に縦並びで ↑↓ のみで移動。
+
 ## 3. 並行可能タスク
 
 - P10 (素材生成) は P8/P9 と並行可 (仮タイルで先にロジックを通すため)

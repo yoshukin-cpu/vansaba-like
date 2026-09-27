@@ -10,8 +10,8 @@ const TRACKS := {
 	"game": "res://audio/music/bgm_game.mp3",
 	"boss": "res://audio/music/bgm_boss.mp3",
 }
-## トラックの基準音量 (要件: ゲーム中は抑えめ。P21 の耳確認で調整する)。
-const TRACK_DB := {"title": -8.0, "game": -14.0, "boss": -10.0}
+## トラックの基準音量 (要件: ゲーム中は抑えめ。追補3/D80 で −14 → −10dB に上げた)。
+const TRACK_DB := {"title": -8.0, "game": -10.0, "boss": -10.0}
 ## 無音とみなす下限 (フェードの開始・終了に使う)。
 const SILENT_DB := -60.0
 

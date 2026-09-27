@@ -48,8 +48,23 @@ func _init() -> void:
 	for i: int in range(12):
 		await process_frame
 	await _set_window("1152x648")
-	# 1) タイトル (デフォルト解像度)。終了ボタンが左下に全部見えること。
+	# 1) タイトル (デフォルト解像度)。左メニュー (強化/オプション/終了) の縦並びを確認。
 	await _shot("v18_title_default.png")
+	# 1b) 難易度選択がロック中 (初期状態) の見え方 (D81: 「ノーマル」も暗い)
+	var save_script := preload("res://systems/save_data.gd")
+	var kept_cleared: Array = save_script.cleared.duplicate()
+	var kept_insane: int = save_script.insane_cleared
+	save_script.cleared = []
+	save_script.insane_cleared = 0
+	(main.get_node("TitleUI") as CanvasLayer).call("refresh_difficulty")
+	for i: int in range(4):
+		await process_frame
+	await _shot("v18_title_locked.png")
+	save_script.cleared = kept_cleared
+	save_script.insane_cleared = kept_insane
+	(main.get_node("TitleUI") as CanvasLayer).call("refresh_difficulty")
+	for i: int in range(3):
+		await process_frame
 	# 2) オプション (解放済み: スタッフロール再演の行も出る)
 	main.call("_on_options")
 	for i: int in range(6):

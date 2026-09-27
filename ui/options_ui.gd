@@ -24,6 +24,8 @@ const HINT_CONFIRM := "←→: はい/いいえ　Enter / A / クリック: 決�
 var rows: Array = []
 var idx: int = 0
 var _axis_armed_v: bool = true
+## D82: 左右 (値の変更・確認のはい/いいえ) のスティックラッチ。X軸が戻るまで1回だけ。
+var _axis_armed_h: bool = true
 ## セーブデータ初期化の確認中 (D76)。確認中の idx は 0 = はい / 1 = いいえ。
 var confirming: bool = false
 var confirm_idx: int = 1
@@ -47,6 +49,7 @@ func open() -> void:
 	rebuild()
 	visible = true
 	_axis_armed_v = true
+	_axis_armed_h = true
 	# D74: タイトルがフォーカスを持ったままだとキーが食われて (a) 画面が操作できない (b) タイトルが動く。
 	# モーダル側はフォーカスを使わず _unhandled_input で操作するため、開いた時点で解放する。
 	get_viewport().gui_release_focus()
@@ -215,6 +218,9 @@ func _process(_delta: float) -> void:
 		return
 	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)) < 0.2:
 		_axis_armed_v = true
+	# D82: 左右もニュートラルに戻ったら再武装する (倒しっぱなしで連続発火させない)。
+	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_X)) < 0.2:
+		_axis_armed_h = true
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -243,10 +249,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		_move(1)
 		return
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		if motion and not _axis_armed_h:
+			return
+		if motion:
+			_axis_armed_h = false
 		get_viewport().set_input_as_handled()
 		_change(-1)
 		return
 	if event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		if motion and not _axis_armed_h:
+			return
+		if motion:
+			_axis_armed_h = false
 		get_viewport().set_input_as_handled()
 		_change(1)
 		return
@@ -272,14 +286,21 @@ func _unhandled_input(event: InputEvent) -> void:
 ## 初期化の確認中の入力 (D76)。はい/いいえの切替・決定・取消。
 func _confirm_input(event: InputEvent) -> void:
 	var motion: bool = event is InputEventJoypadMotion
-	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left") \
-			or event.is_action_pressed("ui_right") or event.is_action_pressed("move_right") \
-			or event.is_action_pressed("ui_up") or event.is_action_pressed("move_up") \
-			or event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
-		if motion and not _axis_armed_v:
-			return
+	var horizontal: bool = event.is_action_pressed("ui_left") or event.is_action_pressed("move_left") \
+			or event.is_action_pressed("ui_right") or event.is_action_pressed("move_right")
+	var vertical: bool = event.is_action_pressed("ui_up") or event.is_action_pressed("move_up") \
+			or event.is_action_pressed("ui_down") or event.is_action_pressed("move_down")
+	if horizontal or vertical:
+		# D82: スティックは倒しっぱなしで連続発火しないよう、軸ごとにラッチする。
 		if motion:
-			_axis_armed_v = false
+			if horizontal and not _axis_armed_h:
+				return
+			if vertical and not _axis_armed_v:
+				return
+			if horizontal:
+				_axis_armed_h = false
+			if vertical:
+				_axis_armed_v = false
 		get_viewport().set_input_as_handled()
 		_set_confirm(1 - confirm_idx)
 		return

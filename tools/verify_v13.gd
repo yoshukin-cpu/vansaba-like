@@ -6,6 +6,7 @@ extends SceneTree
 const MainScene: PackedScene = preload("res://main.tscn")
 const SlimeScene: PackedScene = preload("res://enemies/slime.tscn")
 const ItemsDB := preload("res://data/items_db.gd")
+const SaveData := preload("res://systems/save_data.gd")
 
 var fails := 0
 
@@ -122,15 +123,54 @@ func _t_nova_item(player: Node2D, director: Node) -> void:
 		await process_frame
 
 
-## 4) タイトル: 終了ボタン・quit接続・絵・Dim
+## 4) タイトル: 終了ボタン・quit接続・絵・Dim・左メニュー (D79/D81/D83)
 func _t_title(main: Node) -> void:
 	var title: CanvasLayer = main.get_node("TitleUI")
-	_check("quit button exists", title.get_node_or_null("QuitBtn") != null)
+	_check("quit button exists", title.get_node_or_null("LeftMenu/QuitBtn") != null)
 	_check("quit_pressed connected", title.is_connected("quit_pressed", Callable(main, "_on_desktop_quit")))
 	var art: TextureRect = title.get_node_or_null("Art") as TextureRect
 	_check("title art shown", art != null and art.texture != null)
 	var dim: ColorRect = title.get_node("Dim") as ColorRect
 	_check("dim alpha 0.55", absf(dim.color.a - 0.55) < 0.01)
+	# D79: アプリ名 (ウィンドウタイトルに効く)
+	_check("アプリ名は Vansaba Like! (D79)",
+		str(ProjectSettings.get_setting("application/config/name")) == "Vansaba Like!")
+	# D83: 強化/オプション/終了が左側に縦並び
+	var up: Button = title.get_node("LeftMenu/UpgradeBtn")
+	var op: Button = title.get_node("LeftMenu/OptionsBtn")
+	var qt: Button = title.get_node("LeftMenu/QuitBtn")
+	var start: Button = title.get_node("Center/VBox/StartBtn")
+	var half_w: float = root.get_visible_rect().size.x * 0.5
+	_check("メニュー3つが左側に縦並び (D83)",
+		up.global_position.x < half_w and op.global_position.x < half_w and qt.global_position.x < half_w
+		and up.global_position.y < op.global_position.y and op.global_position.y < qt.global_position.y)
+	_check("左右の近傍を作らない (D83: 上下のみで移動)",
+		up.focus_neighbor_left.is_empty() and up.focus_neighbor_right.is_empty()
+		and qt.focus_neighbor_left.is_empty() and qt.focus_neighbor_right.is_empty())
+	_check("フォーカス配線: はじめる↔強化↔オプション↔終了 (D83)",
+		up.focus_neighbor_top == up.get_path_to(start) and up.focus_neighbor_bottom == up.get_path_to(op)
+		and op.focus_neighbor_bottom == op.get_path_to(qt) and qt.focus_neighbor_top == qt.get_path_to(op))
+	# D81: 難易度選択自体がロック中 (未クリア) は「ノーマル」も暗く・◀▶ も無効
+	var saved_cleared: Array = SaveData.cleared.duplicate()
+	var saved_insane: int = SaveData.insane_cleared
+	SaveData.cleared = []
+	SaveData.insane_cleared = 0
+	title.call("refresh_difficulty")
+	var diff_name: Label = title.get_node("Center/VBox/DiffRow/DiffName")
+	_check("未クリアでは「ノーマル」も暗い (D81)",
+		str(diff_name.text) == "ノーマル" and diff_name.modulate.r < 0.6)
+	_check("未クリアでは ◀▶ も無効表示 (D81)",
+		(title.get_node("Center/VBox/DiffRow/LeftBtn") as Button).disabled
+		and (title.get_node("Center/VBox/DiffRow/RightBtn") as Button).disabled)
+	SaveData.cleared = ["normal"]
+	SaveData.insane_cleared = 0
+	title.call("refresh_difficulty")
+	_check("解放後は「ノーマル」が明るく ◀▶ も有効 (D81)",
+		diff_name.modulate.r > 0.9
+		and not (title.get_node("Center/VBox/DiffRow/LeftBtn") as Button).disabled)
+	SaveData.cleared = saved_cleared
+	SaveData.insane_cleared = saved_insane
+	title.call("refresh_difficulty")
 
 
 func _spawn_slime(at: Vector2) -> Node2D:

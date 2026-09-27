@@ -9,9 +9,34 @@ const OptDB := preload("res://data/options_db.gd")
 
 const SAVE_VERSION := 2
 const DEFAULT_PATH := "user://vansaba_save.json"
+## 旧アプリ名 (v1.8 追補3・D79 で "Vansaba Like!" に改名)。改名で user:// の場所が変わるため、
+## 初回だけこの名前のフォルダのセーブを引き継ぐ。
+const LEGACY_DIR_NAME := "godot test"
 
 ## 保存先。検証スクリプトは一時パスへ差し替える。
 static var path: String = DEFAULT_PATH
+## 旧名セーブの場所 (検証から差し替えるための上書き。空なら既定値を計算する)。
+static var legacy_path: String = ""
+
+## 旧アプリ名のセーブの場所 (既定: <user_data>/<旧名>/vansaba_save.json)。
+static func _legacy_save_path() -> String:
+	if legacy_path != "":
+		return legacy_path
+	return OS.get_user_data_dir().get_base_dir().path_join(LEGACY_DIR_NAME).path_join("vansaba_save.json")
+
+
+## 改名前のセーブを新規パスへ一度だけコピーする (D79)。既に新パスがあるときは何もしない。
+## 検証が `legacy_path` を明示したときだけ一時パスでも動かす (実運用は DEFAULT_PATH のみ)。
+static func _migrate_legacy_save() -> void:
+	if (path != DEFAULT_PATH and legacy_path == "") or FileAccess.file_exists(path):
+		return
+	var legacy: String = _legacy_save_path()
+	if not FileAccess.file_exists(legacy):
+		return
+	var dst: String = ProjectSettings.globalize_path(path)
+	var err: int = DirAccess.copy_absolute(legacy, dst)
+	if err == OK:
+		print("[save] 旧アプリ名のセーブを引き継ぎました: ", legacy)
 ## クリア済みの難易度キー (インセインN は含めない)。
 static var cleared: Array = []
 ## クリア済みインセインN の最大 N (0 = インセイン1未クリア)。
@@ -57,6 +82,7 @@ static func reset_progress() -> void:
 ## 起動時の読み込み。壊れていれば初期状態 (ノーマルのみ) に戻す。
 static func load_save() -> void:
 	reset()
+	_migrate_legacy_save()
 	if not FileAccess.file_exists(path):
 		return
 	var f: FileAccess = FileAccess.open(path, FileAccess.READ)

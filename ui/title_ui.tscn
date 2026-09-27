@@ -89,19 +89,29 @@ theme_override_font_sizes/font_size = 32
 text = "はじめる"
 size_flags_horizontal = 4
 
-[node name="MenuRow" type="HBoxContainer" parent="Center/VBox"]
+[node name="LeftMenu" type="VBoxContainer" parent="."]
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 32.0
+offset_top = -100.0
+offset_right = 212.0
+offset_bottom = 100.0
 theme_override_constants/separation = 16
-alignment = 1
 
-[node name="UpgradeBtn" type="Button" parent="Center/VBox/MenuRow"]
-custom_minimum_size = Vector2(150, 56)
+[node name="UpgradeBtn" type="Button" parent="LeftMenu"]
+custom_minimum_size = Vector2(180, 56)
 theme_override_font_sizes/font_size = 24
 text = "強化"
 
-[node name="OptionsBtn" type="Button" parent="Center/VBox/MenuRow"]
-custom_minimum_size = Vector2(150, 56)
+[node name="OptionsBtn" type="Button" parent="LeftMenu"]
+custom_minimum_size = Vector2(180, 56)
 theme_override_font_sizes/font_size = 24
 text = "オプション"
+
+[node name="QuitBtn" type="Button" parent="LeftMenu"]
+custom_minimum_size = Vector2(180, 56)
+theme_override_font_sizes/font_size = 24
+text = "終了"
 
 [node name="ParamsPanel" type="VBoxContainer" parent="."]
 anchor_left = 1.0
@@ -127,13 +137,3 @@ theme_override_colors/font_color = Color(0.85, 0.87, 0.92, 1)
 theme_override_font_sizes/font_size = 16
 text = ""
 horizontal_alignment = 2
-
-[node name="QuitBtn" type="Button" parent="."]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -76.0
-offset_right = 176.0
-offset_bottom = -16.0
-theme_override_font_sizes/font_size = 24
-text = "終了"

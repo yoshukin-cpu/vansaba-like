@@ -49,6 +49,8 @@ func _init() -> void:
 	await _t_upgrade_ui()
 	await _t_modal_isolation()
 	await _t_reset_save()
+	await _t_stick_latch()
+	_t_legacy_migration()
 	# 後始末
 	OptDB.apply_volume(OptDB.DEFAULT_BGM, OptDB.DEFAULT_SE)
 	SaveData.path = SaveData.DEFAULT_PATH
@@ -418,3 +420,80 @@ func _t_reset_save() -> void:
 		not pd.is_empty() and (pd.get("cleared", []) as Array).is_empty() and int(pd.get("coins", -1)) == 0)
 	_check("保存ファイルにオプションが残る (D76)", str(op.get("resolution", "")) == "1600x900" and _near(float(op.get("bgm", 0.0)), 0.6))
 	opts.free()
+
+
+# === 9) スティック左右のラッチ (D82) ===
+
+func _motion_ev(axis_x: float) -> InputEventJoypadMotion:
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = JOY_AXIS_LEFT_X
+	ev.axis_value = axis_x
+	return ev
+
+
+func _t_stick_latch() -> void:
+	print("\n=== 9) スティック左右のラッチ (D82) ===")
+	SaveData.reset()
+	SaveData.cleared = ["normal"]
+	SaveData.options["resolution"] = "1152x648"
+	var opts: CanvasLayer = OptionsScene.instantiate() as CanvasLayer
+	root.add_child(opts)
+	await process_frame
+	opts.call("open")
+	await process_frame
+	opts.set("idx", 1)  # 解像度の行
+	var i0: int = OptDB.resolution_index(str(SaveData.options["resolution"]))
+	# スティックを右へ倒したまま (motion が連続で届く) → 1回だけ変わる
+	await _inject(_motion_ev(0.95))
+	var armed_after_first: bool = bool(opts.get("_axis_armed_h"))
+	await _inject(_motion_ev(0.95))
+	await _inject(_motion_ev(0.95))
+	var i1: int = OptDB.resolution_index(str(SaveData.options["resolution"]))
+	_check("倒しっぱなしでは1回だけ変わる (D82: %d → %d)" % [i0, i1], i1 == i0 + 1)
+	_check("1回目のモーションでラッチが外れる (D82)", not armed_after_first)
+	# ラッチが掛かっている間は何度送っても動かない
+	opts.set("_axis_armed_h", false)
+	await _inject(_motion_ev(0.95))
+	var i2: int = OptDB.resolution_index(str(SaveData.options["resolution"]))
+	_check("ラッチ中のモーションでは動かない (D82)", i2 == i1)
+	# ニュートラルに戻れば再武装して再び動く
+	opts.set("_axis_armed_h", true)
+	await _inject(_motion_ev(0.95))
+	var i3: int = OptDB.resolution_index(str(SaveData.options["resolution"]))
+	_check("再武装後はまた1回動く (D82)", i3 == i1 + 1)
+	# キー (ui_right) はラッチの影響を受けない (何度でも動く)
+	await _inject(_action_ev("ui_right", true))
+	await _inject(_action_ev("ui_right", false))
+	var i4: int = OptDB.resolution_index(str(SaveData.options["resolution"]))
+	_check("キー入力は連続して動く (D82: ラッチはスティックのみ)", i4 == i3 + 1)
+	opts.free()
+
+
+# === 10) 旧アプリ名のセーブ引継ぎ (D79) ===
+
+func _t_legacy_migration() -> void:
+	print("\n=== 10) 旧セーブの引継ぎ (D79) ===")
+	var legacy := "user://test_legacy_save.json"
+	var f: FileAccess = FileAccess.open(legacy, FileAccess.WRITE)
+	f.store_string(JSON.stringify({
+		"version": 2, "cleared": ["normal", "hard"], "insane_cleared": 0, "last": "hard",
+		"coins": 42, "upgrades": {"M01": 2}, "options": {"mode": "window", "resolution": "1600x900", "bgm": 0.7, "se": 1.0},
+	}))
+	f.close()
+	_remove_save()
+	SaveData.legacy_path = legacy
+	SaveData.path = TEST_SAVE
+	SaveData.load_save()
+	_check("旧名のセーブを引き継ぐ (D79)",
+		SaveData.cleared.size() == 2 and int(SaveData.coins) == 42 and int(SaveData.upgrades.get("M01", 0)) == 2
+		and str(SaveData.options["resolution"]) == "1600x900")
+	_check("引継ぎ後は新パスにファイルがある (D79)", FileAccess.file_exists(TEST_SAVE))
+	# 新パスに既にあれば上書きしない
+	f = FileAccess.open(TEST_SAVE, FileAccess.WRITE)
+	f.store_string(JSON.stringify({"version": 2, "cleared": [], "coins": 7}))
+	f.close()
+	SaveData.load_save()
+	_check("新パスがあれば旧セーブで上書きしない (D79)", int(SaveData.coins) == 7 and SaveData.cleared.is_empty())
+	SaveData.legacy_path = ""
+	if FileAccess.file_exists(legacy):
+		DirAccess.remove_absolute(legacy)

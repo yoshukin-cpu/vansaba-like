@@ -71,7 +71,7 @@ func _case(tag: String, sel: String, how: String, expect_start: bool) -> void:
 	title.connect("quit_pressed", func() -> void: quits += 1)
 	title.connect("start_pressed", func() -> void: starts += 1)
 	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
-	var qbtn: Button = title.get_node("QuitBtn")
+	var qbtn: Button = title.get_node("LeftMenu/QuitBtn")
 	sbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	qbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	if sel == "quit":
@@ -83,6 +83,10 @@ func _case(tag: String, sel: String, how: String, expect_start: bool) -> void:
 		# (はじめる → 強化 → オプション → 終了)。
 		for i: int in range(3):
 			await _nav_down(sel == "nav_pad")
+		# v1.8 追補3 (D83): ←→ はメニューを動かさない (難易度の切替にだけ使う)。
+		await _action("ui_left")
+		await _action("ui_right")
+		_check("%s: ←→ でメニューが動かない (D83)" % tag, root.gui_get_focus_owner() == qbtn)
 	var focus: Control = root.gui_get_focus_owner()
 	var want: Button = qbtn if sel != "start" else sbtn
 	_check("%s: フォーカスが %s (%s)" % [tag, want.name, str(focus != null and focus.name)], focus == want)
@@ -189,7 +193,7 @@ func _case9_locked_quit() -> void:
 	title.connect("quit_pressed", func() -> void: quits += 1)
 	title.connect("start_pressed", func() -> void: starts += 1)
 	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
-	var qbtn: Button = title.get_node("QuitBtn")
+	var qbtn: Button = title.get_node("LeftMenu/QuitBtn")
 	sbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	qbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	_check("9: ロック中の選択で開始ボタンが無効", sbtn.disabled)
@@ -216,7 +220,7 @@ func _case10_locked_start() -> void:
 	title.connect("quit_pressed", func() -> void: quits += 1)
 	title.connect("start_pressed", func() -> void: starts += 1)
 	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
-	var qbtn: Button = title.get_node("QuitBtn")
+	var qbtn: Button = title.get_node("LeftMenu/QuitBtn")
 	sbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	qbtn.pressed.connect(func() -> void: btn_pressed += 1)
 	_check("10: ロック中の選択で開始ボタンが無効", sbtn.disabled)
