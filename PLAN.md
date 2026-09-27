@@ -1,7 +1,7 @@
-# 実装計画 v1.7
+# 実装計画 v1.8
 
-> 前提: SPEC.md v1.7 / Godot 4.7.2 / v1.0〜v1.6 実装済み (P0〜P19 完了)。
-> v1.1 以降は `IDEA.md` の「バージョンアップ案1〜5」を順に実装する計画として積み上げている。v1.7 = バージョンアップ案5。
+> 前提: SPEC.md v1.8 / Godot 4.7.2 / v1.0〜v1.7 実装済み (P0〜P20 完了。P20 は窓ありキャプチャの目視のみ残り)。
+> v1.1 以降は `IDEA.md` の「バージョンアップ案1〜6」を順に実装する計画として積み上げている。v1.7 = 案5、v1.8 = 案6 (設計: 承認待ち)。
 > 方針: データ駆動・仮素材・小さく動くものを反復。Editor toolsで構築、Runtime toolsで検証。
 
 ## 0. ゴール・マイルストーン
@@ -45,6 +45,10 @@
 ### v1.7 (実装中)
 
 - **M19 案5 (D44〜D57) が入り、回帰が通る (P20)**
+
+### v1.8 (設計: 承認待ち)
+
+- **M20 案6 (BGM 3曲と切替・オプション・コイン/恒久強化・射程・エリートボス×2) が入り、回帰が通る (P21〜P22)**
 
 ## 1. ファイル構成 (v1.1)
 
@@ -293,6 +297,42 @@ res://
   `verify_title_load.gd` 9件 ALL PASS + 全回帰 (headless) ALL PASS。
   通しプレイ (3倍速・通常) 9:43 死亡 (Lv9・312kill・score 5620) エラーなし。残りは窓ありキャプチャ (見た目系) の目視。
 
+### P21 BGM・音量・オプション [M20-1] (設計: SPEC §35.1〜§35.4・承認待ち)
+
+- 素材: 1min-image (Suno・`instrumental: true`) で BGM 3曲を生成し、`audio/music/bgm_title.mp3`・`bgm_game.mp3`・`bgm_boss.mp3` に格納
+  (プロンプト方針は SPEC §35.1 の表。1曲=1生成・2曲目は使わない)。`--headless --import` で取込
+- 実装: `audio/default_bus_layout.tres` 新規 (Master/BGM/SE) + `project.godot` (bus 設定・viewport 1152×648 の明文化・`window/stretch/aspect="keep"`) /
+  `systems/bgm_manager.gd` 新規 (3 player・process_mode ALWAYS・状態 title/game/boss/silent・フェードと `_game_pos` 再開) +
+  `main.tscn` に `BGM` ノード + `main.gd` の状態配線 (start_game/死亡/クリア/リトライ/スタッフロール) /
+  `systems/audio_manager.gd` を SE バスへ /
+  `ui/options_ui.tscn` + `options_ui.gd` 新規 (表示モード・解像度10件・BGM/SE音量・スタッフロール再演・戻る) /
+  `ui/title_ui.tscn` + `title_ui.gd` に「オプション」ボタン /
+  `ui/staff_roll_ui.gd` に再演モード (`start_roll(null)`・HeaderRoll 文言・保存を呼ばない)
+- 検証: `tools/verify_bgm.gd` 新規 (状態遷移・フェードの音量・`_game_pos` 再開・paused 中も鳴る) /
+  `tools/verify_options.gd` 新規 (既定値・保存往復・v1 セーブ互換・bus 音量・モード/解像度の値) /
+  `tools/capture_options.gd` (窓ありで解像度10件と黒帯を撮影し目視) + BGM の耳確認 (ボス切替・ループ継ぎ目・ゲーム中の抑え具合) /
+  `verify_staff_roll.gd` に再演モードを追加
+- **完了条件**: タイトル・ゲーム中・ボスで BGM が鳴り、ボスで切替わって倒すと続きから戻る。オプションでウィンドウ/フルスクリーン・解像度・音量・スタッフロール再演が使える
+
+### P22 コイン・恒久強化・バランス [M20-2] (設計: SPEC §35.5〜§35.12・承認待ち)
+
+- 実装: `data/meta_upgrades.gd` 新規 (8項目・コスト式 `基準+増分×Lv`・ラン開始時の適用) /
+  `data/difficulty_db.gd` (`ELITE_BOSS_SCALE = 2.0`・`COIN_MULT`/`coin_mult`) /
+  `systems/save_data.gd` v2 (coins/upgrades/options・v1 互換・`add_coins`) /
+  `systems/chest_director.gd` (T02 +1 / R_COIN +10 のコイン加算) /
+  `main.gd` (`run_coins`・HUD コイン・リザルト確定・メタ適用・`--coins`) + `main.tscn` に HUD `CoinLabel` /
+  `ui/upgrade_ui.tscn` + `upgrade_ui.gd` 新規 + `ui/title_ui.*` (「強化」ボタン・`CoinLabel`・`confirm_focused` 拡張) /
+  `ui/result_ui.gd` (コイン確定行) /
+  `weapons/weapon_base.gd` (`aim_range`) + `weapons/straight_shot.gd`・`homing_missiles.gd` (寿命 1.0s/1.2s・aim_range 上書き) +
+  `projectiles/homing_projectile.gd` (再探索を残り寿命×速度に) /
+  `ui/staff_roll_ui.gd` (BGM/コイン・強化のページ追加)
+- 検証: `tools/verify_v18.gd` 新規 (コスト式・購入・メタ適用の no-op/乗算・コイン入手と確定・倍率表・実効射程・aim_range・エリートボス倍率) /
+  `verify_v16.gd` 更新 (W 3.0・エリート比 2.4・B01 4500・エリートHP ×2) /
+  `verify_chests.gd`・`verify_v12.gd` 更新 (コイン +1/+10) / `verify_staff_roll.gd` 更新 (ページ増) /
+  全回帰 / `playtest_full.gd` 通し (コイン回収量・ボスTTK・撃破数を v1.7 と比較) / 窓あり目視 (強化画面・リザルトのコイン行)
+- **完了条件**: コインが貯まり、強化で少し強くなって開始できる。射程とエリート・ボス×2 が計測で確認され、回帰が全PASS
+- 数値 (コスト・難易度倍率・`ELITE_BOSS_SCALE`・射程) は初版。P22 の計測で確定して SPEC に書き戻す (P12/P19 と同じ流儀)
+
 ## 3. 並行可能タスク
 
 - P10 (素材生成) は P8/P9 と並行可 (仮タイルで先にロジックを通すため)
@@ -312,7 +352,13 @@ res://
 | (v1.6) 高難易度で敵が増えすぎ fps 低下 | 出現量は同時上限 ×(1+S/200) + 400体クランプ。P19 で実測し、係数とクランプを確定して SPEC に書き戻す |
 | (v1.6) セーブが壊れてタイトルが動かない | 読み込み失敗時は初期状態 (ノーマルのみ) に戻す。検証で破損ファイルの往復を assert |
 | (v1.6) 難易度の掛け忘れ/二重掛け | 適用点を §31.5 の3箇所に限定し、ノーマル = 完全 no-op を回帰で保証 (verify_v16) |
-| scope肥大 | v1.6対象外 (メタ成長・実績・リロール等) は入れない |
+| (v1.8) BGM のループ継ぎ目・音量が合わない | mp3 の `loop` を有効化。継ぎ目が耳につく場合のみ ffmpeg で OGG へ変換。トラック基準音量 (−8/−14/−10dB) は P21 で耳確認して調整 |
+| (v1.8) 解像度変更で UI が崩れる | 内部解像度 1152×648 固定 + `keep` (黒帯) で伸縮は等比のみ。窓あり `capture_options` で10解像度を目視 (アンカー崩れの確認) |
+| (v1.8) セーブ v2 でタイトルが壊れる | v1 互換の読み込み + 破損時は初期化。verify_options で往復と v1 ファイルの読込を assert |
+| (v1.8) コイン経済が渋い/甘い | コストと難易度倍率は初版。P22 の通し計測で回収量を実測し、全MAX 2,205 コインを基準に調整して SPEC に書き戻す |
+| (v1.8) エリート・ボス ×2 が高難易度で過剰 | 一律 ×2 (ノーマル含む)。P22 でボス TTK を計測し、過剰なら `ELITE_BOSS_SCALE` を 1.5 へ |
+| (v1.8) 射程短縮でストレートが弱くなりすぎる | 実効射程 = 画面ぶん (500/504px) + エイム射程の一致で無駄撃ちを除去。通し計測で撃破数を v1.7 と比較し、必要なら 576〜640px へ緩める |
+| scope肥大 | v1.8 対象外 (ポーズからのオプション・C05 の射程・実績等) は入れない |
 
 ## 5. 検証コマンド
 
@@ -325,6 +371,8 @@ res://
 
 ## 6. 次アクション提案
 
-1. P20 の残り (通しプレイ計測 + 全回帰 + 実機キャプチャの目視) を実行する
+1. P20 の残り (通しプレイ計測 + 全回帰 + 実機キャプチャの目視) を実行する — これで v1.7 完了
 2. D47 (最低距離160)・D57 (破片48) の数値を計測で確定して SPEC に書き戻す (P12と同じ流儀)
-3. 実装ブロッカーはなし (D44〜D57 の実装は完了、検証待ち)
+3. **v1.8 (案6) のチェックリスト (SPEC §36・D61〜D72) を承認 → P21 (BGM・音量・オプション) から実装開始**
+   - D70 (射程) と D71 (エリートボス×2) は解釈の分岐を §35.10・§35.11 に明記済み (推奨で進めて良いかだけ確認)
+4. 実装ブロッカー: なし (BGM 素材の生成は P21 の最初に実施。クレジット 180,000/曲 ×3)
