@@ -2,6 +2,10 @@ extends Node2D
 
 var nums: Array = []
 var sparks: Array = []
+## D60: 飛び散る火花 (速度つきの直線)。チェインのバースト用。
+var streaks: Array = []
+## D60: 飛び散る火花の上限 (Lv8 の全ヒット分 96本/発 + 余裕)。
+const STREAK_CAP := 256
 
 func _ready() -> void:
 	add_to_group("combat_fx")
@@ -21,6 +25,14 @@ func spark(pos: Vector2, color: Color) -> void:
 	# D56: チェインのバースト分を見込んで上限を引き上げ。
 	while sparks.size() > 128:
 		sparks.pop_front()
+
+## D60: 速度つきの火花 (直線の残像で飛んでいく)。チェインのバーストを派手にする。
+## dir: 飛ぶ向き / speed: px/s / size: 残像の長さ (px)。
+func streak(pos: Vector2, dir: Vector2, color: Color, speed: float, size: float) -> void:
+	var d: Vector2 = dir.normalized() if dir.length() > 0.001 else Vector2.RIGHT
+	streaks.append({"pos": pos, "vel": d * speed, "age": 0.0, "life": 0.45, "color": color, "size": size})
+	while streaks.size() > STREAK_CAP:
+		streaks.pop_front()
 
 ## 文字ポップアップ (T09 の武器名表示など)。damage_number と同じ描画経路を使う。
 func text_popup(pos: Vector2, text: String, size: int, color: Color) -> void:
@@ -51,7 +63,18 @@ func _process(delta: float) -> void:
 		else:
 			sparks[i] = s
 		dirty = true
-	if dirty or nums.size() > 0 or sparks.size() > 0:
+	for i: int in range(streaks.size() - 1, -1, -1):
+		var st: Dictionary = streaks[i]
+		st["age"] = float(st["age"]) + delta
+		if float(st["age"]) >= float(st["life"]):
+			streaks.remove_at(i)
+		else:
+			# D60: 飛びながら減速する (火花らしく失速して散る)。
+			st["pos"] = (st["pos"] as Vector2) + (st["vel"] as Vector2) * delta
+			st["vel"] = (st["vel"] as Vector2) * maxf(0.0, 1.0 - 2.2 * delta)
+			streaks[i] = st
+		dirty = true
+	if dirty or nums.size() > 0 or sparks.size() > 0 or streaks.size() > 0:
 		queue_redraw()
 
 func _draw() -> void:
@@ -66,3 +89,12 @@ func _draw() -> void:
 		var c2: Color = (s["color"] as Color)
 		c2.a = 1.0 - t
 		draw_arc((s["pos"] as Vector2) - global_position, float(s["max_r"]) * t + 4.0, 0.0, TAU, 16, c2, float(s["width"]), true)
+	for s: Dictionary in streaks:
+		var t: float = float(s["age"]) / float(s["life"])
+		var c3: Color = (s["color"] as Color)
+		c3.a = 1.0 - t
+		var p: Vector2 = (s["pos"] as Vector2) - global_position
+		var v: Vector2 = (s["vel"] as Vector2)
+		# D60: 進行方向の逆へ尾を引く直線 (速いほど長い火花に見える)。
+		var tail: Vector2 = v.normalized() * float(s["size"]) if v.length() > 0.001 else Vector2.ZERO
+		draw_line(p, p - tail, c3, 2.0, true)

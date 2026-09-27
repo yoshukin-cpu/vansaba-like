@@ -442,7 +442,7 @@ func _t_smoke_d58() -> void:
 	await process_frame
 
 
-# === 9) D59 チェインの線の太さ ===
+# === 9) D59・D60 チェインの線の太さ・飛び散る火花 ===
 ## current_scene 直下の線FXのうち最後 (= 最新) のものを返す。
 func _line_fx(script: GDScript) -> Node:
 	var found: Node = null
@@ -452,8 +452,35 @@ func _line_fx(script: GDScript) -> Node:
 	return found
 
 
+## 火花 (streaks) の速度が全て [lo, hi] に入っているか。
+func _speeds_in(items: Array, lo: float, hi: float) -> bool:
+	for it: Dictionary in items:
+		var spd: float = (it["vel"] as Vector2).length()
+		if spd < lo - 0.01 or spd > hi + 0.01:
+			return false
+	return true
+
+
+## combat_fx の sparks/streaks を安全に読む (無い実装では空配列 = 失敗として扱える)。
+func _streaks(cfx: Node) -> Array:
+	var v: Variant = cfx.get("streaks")
+	return v as Array if v is Array else []
+
+
+## 火花の向きの最大ペア角度差 (度)。
+func _max_pair_deg(items: Array) -> float:
+	var angles: Array = []
+	for it: Dictionary in items:
+		angles.append((it["vel"] as Vector2).angle())
+	var best := 0.0
+	for i: int in range(angles.size()):
+		for j: int in range(i + 1, angles.size()):
+			best = maxf(best, absf(rad_to_deg(wrapf(float(angles[i]) - float(angles[j]), -PI, PI))))
+	return best
+
+
 func _t_chain_thickness_d59() -> void:
-	print("\n=== 9) チェインライトニングの線の太さ (D59) ===")
+	print("\n=== 9) チェインの線の太さ・飛び散る火花 (D59・D60) ===")
 	var main: Node = _new_main()
 	for i: int in range(10):
 		await process_frame
@@ -475,7 +502,14 @@ func _t_chain_thickness_d59() -> void:
 	for i: int in range(3):
 		await process_frame
 	var fx_script: GDScript = load("res://weapons/lightning_fx.gd")
+	var cfx: Node = get_first_node_in_group("combat_fx")
+	# D60: 火花は発射と同フレームで数える (減速前の速度をそのまま検証するため)。
+	var before1: int = _streaks(cfx).size()
 	ch.call("fire")
+	var arr1: Array = _streaks(cfx).slice(before1)
+	_check("D60: Lv1 で飛び散る火花 (%d本 >= 6)" % arr1.size(), arr1.size() >= 6)
+	_check("D60: Lv1 の火花が放射状 (最大角度差 %.0f° > 45°)" % _max_pair_deg(arr1), _max_pair_deg(arr1) > 45.0)
+	_check("D60: Lv1 の火花の速さ (全て 175〜315px/s)", _speeds_in(arr1, 175.0, 315.0))
 	await process_frame
 	var fx1: Node = _line_fx(fx_script)
 	_check("Lv1: 線FXが生成される", fx1 != null)
@@ -485,7 +519,13 @@ func _t_chain_thickness_d59() -> void:
 			(t1 is float or t1 is int) and absf(float(t1) - 1.0) < 0.001)
 	for i: int in range(7):
 		ch.call("upgrade")
+	var before8: int = _streaks(cfx).size()
 	ch.call("fire")
+	var arr8: Array = _streaks(cfx).slice(before8)
+	_check("D60: Lv8 はさらに多い (Lv1 %d本 → Lv8 %d本 >= 13)" % [arr1.size(), arr8.size()],
+		arr8.size() >= 13 and arr8.size() > arr1.size())
+	_check("D60: Lv8 の火花が放射状 (最大角度差 %.0f° > 90°)" % _max_pair_deg(arr8), _max_pair_deg(arr8) > 90.0)
+	_check("D60: Lv8 の火花は速い (全て 280〜420px/s)", _speeds_in(arr8, 280.0, 420.0))
 	await process_frame
 	var fx8: Node = _line_fx(fx_script)
 	_check("Lv8: 新しい線FXが生成される", fx8 != null and fx8 != fx1)

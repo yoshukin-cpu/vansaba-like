@@ -61,6 +61,7 @@ func fire() -> void:
 	fx.call("setup", pts, 1.0 + 0.15 * float(weapon_level - 1))
 
 ## D56: 被弾点のバースト (Lvで数・大きさが増える)。演出のみ。
+## D60: 放射状に飛び散る火花を追加 (Lv1:5本 → Lv8:12本/ヒット。Lvで速く・長くなる)。
 func _burst(pos: Vector2, idx: int) -> void:
 	var fx: Node = get_tree().get_first_node_in_group("combat_fx")
 	if fx == null:
@@ -68,6 +69,11 @@ func _burst(pos: Vector2, idx: int) -> void:
 	var count: int = 2 + weapon_level / 2
 	for i: int in range(count):
 		fx.call("spark", pos + Vector2(randf_range(-12.0, 12.0), randf_range(-12.0, 12.0)), Color(0.7, 0.95, 1.0, 1.0))
+	for i: int in range(5 + weapon_level):
+		var ang: float = randf() * TAU
+		var spd: float = randf_range(160.0, 300.0) + 15.0 * float(weapon_level)
+		var col: Color = Color(1, 1, 1, 1) if i % 2 == 0 else Color(0.75, 0.95, 1.0, 1.0)
+		fx.call("streak", pos + Vector2(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0)), Vector2.RIGHT.rotated(ang), col, spd, randf_range(8.0, 16.0))
 	if idx % 3 == 2:
 		fx.call("poof", pos, Color(0.7, 0.95, 1.0), weapon_level >= 6)
 
