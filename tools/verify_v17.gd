@@ -1,6 +1,6 @@
 extends SceneTree
-## P20 検証: v1.7 (案5 D44〜D57) — 解放通知スクロール・DiffLock 固定・スティックラッチ・
-## ボム投下点・敵ばらつき・ジェム閾値・密着ヒット・見た目係数・煙・破片48。
+## P20 検証: v1.7 (案5 D44〜D58) — 解放通知スクロール・DiffLock 固定・スティックラッチ・
+## ボム投下点・敵ばらつき・ジェム閾値・密着ヒット・見た目係数・煙 (D58)・破片48。
 ## 実行: godot --headless --fixed-fps 60 --path <project> --script res://tools/verify_v17.gd
 ## 全ケースPASSで終了コード0、失敗があれば1。
 
@@ -42,6 +42,7 @@ func _init() -> void:
 	await _t_visuals()
 	await _t_item_bomb()
 	await _t_title_latch()
+	await _t_smoke_d58()
 	# 後始末 (テストが実セーブを汚さない)
 	SaveData.path = SaveData.DEFAULT_PATH
 	SaveData.reset()
@@ -363,5 +364,78 @@ func _t_title_latch() -> void:
 	for i: int in range(5):
 		await process_frame
 	_check("D46: ニュートラルで re-arm", bool(title.get("_diff_axis_armed")))
+	main.queue_free()
+	await process_frame
+
+
+# === 8) D58 ホーミング煙 ===
+func _t_smoke_d58() -> void:
+	print("\n=== 8) ホーミング煙の見え方 (D58) ===")
+	var main: Node = _new_main()
+	for i: int in range(10):
+		await process_frame
+	main.call("start_game")
+	main.get_node("SpawnDirector").set("running", false)
+	main.get_node("ChestDirector").set("running", false)
+	var player: Node2D = main.get_node("Player")
+	_strip_weapons(player)
+	for i: int in range(5):
+		await process_frame
+	var hpool: Node = get_first_node_in_group("pool_homing")
+	var hm: Node2D = hpool.call("acquire") as Node2D
+	_check("ホーミング弾を取得できる", hm != null)
+	if hm == null:
+		main.queue_free()
+		await process_frame
+		return
+	var hscript: GDScript = load("res://projectiles/homing_projectile.gd")
+	_check("D58: 基準の不透明度を上げた (%.2f >= 0.6・旧 実効0.12)" % float(hscript.SMOKE_ALPHA), float(hscript.SMOKE_ALPHA) >= 0.6)
+	_check("D58: 寿命を延ばした (%.2fs >= 1.0・旧 0.4s)" % float(hscript.SMOKE_LIFE), float(hscript.SMOKE_LIFE) >= 1.0)
+	# 誰もいない場所をまっすぐ飛ばし、煙を手動噴出して同フレームで角度を測る。
+	hm.global_position = player.global_position + Vector2(3000, 3000)
+	hm.set("target", null)
+	hm.call("setup", Vector2.RIGHT, 420.0, 10.0, 3.0, 1, 1.0)
+	hm.set("trail_scale", 1.0)
+	var angles: Array = []
+	var first: Polygon2D = null
+	var first_spawn := Vector2.ZERO
+	for i: int in range(12):
+		hm.call("_spawn_smoke")
+		var arr: Array = hm.get("smokes") as Array
+		if arr.is_empty():
+			continue
+		var sn: Polygon2D = (arr[arr.size() - 1] as Dictionary)["node"]
+		if first == null:
+			first = sn
+			first_spawn = sn.global_position
+		var back: Vector2 = -(hm.get("direction") as Vector2)
+		angles.append(rad_to_deg(back.angle_to(sn.global_position - hm.global_position)))
+	var in_range := true
+	var max_abs := 0.0
+	for a: float in angles:
+		if absf(a) > 5.2:
+			in_range = false
+		max_abs = maxf(max_abs, absf(a))
+	_check("D58: 噴出は後方 ±5° 内 (%d個・最大 %.1f°)" % [angles.size(), max_abs], in_range and angles.size() >= 10)
+	_check("D58: ぶれが実際にある (最大 %.1f° > 0.5°)" % max_abs, max_abs > 0.5)
+	if first != null:
+		_check("D58: 噴出直後の不透明度 (色 %.2f / 基準 %.2f)" % [float(first.color.a), float(hscript.SMOKE_ALPHA)],
+			absf(float(first.color.a) - float(hscript.SMOKE_ALPHA)) < 0.001)
+	# 残存と流れ: 0.7s 後も残り、薄くなり、ぶれた向きへ流れている (旧仕様は 0.4s で消えていた)。
+	for i: int in range(42):
+		await process_frame
+	var still_listed := false
+	var vel := Vector2.ZERO
+	for sm: Dictionary in hm.get("smokes") as Array:
+		if sm["node"] == first:
+			still_listed = true
+			vel = sm["vel"] as Vector2
+			break
+	_check("D58: 0.7s 後も煙が残る (寿命1.0s・旧0.4s)", first != null and is_instance_valid(first) and still_listed)
+	if first != null and is_instance_valid(first):
+		_check("D58: だんだん薄くなる (modulate.a=%.2f < 0.5)" % float(first.modulate.a), float(first.modulate.a) < 0.5)
+		var moved: Vector2 = first.global_position - first_spawn
+		_check("D58: ぶれた向きへ流れる (%.0fpx 移動)" % moved.length(),
+			moved.length() > 40.0 and vel.length() > 0.0 and moved.normalized().dot(vel.normalized()) > 0.99)
 	main.queue_free()
 	await process_frame

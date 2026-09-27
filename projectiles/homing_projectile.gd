@@ -4,12 +4,19 @@ var target: Node2D = null
 var turn_rate: float = 6.0
 var blast_radius: float = 30.0
 ## D55: 煙トレイル (半透明でだんだん消える。Lvで大きくなる)。演出のみ。
+## D58: 見えづらいので不透明度と寿命を上げ、後方から左右 ±5° ばらついて噴出・流れるようにした。
 var trail_scale: float = 1.0
 var smoke_timer: float = 0.0
 var smokes: Array = []
-const SMOKE_INTERVAL := 0.05
-const SMOKE_LIFE := 0.4
-const SMOKE_MAX := 24
+const SMOKE_INTERVAL := 0.04
+const SMOKE_LIFE := 1.0
+const SMOKE_MAX := 48
+## 煙の基準の不透明度 (modulate は残量 1→0 だけを掛ける)。
+const SMOKE_ALPHA := 0.65
+## 噴出方向のぶれ (ミサイル後方を基準に ±この角度)。
+const SMOKE_SPREAD_DEG := 5.0
+## 噴出後の流れ (px/s、ぶれ方向へ)。ぶれを見えるようにするための後方へのドリフト。
+const SMOKE_DRIFT := 90.0
 
 func _process(delta: float) -> void:
 	_update_smokes(delta)
@@ -31,12 +38,14 @@ func _spawn_smoke() -> void:
 	var parent: Node = get_parent()
 	if parent == null:
 		return
+	# D58: 後方 (進行方向の逆) を基準に左右 ±5° ばらつかせ、その向きへ流しながら残る。
+	var back: Vector2 = (-direction).rotated(deg_to_rad(randf_range(-SMOKE_SPREAD_DEG, SMOKE_SPREAD_DEG)))
 	var s := Polygon2D.new()
 	s.polygon = _smoke_poly(6.0 * trail_scale)
-	s.color = Color(0.62, 0.62, 0.66, 0.35)
+	s.color = Color(0.62, 0.62, 0.66, SMOKE_ALPHA)
 	parent.add_child(s)
-	s.global_position = global_position - direction * 10.0
-	smokes.append({"node": s, "age": 0.0})
+	s.global_position = global_position + back * 10.0
+	smokes.append({"node": s, "age": 0.0, "vel": back * SMOKE_DRIFT})
 	while smokes.size() > SMOKE_MAX:
 		var old: Dictionary = smokes.pop_front()
 		var on: Node = old["node"]
@@ -54,7 +63,10 @@ func _update_smokes(delta: float) -> void:
 			(sn as Node).queue_free()
 			continue
 		var k: float = age / SMOKE_LIFE
-		(sn as Polygon2D).modulate.a = 0.35 * (1.0 - k)
+		# D58: 基準の不透明度は色側 (`SMOKE_ALPHA`) に持たせ、modulate は残量 (1→0) のみを掛ける。
+		(sn as Polygon2D).modulate.a = 1.0 - k
+		# D58: ぶれた向きへ流れながら広がる。
+		(sn as Node2D).global_position += (sm["vel"] as Vector2) * delta
 		var sc: float = 1.0 + 0.6 * k
 		(sn as Node2D).scale = Vector2(sc, sc)
 		sm["age"] = age
