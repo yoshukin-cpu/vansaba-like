@@ -64,13 +64,16 @@ func _init() -> void:
 		await process_frame
 	await _shot("v18_options_reset_confirm.png")
 	opts.call("_confirm_answer", false)
-	main.call("_on_options_closed")
+	# 閉じるのは close() (closed シグナル経由で main が後処理する)。
+	opts.call("close")
 	# 3) 強化画面 (--coins 500 で所持コインを入れてある)
 	main.call("_on_upgrade")
 	for i: int in range(6):
 		await process_frame
 	await _shot("v18_upgrade.png")
-	main.call("_on_upgrade_closed")
+	(main.get_node("UpgradeUI") as CanvasLayer).call("close")
+	for i: int in range(3):
+		await process_frame
 	# 4) 4:3 (1024x768) / 5) 16:10 (1280x800) の黒帯確認
 	await _set_window("1024x768")
 	await _shot("v18_window_4x3.png")
@@ -82,5 +85,18 @@ func _init() -> void:
 	await _fps_sample(180)
 	# 元に戻す
 	await _set_window("1152x648")
+	# 7) 再演フロー: カウントダウン → リザルト (再演デモ) → D77
+	main.call("_on_options")
+	for i: int in range(6):
+		await process_frame
+	var opts3: CanvasLayer = main.get_node("OptionsUI")
+	opts3.set("idx", (opts3.call("row_ids") as Array).find("replay"))
+	opts3.call("_activate")
+	for i: int in range(10):
+		await process_frame
+	await _shot("v18_replay_countdown.png")
+	for i: int in range(190):
+		await process_frame
+	await _shot("v18_replay_result.png")
 	print("RESULT: %d shots" % shots)
 	quit(0)
