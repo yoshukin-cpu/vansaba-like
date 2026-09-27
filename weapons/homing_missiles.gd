@@ -32,6 +32,10 @@ func fire() -> void:
 	var n: int = base_count() + int(pstat("bonus_projectiles", 0.0))
 	var dir: Vector2 = get_fire_direction()
 	var hit: Array = roll_hit()
+	# D54: 見た目のみの拡大。Lv8 はさらに ×1.3 でかなり大きく (約2.7)。速度・寿命は不変。
+	var vis: float = 1.0 + 0.15 * float(weapon_level - 1)
+	if weapon_level >= 8:
+		vis *= 1.3
 	var pool: Node = ammo_pool("pool_homing")
 	for i: int in range(n):
 		var d: Vector2 = dir.rotated((float(i) - float(n - 1) / 2.0) * 0.35)
@@ -44,6 +48,7 @@ func fire() -> void:
 			pr = HomingScene.instantiate() as Area2D
 			scene.add_child(pr)
 		pr.global_position = player.global_position + d * 24.0
-		pr.call("setup", d, projectile_speed * pstat("bullet_speed_mult", 1.0), hit[0], projectile_lifetime * pstat("duration_mult", 1.0), 1)
+		pr.call("setup", d, projectile_speed * pstat("bullet_speed_mult", 1.0), hit[0], projectile_lifetime * pstat("duration_mult", 1.0), 1, vis)
+		pr.set("trail_scale", vis)
 		pr.set("kb_scale", kb_mult())
 		pr.set("crit_hit", hit[1])

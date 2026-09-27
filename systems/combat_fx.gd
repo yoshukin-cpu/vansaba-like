@@ -18,7 +18,8 @@ func damage_number(pos: Vector2, amount: float, crit: bool) -> void:
 
 func spark(pos: Vector2, color: Color) -> void:
 	sparks.append({"pos": pos, "age": 0.0, "life": 0.18, "max_r": 14.0, "color": color, "width": 3.0})
-	while sparks.size() > 80:
+	# D56: チェインのバースト分を見込んで上限を引き上げ。
+	while sparks.size() > 128:
 		sparks.pop_front()
 
 ## 文字ポップアップ (T09 の武器名表示など)。damage_number と同じ描画経路を使う。

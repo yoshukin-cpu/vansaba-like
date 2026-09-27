@@ -90,7 +90,3 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	focus_idx = 0
 	if not clear:
 		retry_btn.grab_focus()
-
-## スタッフロール開始時に解放通知を消す (一時的な通知のため。D41・§31.8)。
-func hide_unlock_notice() -> void:
-	unlock_label.hide()

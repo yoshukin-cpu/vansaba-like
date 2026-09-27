@@ -43,13 +43,13 @@ func get_offers() -> Array:
 		var w: Node = weapon_by_id(cid)
 		if w == null:
 			if weapon_count() < 6:
-				pool.append(_entry(cid, true, 0))
+				pool.append(_entry(cid, true, 0, CardsDB.WEAPON_MAX_LEVEL))
 		elif int(w.get("weapon_level")) < CardsDB.WEAPON_MAX_LEVEL:
-			pool.append(_entry(cid, false, int(w.get("weapon_level"))))
+			pool.append(_entry(cid, false, int(w.get("weapon_level")), CardsDB.WEAPON_MAX_LEVEL))
 	for cid: String in CardsDB.STAT_IDS:
 		var sl: int = int(stat_levels.get(cid, 0))
 		if sl < int(CardsDB.DEFS[cid]["max"]):
-			pool.append(_entry(cid, sl == 0, sl))
+			pool.append(_entry(cid, sl == 0, sl, int(CardsDB.DEFS[cid]["max"])))
 	pool.shuffle()
 	var offers: Array = pool.slice(0, 3)
 	var fb: Array = FALLBACK_IDS.duplicate()
@@ -60,11 +60,12 @@ func get_offers() -> Array:
 		fi += 1
 	return offers
 
-func _entry(card_id: String, is_new: bool, lv: int) -> Dictionary:
+func _entry(card_id: String, is_new: bool, lv: int, max_lv: int) -> Dictionary:
 	# 表示は「実際の遷移」に合わせる (D33)。武器の weapon_level は1始まり、
 	# ステータスの stat_levels は0始まりのため、どちらも lv→lv+1 が正しい。
+	# 取得後に MAX 到達する場合は数字ではなく "MAX" と表示する (D52)。
 	var d: Dictionary = CardsDB.get_def(card_id)
-	var text: String = "新規取得!" if is_new else ("Lv%d→%d" % [lv, lv + 1])
+	var text: String = "新規取得!" if is_new else ("MAX" if lv + 1 >= max_lv else ("Lv%d→%d" % [lv, lv + 1]))
 	return {"id": card_id, "name": str(d["name"]), "detail": str(d["detail"]), "level_text": text, "icon": CardMarks.texture_for(card_id)}
 
 func _fallback_entry(card_id: String) -> Dictionary:

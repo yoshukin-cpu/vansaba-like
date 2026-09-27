@@ -11,6 +11,8 @@ var crit_hit: bool = false
 var active: bool = true
 var home_pool: Node = null
 var hit_set: Dictionary = {}
+## D51: 発射位置 (前方24px) と敵半径を考慮した初回ヒット範囲。
+const SPAWN_HIT_R := 30.0
 
 func _ready() -> void:
 	add_to_group("projectiles")
@@ -37,7 +39,7 @@ func deactivate() -> void:
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 
-func setup(dir: Vector2, spd: float, dmg: float, lifetime: float, pier: int) -> void:
+func setup(dir: Vector2, spd: float, dmg: float, lifetime: float, pier: int, visual_scale: float = 1.0) -> void:
 	if dir.length() > 0.001:
 		direction = dir.normalized()
 	speed = spd
@@ -45,6 +47,36 @@ func setup(dir: Vector2, spd: float, dmg: float, lifetime: float, pier: int) -> 
 	life = lifetime
 	pierce = pier
 	rotation = direction.angle()
+	# D54: 見た目のみの拡大 (衝突形状は不変)。
+	if has_node("Visual"):
+		(get_node("Visual") as Sprite2D).scale = Vector2(visual_scale, visual_scale)
+	# D51: スポーン時点で重なっていた敵・宝箱にも当てる (密着不発の修正)。初回のみ。
+	call_deferred("_check_initial_overlap")
+
+## D51: 発射直後に重なっている個体へ通常ヒット処理を行う (hit_set・pierce 共有)。
+func _check_initial_overlap() -> void:
+	if not active:
+		return
+	for n: Node in get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("chests"):
+		if pierce <= 0 or not active:
+			return
+		if not (n is Node2D):
+			continue
+		if bool(n.get("dead")):
+			continue
+		if not n.has_method("take_damage"):
+			continue
+		if ((n as Node2D).global_position - global_position).length() > SPAWN_HIT_R:
+			continue
+		var id: int = n.get_instance_id()
+		if hit_set.has(id):
+			continue
+		hit_set[id] = true
+		n.call("take_damage", damage, direction * 120.0 * kb_scale, crit_hit)
+		pierce -= 1
+		if pierce <= 0:
+			_despawn()
+			return
 
 func _physics_process(delta: float) -> void:
 	if not active:

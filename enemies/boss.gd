@@ -15,6 +15,8 @@ var mv_dir: Vector2 = Vector2.ZERO
 var mv_spd: float = 0.0
 
 func _ready() -> void:
+	# ボスは個体ばらつきの対象外 (D49)。super._ready() より前に無効化する。
+	use_variance = false
 	super._ready()
 	add_to_group("bosses")
 	# ボスはエリートと同じ「加算式」の硬さにする (SPEC §31.5)。

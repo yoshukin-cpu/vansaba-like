@@ -18,14 +18,26 @@ const SaveData := preload("res://systems/save_data.gd")
 ## 表示中の難易度エントリ [{"key", "unlocked"}] (解放済み + 次の1件)。
 var _entries: Array = []
 var _idx: int = 0
+## D46: スティック連続切替防止のラッチ。Motion で切替えたらニュートラルまで無効。
+var _diff_axis_armed: bool = true
 
 func _ready() -> void:
 	start_btn.pressed.connect(func() -> void: start_pressed.emit())
 	quit_btn.pressed.connect(func() -> void: quit_pressed.emit())
 	left_btn.pressed.connect(func() -> void: _cycle(-1))
 	right_btn.pressed.connect(func() -> void: _cycle(1))
+	# D45: 解放条件の有無でレイアウトが動かないよう、行の高さを固定して常時表示する。
+	diff_lock.custom_minimum_size = Vector2(0, 22)
+	diff_lock.show()
 	_refresh_difficulty()
 	start_btn.grab_focus()
+
+## D46: スティックがニュートラルに戻ったら再び切替可能にする。
+func _process(_delta: float) -> void:
+	if not visible:
+		return
+	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_X)) < 0.2:
+		_diff_axis_armed = true
 
 ## セーブの解放状況から表示リストを作り、前回選択 (last) にカーソルを合わせる。
 func _refresh_difficulty() -> void:
@@ -76,14 +88,14 @@ func _update_display() -> void:
 	diff_name.text = DiffDB.display_name(key)
 	# ロック中は暗くして鍵マークを出す (要求どおり)。
 	diff_name.modulate = Color(1, 1, 1, 1) if unlocked else Color(0.42, 0.42, 0.48, 1)
+	# D45: 表示の有無にかかわらず他の表示位置を固定するため、hide() せず空行で領域を残す。
 	if not selector_on:
 		diff_lock.text = "🔒 1度クリアすると難易度選択が解放されます"
-		diff_lock.show()
 	elif not unlocked:
 		diff_lock.text = "🔒 " + DiffDB.unlock_requirement_text(key)
-		diff_lock.show()
 	else:
-		diff_lock.hide()
+		diff_lock.text = ""
+	diff_lock.show()
 	# ロック中は「はじめる」を無効化する (D40)。
 	start_btn.disabled = not unlocked
 	params_title.text = "難易度パラメータ (%s)" % DiffDB.display_name(key)
@@ -104,11 +116,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and (event as InputEventKey).echo:
 		return
 	# 難易度の左右切替 (←→ / 十字キー / 左スティック)。ロック中は _cycle が無効。
+	# D46: Motion 由来 (スティック) は倒しっぱなしで連続発火するため、ラッチで1回だけにする。
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		if event is InputEventJoypadMotion and not _diff_axis_armed:
+			return
+		if event is InputEventJoypadMotion:
+			_diff_axis_armed = false
 		get_viewport().set_input_as_handled()
 		_cycle(-1)
 		return
 	if event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		if event is InputEventJoypadMotion and not _diff_axis_armed:
+			return
+		if event is InputEventJoypadMotion:
+			_diff_axis_armed = false
 		get_viewport().set_input_as_handled()
 		_cycle(1)
 		return

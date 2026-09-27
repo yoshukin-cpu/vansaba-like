@@ -204,9 +204,8 @@ func start_roll(res: CanvasLayer) -> void:
 	scroll_time = song_len - THANKS_LEAD
 	_res = res
 	_rc = res.get_node("Center") as Control
-	# 解放通知行は流さない (一時的な通知のため。D41)。
-	if res.has_method("hide_unlock_notice"):
-		res.call("hide_unlock_notice")
+	# 解放通知行もそのまま残して一緒にスクロールさせる (D44)。
+	# 実ノードをそのまま流用するため、位置・大きさ・色は完全一致のまま流れる。
 	_layout_art()
 	if not get_viewport().size_changed.is_connected(_layout_art):
 		get_viewport().size_changed.connect(_layout_art)

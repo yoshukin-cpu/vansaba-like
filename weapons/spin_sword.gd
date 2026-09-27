@@ -5,11 +5,16 @@ extends "res://weapons/weapon_base.gd"
 
 var orbit: Node2D = null
 var blades: Array = []
+var ghosts: Array = []
 var angle: float = 0.0
 var fx: Node = null
 
 const DMG_TABLE := [8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 16.0]
 const COUNT_TABLE := [1, 1, 2, 2, 2, 3, 3, 3]
+## D53: 見た目のみの拡大率 (Lv1:1.0 → Lv8:1.56)。当たり判定は変えない。
+## 残像は刃ごとに2枚 (角度 -0.15/-0.30rad、alpha 0.28/0.14、衝突なし)。
+const GHOST_OFFS := [0.15, 0.30]
+const GHOST_ALPHAS := [0.28, 0.14]
 
 func _ready() -> void:
 	super._ready()
@@ -32,7 +37,11 @@ func upgrade() -> void:
 func blade_count() -> int:
 	return COUNT_TABLE[clampi(weapon_level - 1, 0, 7)]
 
-## 刃の数をレベルに合わせる。Orbit 下に等角度で配置する。
+## 見た目のみの拡大率 (D53)。当たり判定 (48x28)・radius・威力は不変。
+func vis_scale() -> float:
+	return 1.0 + 0.08 * float(weapon_level - 1)
+
+## 刃の数をレベルに合わせる。Orbit 下に等角度で配置する。残像 (D53) もここで作り直す。
 func _refresh_blades() -> void:
 	if orbit == null:
 		return
@@ -40,34 +49,50 @@ func _refresh_blades() -> void:
 		if is_instance_valid(b):
 			b.queue_free()
 	blades.clear()
+	ghosts.clear()
+	var tex_path := "res://weapons/sprites/spin_sword.png"
+	var tex: Texture2D = null
+	if ResourceLoader.exists(tex_path):
+		tex = load(tex_path) as Texture2D
+	var sc: float = vis_scale()
 	var n: int = blade_count()
 	for i: int in range(n):
+		var ang: float = TAU * float(i) / float(n)
 		var bl := Area2D.new()
 		bl.name = "Blade%d" % i
 		bl.collision_layer = 4
 		bl.collision_mask = 10
 		bl.monitoring = true
 		# 刃は放射状に向ける (位置角度と同じだけ回転。Orbit の回転で振り回す)
-		bl.position = Vector2(radius, 0).rotated(TAU * float(i) / float(n))
-		bl.rotation = TAU * float(i) / float(n)
+		bl.position = Vector2(radius, 0).rotated(ang)
+		bl.rotation = ang
 		var shape := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
 		rect.size = Vector2(48, 28)
 		shape.shape = rect
 		bl.add_child(shape)
 		# 1枚絵の剣スプライト(右向き)を Orbit の回転で振り回す
-		var tex_path := "res://weapons/sprites/spin_sword.png"
-		if ResourceLoader.exists(tex_path):
-			var tex: Texture2D = load(tex_path) as Texture2D
-			if tex != null:
-				var visual := Sprite2D.new()
-				visual.name = "Visual"
-				visual.texture = tex
-				visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				bl.add_child(visual)
+		if tex != null:
+			var visual := Sprite2D.new()
+			visual.name = "Visual"
+			visual.texture = tex
+			visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			visual.scale = Vector2(sc, sc)
+			bl.add_child(visual)
 		orbit.add_child(bl)
 		bl.area_entered.connect(_on_blade_area)
 		blades.append(bl)
+		# 残像: 衝突なしのゴースト2枚を Orbit 直下に置く (回転で一緒に流れる)。
+		if tex != null:
+			for g: int in range(GHOST_OFFS.size()):
+				var gh := Sprite2D.new()
+				gh.name = "Ghost%d_%d" % [i, g]
+				gh.texture = tex
+				gh.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				gh.scale = Vector2(sc, sc)
+				gh.modulate = Color(1, 1, 1, float(GHOST_ALPHAS[g]))
+				orbit.add_child(gh)
+				ghosts.append({"node": gh, "ang": ang - float(GHOST_OFFS[g]), "rot": ang - float(GHOST_OFFS[g])})
 
 func _process(_delta: float) -> void:
 	if orbit == null or player == null:
@@ -83,6 +108,11 @@ func _process(_delta: float) -> void:
 		var bl: Node = blades[i]
 		if is_instance_valid(bl):
 			(bl as Node2D).position = Vector2(r, 0).rotated(TAU * float(i) / float(maxi(n, 1)))
+	for g: Dictionary in ghosts:
+		var gn: Node = g["node"]
+		if is_instance_valid(gn):
+			(gn as Node2D).position = Vector2(r, 0).rotated(float(g["ang"]))
+			(gn as Node2D).rotation = float(g["rot"])
 
 func _on_blade_area(area: Area2D) -> void:
 	# 敵弾 (layer 8) は消去する (D18)。味方弾 (layer 4) は対象外。

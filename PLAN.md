@@ -1,7 +1,7 @@
-# 実装計画 v1.6
+# 実装計画 v1.7
 
-> 前提: SPEC.md v1.6 / Godot 4.7.2 / v1.0〜v1.5 実装済み (P0〜P18 完了)。
-> v1.1 以降は `IDEA.md` の「バージョンアップ案1〜4」を順に実装する計画として積み上げている。v1.6 = バージョンアップ案4。
+> 前提: SPEC.md v1.7 / Godot 4.7.2 / v1.0〜v1.6 実装済み (P0〜P19 完了)。
+> v1.1 以降は `IDEA.md` の「バージョンアップ案1〜5」を順に実装する計画として積み上げている。v1.7 = バージョンアップ案5。
 > 方針: データ駆動・仮素材・小さく動くものを反復。Editor toolsで構築、Runtime toolsで検証。
 
 ## 0. ゴール・マイルストーン
@@ -41,6 +41,10 @@
 ### v1.6 (完了)
 
 - **M18 案4 (カード上限/フォールバック3種・ジェム3段階色・難易度7段階+インセインN・解放セーブ・エンディング後のタイトル導線・エンディング背景の上端合わせ) が入り、回帰が通る (P19)** ✅
+
+### v1.7 (実装中)
+
+- **M19 案5 (D44〜D57) が入り、回帰が通る (P20)**
 
 ## 1. ファイル構成 (v1.1)
 
@@ -265,6 +269,21 @@ res://
   `verify_v16.gd` 107件 ALL PASS + 全回帰 ALL PASS。実機キャプチャ (`capture_title_diff`・`capture_finale`) で
   解放/未解放の2状態とエンディング (月が見える・ボタンはタイトルへのみ) を目視確認
 
+### P20 バージョンアップ案5 [M19] (実装中)
+
+- 実装: `ui/staff_roll_ui.gd` (D44 解放通知を残す) + `ui/result_ui.gd` (`hide_unlock_notice` 削除) /
+  `ui/title_ui.gd` (D45 DiffLock 固定・D46 スティックラッチ) /
+  `weapons/orbit_bomb.gd` (D47 最低距離160・D48 `_pick_target`/`_find_unused`) /
+  `enemies/enemy.gd` (D49 `_apply_variance`) / `pickups/xp_gem.gd` (D50 閾値1/4/8) + `enemies/wolf.tscn` (XP4) /
+  `projectiles/projectile.gd` (D51 初回走査・D54 `visual_scale`) / `systems/card_manager.gd` (D52 MAX表示) /
+  `weapons/spin_sword.gd` (D53 拡大+残像) / `weapons/straight_shot.gd`・`weapons/homing_missiles.gd`・`weapons/flamethrower.gd` (D54) /
+  `projectiles/homing_projectile.gd` (D55 煙) / `weapons/chain_lightning.gd` + `systems/combat_fx.gd` (D56 burst・上限128) /
+  `objects/bomb.gd` (D57 48破片・速遅分離・敵配列キャッシュ)
+- 検証: 新規 `tools/verify_v17.gd` (ばらつき範囲・ボム投下点・密着ヒット・見た目係数・煙・破片48) +
+  `verify_v16.gd` 更新 (範囲 assert・閾値4/8・MAX表記・DiffLock 空行・解放通知残存) +
+  `verify_staff_roll.gd` 更新 (解放通知残存) + 通しプレイ + 全回帰
+- **完了条件**: 案5の11項目がすべて動き、verify 全PASS。見た目変更は判定・数値に影響しない
+
 ## 3. 並行可能タスク
 
 - P10 (素材生成) は P8/P9 と並行可 (仮タイルで先にロジックを通すため)
@@ -297,7 +316,6 @@ res://
 
 ## 6. 次アクション提案
 
-1. SPEC.md §32 の決定事項チェックリスト (D33〜D43) を確認・承認する
-2. 承認後 P19 を実装 (難易度DB → 適用 → タイトルUI → カード/ジェム → セーブ → 計測)
-3. 実装ブロッカーは D36 (難易度の数値とパラメータ表)・D39 (セーブ形式)・D40 (セレクタUI) — ここが決まれば
-   D33〜D35 (カード・ジェム) は独立して進められる
+1. P20 の残り (通しプレイ計測 + 全回帰 + 実機キャプチャの目視) を実行する
+2. D47 (最低距離160)・D57 (破片48) の数値を計測で確定して SPEC に書き戻す (P12と同じ流儀)
+3. 実装ブロッカーはなし (D44〜D57 の実装は完了、検証待ち)

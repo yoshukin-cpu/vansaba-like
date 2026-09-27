@@ -38,11 +38,11 @@ func _ready() -> void:
 	sparkle.modulate.a = 0.0
 	_refresh_visual()
 
-## 値 → 色 (低→高で 緑→赤→白。D35)。
+## 値 → 色 (低→高で 緑→赤→白。D35・D50で閾値を 1/4/8 に変更)。
 static func color_for_value(v: int) -> Color:
-	if v >= 20:
+	if v >= 8:
 		return TIER_BIG
-	if v >= 5:
+	if v >= 4:
 		return TIER_MID
 	return TIER_SMALL
 

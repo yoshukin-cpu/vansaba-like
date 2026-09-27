@@ -65,7 +65,9 @@ func _spawn_flames(_delta: float) -> void:
 		s.texture = textures[randi() % textures.size()]
 		s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		s.rotation = d.angle()
-		var sc: float = randf_range(0.7, 1.15)
+		# D54: 見た目のみの拡大 (Lv1:1.0 → Lv8:約1.7)。ダメージ範囲は不変。
+		var lv_scale: float = 1.0 + 0.10 * float(weapon_level - 1)
+		var sc: float = randf_range(0.7, 1.15) * lv_scale
 		s.scale = Vector2(sc, sc)
 		add_child(s)
 		s.global_position = player.global_position + d * randf_range(4.0, 24.0)

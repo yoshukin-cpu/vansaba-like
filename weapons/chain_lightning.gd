@@ -50,6 +50,7 @@ func fire() -> void:
 		if away.length() < 1.0:
 			away = Vector2.RIGHT
 		current.call("take_damage", dmg, away.normalized() * 100.0 * kb, crit)
+		_burst(current.global_position, i)
 		from = current.global_position
 		current = _next_target(from, hit)
 	var fx := Node2D.new()
@@ -57,6 +58,17 @@ func fire() -> void:
 	scene.add_child(fx)
 	fx.global_position = Vector2.ZERO
 	fx.call("setup", pts)
+
+## D56: 被弾点のバースト (Lvで数・大きさが増える)。演出のみ。
+func _burst(pos: Vector2, idx: int) -> void:
+	var fx: Node = get_tree().get_first_node_in_group("combat_fx")
+	if fx == null:
+		return
+	var count: int = 2 + weapon_level / 2
+	for i: int in range(count):
+		fx.call("spark", pos + Vector2(randf_range(-12.0, 12.0), randf_range(-12.0, 12.0)), Color(0.7, 0.95, 1.0, 1.0))
+	if idx % 3 == 2:
+		fx.call("poof", pos, Color(0.7, 0.95, 1.0), weapon_level >= 6)
 
 func _next_target(from: Vector2, exclude: Array) -> Node2D:
 	var best: Node2D = null

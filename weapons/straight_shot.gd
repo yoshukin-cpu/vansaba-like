@@ -31,6 +31,8 @@ func fire() -> void:
 	var n: int = projectile_count + int(pstat("bonus_projectiles", 0.0))
 	var spd: float = projectile_speed * pstat("bullet_speed_mult", 1.0)
 	var life: float = projectile_lifetime * pstat("duration_mult", 1.0)
+	# D54: 見た目のみの拡大 (Lv1:1.0 → Lv8:約1.49)。弾速・寿命・貫通は不変。
+	var vis: float = 1.0 + 0.07 * float(weapon_level - 1)
 	var hit: Array = roll_hit()
 	var dmg: float = hit[0]
 	var crit: bool = hit[1]
@@ -48,6 +50,6 @@ func fire() -> void:
 			pr = ProjectileScene.instantiate() as Area2D
 			scene.add_child(pr)
 		pr.global_position = player.global_position + d * 24.0
-		pr.call("setup", d, spd, dmg, life, pierce)
+		pr.call("setup", d, spd, dmg, life, pierce, vis)
 		pr.set("kb_scale", kb)
 		pr.set("crit_hit", crit)

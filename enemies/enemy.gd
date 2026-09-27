@@ -42,6 +42,8 @@ var fx: Node = null
 var gem_pool: Node = null
 var stuck_time: float = 0.0
 var stuck_ignore: float = 0.0
+## D49: false にすると個体ばらつきを掛けない (ボス用。_ready より前に設定すること)。
+var use_variance: bool = true
 var _prev_pos: Vector2 = Vector2.ZERO
 var _prev_valid: bool = false
 
@@ -51,6 +53,8 @@ var _prev_valid: bool = false
 func _ready() -> void:
 	add_to_group("enemies")
 	_apply_difficulty()
+	if use_variance:
+		_apply_variance()
 	hp = max_hp
 	_apply_sprite()
 	hitbox.area_entered.connect(_on_hitbox_area)
@@ -67,6 +71,14 @@ func _apply_difficulty() -> void:
 	var spd: float = DiffDB.cur_enemy_speed_mult()
 	speed *= spd
 	dash_speed *= spd
+
+## 敵の硬さ・ダメージ・速度の個体ばらつき ±30% (D49)。
+## 報酬 (xp_value)・射撃間隔・行動パターンは固定。ボスは対象外 (boss.gd 側では呼ばない)。
+func _apply_variance() -> void:
+	max_hp *= randf_range(0.7, 1.3)
+	contact_damage *= randf_range(0.7, 1.3)
+	shot_damage *= randf_range(0.7, 1.3)
+	speed *= randf_range(0.7, 1.3)
 
 ## frames_path の SpriteFrames を Body に適用する (未指定なら何もしない)
 func _apply_sprite() -> void:

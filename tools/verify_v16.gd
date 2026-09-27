@@ -159,21 +159,21 @@ func _t_game_difficulty() -> void:
 	for i: int in range(5):
 		await process_frame
 
-	# ノーマルは完全 no-op
+	# ノーマルは完全 no-op (数値は素のまま。D49 の個体ばらつき ±30% の範囲内)
 	var s0: Node2D = _spawn_slime(player)
-	_check("normal: HP 12 (no-op)", _near(float(s0.get("max_hp")), 12.0))
-	_check("normal: 接触 8", _near(float(s0.get("contact_damage")), 8.0))
-	_check("normal: 速度 70", _near(float(s0.get("speed")), 70.0))
+	_check("normal: HP 12±30%", 12.0 * 0.7 <= float(s0.get("max_hp")) and float(s0.get("max_hp")) <= 12.0 * 1.3)
+	_check("normal: 接触 8±30%", 8.0 * 0.7 <= float(s0.get("contact_damage")) and float(s0.get("contact_damage")) <= 8.0 * 1.3)
+	_check("normal: 速度 70±30%", 70.0 * 0.7 <= float(s0.get("speed")) and float(s0.get("speed")) <= 70.0 * 1.3)
 	s0.queue_free()
 
 	# ハード
 	DiffDB.current_key = "hard"
 	var s1: Node2D = _spawn_slime(player)
-	_check("hard: HP 12×1.25=15", _near(float(s1.get("max_hp")), 15.0))
-	_check("hard: 接触 8×1.2=9.6", _near(float(s1.get("contact_damage")), 9.6))
-	_check("hard: 速度 70×1.05=73.5", _near(float(s1.get("speed")), 73.5))
+	_check("hard: HP 15±30%", 15.0 * 0.7 <= float(s1.get("max_hp")) and float(s1.get("max_hp")) <= 15.0 * 1.3)
+	_check("hard: 接触 9.6±30%", 9.6 * 0.7 <= float(s1.get("contact_damage")) and float(s1.get("contact_damage")) <= 9.6 * 1.3)
+	_check("hard: 速度 73.5±30%", 73.5 * 0.7 <= float(s1.get("speed")) and float(s1.get("speed")) <= 73.5 * 1.3)
 	s1.call("make_elite")
-	_check("hard: エリート 15×5×1.2=90", _near(float(s1.get("max_hp")), 90.0))
+	_check("hard: エリート 90±30%", 90.0 * 0.7 <= float(s1.get("max_hp")) and float(s1.get("max_hp")) <= 90.0 * 1.3)
 	s1.queue_free()
 
 	var b: Node2D = B01Scene.instantiate() as Node2D
@@ -199,8 +199,8 @@ func _t_game_difficulty() -> void:
 	# インセイン
 	DiffDB.current_key = "insane"
 	var s2: Node2D = _spawn_slime(player)
-	_check("insane: HP 12×4=48", _near(float(s2.get("max_hp")), 48.0))
-	_check("insane: 接触 8×3=24", _near(float(s2.get("contact_damage")), 24.0))
+	_check("insane: HP 48±30%", 48.0 * 0.7 <= float(s2.get("max_hp")) and float(s2.get("max_hp")) <= 48.0 * 1.3)
+	_check("insane: 接触 24±30%", 24.0 * 0.7 <= float(s2.get("contact_damage")) and float(s2.get("contact_damage")) <= 24.0 * 1.3)
 	s2.queue_free()
 	_check("insane: 上限 280×2 → 400 クランプ", DiffDB.cap_for(280, "insane") == 400)
 
@@ -225,7 +225,7 @@ func _t_game_difficulty() -> void:
 	sr.call("start_roll", res)
 	for i: int in range(5):
 		await process_frame
-	_check("ロール開始で解放通知が消える", not (res.get_node("Center/VBox/UnlockLabel") as Label).visible)
+	_check("ロール開始で解放通知が残る (D44)", (res.get_node("Center/VBox/UnlockLabel") as Label).visible)
 	var art: TextureRect = sr.get_node("ArtFade") as TextureRect
 	var vp: Vector2 = sr.get_viewport().get_visible_rect().size
 	_check("背景は上端合わせ (y=%.1f)" % art.position.y, absf(art.position.y) < 0.5)
@@ -261,12 +261,13 @@ func _t_game_cards_gems() -> void:
 		await process_frame
 	var cm: Node = main.get_node("CardManager")
 
-	# Lv表記 (D33): 実レベルどおりに出す
-	_check("武器Lv1 → Lv1→2", str((cm.call("_entry", "C01", false, 1) as Dictionary)["level_text"]) == "Lv1→2")
-	_check("武器Lv7 → Lv7→8", str((cm.call("_entry", "C01", false, 7) as Dictionary)["level_text"]) == "Lv7→8")
-	_check("武器 新規 → 新規取得!", str((cm.call("_entry", "C03", true, 0) as Dictionary)["level_text"]) == "新規取得!")
-	_check("ステータス初回 → 新規取得!", str((cm.call("_entry", "C07", true, 0) as Dictionary)["level_text"]) == "新規取得!")
-	_check("ステータスLv4 → Lv4→5", str((cm.call("_entry", "C07", false, 4) as Dictionary)["level_text"]) == "Lv4→5")
+	# Lv表記 (D33・D52): 実レベルどおりに出し、取得後に MAX 到達する場合は "MAX"
+	_check("武器Lv1 → Lv1→2", str((cm.call("_entry", "C01", false, 1, 8) as Dictionary)["level_text"]) == "Lv1→2")
+	_check("武器Lv7 → MAX", str((cm.call("_entry", "C01", false, 7, 8) as Dictionary)["level_text"]) == "MAX")
+	_check("武器 新規 → 新規取得!", str((cm.call("_entry", "C03", true, 0, 8) as Dictionary)["level_text"]) == "新規取得!")
+	_check("ステータス初回 → 新規取得!", str((cm.call("_entry", "C07", true, 0, 5) as Dictionary)["level_text"]) == "新規取得!")
+	_check("ステータスLv4 → MAX", str((cm.call("_entry", "C07", false, 4, 5) as Dictionary)["level_text"]) == "MAX")
+	_check("ステータスLv3 → Lv3→4", str((cm.call("_entry", "C07", false, 3, 5) as Dictionary)["level_text"]) == "Lv3→4")
 
 	# プールが十分なときはフォールバックを出さない
 	var normal_has_fb := false
@@ -309,9 +310,9 @@ func _t_game_cards_gems() -> void:
 	var offers1: Array = cm.call("get_offers")
 	var id1: String = str((offers1[1] as Dictionary)["id"])
 	var id2: String = str((offers1[2] as Dictionary)["id"])
-	_check("プール1: C01 が先頭 (Lv7→8)",
+	_check("プール1: C01 が先頭 (MAX)",
 		str((offers1[0] as Dictionary)["id"]) == "C01"
-		and str((offers1[0] as Dictionary)["level_text"]) == "Lv7→8")
+		and str((offers1[0] as Dictionary)["level_text"]) == "MAX")
 	_check("プール1: 残り2枚は別々のフォールバック", id1 in FALLBACK_IDS and id2 in FALLBACK_IDS and id1 != id2)
 
 	# 修練の書 (CXP): XP +100
@@ -351,9 +352,12 @@ func _t_game_cards_gems() -> void:
 	e1.queue_free()
 	e2.queue_free()
 
-	# ジェム: 3段階色 + きらめき (D35)
+	# ジェム: 3段階色 (D35・D50: 閾値 1/4/8) + きらめき
 	_check("色: 1XP = 緑", GemScript.color_for_value(1) == GemScript.TIER_SMALL)
-	_check("色: 5XP = 赤", GemScript.color_for_value(5) == GemScript.TIER_MID)
+	_check("色: 3XP = 緑", GemScript.color_for_value(3) == GemScript.TIER_SMALL)
+	_check("色: 4XP = 赤", GemScript.color_for_value(4) == GemScript.TIER_MID)
+	_check("色: 7XP = 赤", GemScript.color_for_value(7) == GemScript.TIER_MID)
+	_check("色: 8XP = 白", GemScript.color_for_value(8) == GemScript.TIER_BIG)
 	_check("色: 20XP = 白", GemScript.color_for_value(20) == GemScript.TIER_BIG)
 	var gem_pool: Node = get_first_node_in_group("pool_gems")
 	var gem: Node2D = gem_pool.call("acquire") as Node2D
@@ -393,7 +397,10 @@ func _t_title_selector() -> void:
 	var title: Node = main.get_node("TitleUI")
 	_check("初期カーソルは last=hard", str(title.call("selected_key")) == "hard")
 	_check("名前表示", str(title.get_node("Center/VBox/DiffRow/DiffName").get("text")) == "ハード")
-	_check("解放済みは鍵なし", not (title.get_node("Center/VBox/DiffLock") as Label).visible)
+	# D45: 解放済みでも行自体は残る (空文字で領域確保しレイアウトを固定)。
+	_check("解放済みは鍵なし (空行で領域あり)",
+		(title.get_node("Center/VBox/DiffLock") as Label).visible
+		and str(title.get_node("Center/VBox/DiffLock").get("text")) == "")
 	_check("はじめる 有効", not (title.get_node("Center/VBox/StartBtn") as Button).disabled)
 	var ptext: String = str(title.get_node("ParamsPanel/ParamsText").get("text"))
 	_check("右側にパラメータ (敵の硬さ +25% / エリート・ボス +25%)",

@@ -218,8 +218,8 @@ func _initialize() -> void:
 	for i: int in range(3):
 		await process_frame
 	_check("result hidden after scroll", not (m.get_node("ResultUI") as CanvasLayer).visible)
-	_check("unlock notice hidden in roll",
-		not (m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).visible)
+	_check("unlock notice stays in roll (D44)",
+		(m.get_node("ResultUI/Center/VBox/UnlockLabel") as Label).visible)
 	m.queue_free()
 
 	SaveData.path = SaveData.DEFAULT_PATH
