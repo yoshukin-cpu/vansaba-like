@@ -42,6 +42,8 @@ func vis_scale() -> float:
 	return 1.0 + 0.08 * float(weapon_level - 1)
 
 ## 刃の数をレベルに合わせる。Orbit 下に等角度で配置する。残像 (D53) もここで作り直す。
+## 修正: 古い残像も解放する。ghosts を clear するだけだと前レベルの残像ノードが Orbit 直下に
+## 残留し、古い半径・古い拡大率のまま「内側に小さい残像」として残り続ける (蓄積バグ)。
 func _refresh_blades() -> void:
 	if orbit == null:
 		return
@@ -49,6 +51,10 @@ func _refresh_blades() -> void:
 		if is_instance_valid(b):
 			b.queue_free()
 	blades.clear()
+	for g: Dictionary in ghosts:
+		var gn: Node = g["node"]
+		if is_instance_valid(gn):
+			gn.queue_free()
 	ghosts.clear()
 	var tex_path := "res://weapons/sprites/spin_sword.png"
 	var tex: Texture2D = null

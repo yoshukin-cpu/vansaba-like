@@ -253,6 +253,25 @@ func _t_visuals() -> void:
 	_check("スピンLv8: 拡大率1.56", absf(float(spin.call("vis_scale")) - 1.56) < 0.001)
 	_check("スピンLv8: 刃3×残像6", (spin.get("blades") as Array).size() == 3
 		and (spin.get("ghosts") as Array).size() == 6)
+	# 修正: 刃の作り直しで古い残像が残留しない (Orbit 直下 = 刃3+残像6の9ノードのみ)。
+	# clear するだけだと前レベルの残像が古い半径・拡大率のまま残り「内側に小さい残像」になる。
+	for i: int in range(2):
+		await process_frame
+	var orbit: Node2D = spin.get("orbit")
+	var orbit_children: int = 0
+	for c: Node in orbit.get_children():
+		if not c.is_queued_for_deletion():
+			orbit_children += 1
+	_check("スピン: Orbit 直下は刃3+残像6の9ノード (実際 %d・残留なし)" % orbit_children, orbit_children == 9)
+	# 残像は刃と同じ半径・同じ拡大率で、角度だけ 0.15/0.30rad 遅れる (D53)。
+	var g0: Dictionary = (spin.get("ghosts") as Array)[0]
+	var g0n: Node2D = g0["node"] as Node2D
+	var blade0: Node2D = (spin.get("blades") as Array)[0] as Node2D
+	_check("スピン: 残像は刃と同半径・同拡大率 (%.0f vs %.0f / %.2f vs %.2f)" % [
+		g0n.position.length(), blade0.position.length(),
+		(g0n as Sprite2D).scale.x, (blade0.get_node("Visual") as Sprite2D).scale.x],
+		absf(g0n.position.length() - blade0.position.length()) < 0.01
+		and absf((g0n as Sprite2D).scale.x - (blade0.get_node("Visual") as Sprite2D).scale.x) < 0.001)
 	var blade: Node = (spin.get("blades") as Array)[0]
 	# コード生成ノードの名前は自動採番のため、型で探す。
 	var bshape: CollisionShape2D = null
