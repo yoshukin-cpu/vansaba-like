@@ -279,11 +279,16 @@ res://
   `weapons/spin_sword.gd` (D53 拡大+残像) / `weapons/straight_shot.gd`・`weapons/homing_missiles.gd`・`weapons/flamethrower.gd` (D54) /
   `projectiles/homing_projectile.gd` (D55 煙) / `weapons/chain_lightning.gd` + `systems/combat_fx.gd` (D56 burst・上限128) /
   `objects/bomb.gd` (D57 48破片・速遅分離・敵配列キャッシュ)
-- 検証: 新規 `tools/verify_v17.gd` (ばらつき範囲・ボム投下点・密着ヒット・見た目係数・煙・破片48) +
+  - 追補 (チャット要望): `projectiles/homing_projectile.gd` (D58 煙の視認性・後方±5°ぶれ) /
+    `weapons/lightning_fx.gd` + `weapons/chain_lightning.gd` (D59 線の太さLv連動) /
+    `ui/title_ui.gd` (起動時セーブ読み込み順の修正・パッド「終了」不具合修正)
+- 検証: 新規 `tools/verify_v17.gd` (ばらつき範囲・ボム投下点・密着ヒット・見た目係数・煙・破片48・線の太さ) +
   `verify_v16.gd` 更新 (範囲 assert・閾値4/8・MAX表記・DiffLock 空行・解放通知残存) +
-  `verify_staff_roll.gd` 更新 (解放通知残存) + 通しプレイ + 全回帰
+  `verify_staff_roll.gd` 更新 (解放通知残存) + `tools/verify_title_load.gd`・`tools/test_title_input.gd` (タイトル系の回帰) +
+  通しプレイ + 全回帰
 - **完了条件**: 案5の11項目がすべて動き、verify 全PASS。見た目変更は判定・数値に影響しない
-- 実測: `verify_v17.gd` 新規29件 ALL PASS + 全回帰 (headless: world/chests/v12/v13/card_marks/staff_roll/audio/gem_magnet/v16) ALL PASS。
+- 実測: `verify_v17.gd` 42件 ALL PASS (D58/D59 追補込み) + `test_title_input.gd` 50件 ALL PASS (ロック中+パッド終了の回帰込み) +
+  `verify_title_load.gd` 9件 ALL PASS + 全回帰 (headless) ALL PASS。
   通しプレイ (3倍速・通常) 9:43 死亡 (Lv9・312kill・score 5620) エラーなし。残りは窓ありキャプチャ (見た目系) の目視。
 
 ## 3. 並行可能タスク

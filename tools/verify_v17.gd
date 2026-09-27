@@ -43,6 +43,7 @@ func _init() -> void:
 	await _t_item_bomb()
 	await _t_title_latch()
 	await _t_smoke_d58()
+	await _t_chain_thickness_d59()
 	# 後始末 (テストが実セーブを汚さない)
 	SaveData.path = SaveData.DEFAULT_PATH
 	SaveData.reset()
@@ -437,5 +438,60 @@ func _t_smoke_d58() -> void:
 		var moved: Vector2 = first.global_position - first_spawn
 		_check("D58: ぶれた向きへ流れる (%.0fpx 移動)" % moved.length(),
 			moved.length() > 40.0 and vel.length() > 0.0 and moved.normalized().dot(vel.normalized()) > 0.99)
+	main.queue_free()
+	await process_frame
+
+
+# === 9) D59 チェインの線の太さ ===
+## current_scene 直下の線FXのうち最後 (= 最新) のものを返す。
+func _line_fx(script: GDScript) -> Node:
+	var found: Node = null
+	for c: Node in (current_scene as Node).get_children():
+		if c.get_script() == script:
+			found = c
+	return found
+
+
+func _t_chain_thickness_d59() -> void:
+	print("\n=== 9) チェインライトニングの線の太さ (D59) ===")
+	var main: Node = _new_main()
+	for i: int in range(10):
+		await process_frame
+	main.call("start_game")
+	main.get_node("SpawnDirector").set("running", false)
+	main.get_node("ChestDirector").set("running", false)
+	var player: Node2D = main.get_node("Player")
+	_strip_weapons(player)
+	for i: int in range(5):
+		await process_frame
+	player.call("add_weapon", "C04")
+	for i: int in range(5):
+		await process_frame
+	var cm: Node = main.get_node("CardManager")
+	var ch: Node = cm.call("weapon_by_id", "C04")
+	var e: Node2D = _spawn_slime(player, Vector2(200, 0))
+	e.set("max_hp", 1000000.0)
+	e.set("hp", 1000000.0)
+	for i: int in range(3):
+		await process_frame
+	var fx_script: GDScript = load("res://weapons/lightning_fx.gd")
+	ch.call("fire")
+	await process_frame
+	var fx1: Node = _line_fx(fx_script)
+	_check("Lv1: 線FXが生成される", fx1 != null)
+	if fx1 != null:
+		var t1: Variant = fx1.get("thickness")
+		_check("D59: Lv1 の太さ係数 1.00 (実際 %s)" % str(t1),
+			(t1 is float or t1 is int) and absf(float(t1) - 1.0) < 0.001)
+	for i: int in range(7):
+		ch.call("upgrade")
+	ch.call("fire")
+	await process_frame
+	var fx8: Node = _line_fx(fx_script)
+	_check("Lv8: 新しい線FXが生成される", fx8 != null and fx8 != fx1)
+	if fx8 != null:
+		var t8: Variant = fx8.get("thickness")
+		_check("D59: Lv8 の太さ係数 2.05 (実際 %s・Lv1より太い)" % str(t8),
+			(t8 is float or t8 is int) and absf(float(t8) - 2.05) < 0.001)
 	main.queue_free()
 	await process_frame

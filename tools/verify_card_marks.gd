@@ -118,6 +118,12 @@ func _t_levelup_and_history() -> void:
 
 	var chest: Node = main.get_node("ChestDirector")
 	var before_t09: int = marks.get_child_count()
+	# T09 は「所持武器からランダムに1つ」を強化する。ここまでの取得カードはランダム提示のため、
+	# 期待値は C01/C02 固定ではなく「その時点の所持武器」で判定する (誤失敗しやすい検査の修正)。
+	var owned: Array = []
+	for cid: String in CardsDB.WEAPON_IDS:
+		if card_manager.call("weapon_by_id", cid) != null:
+			owned.append(cid)
 	chest.call("apply_item", "T09", player.global_position)
 	for i: int in range(5):
 		await process_frame
@@ -125,7 +131,7 @@ func _t_levelup_and_history() -> void:
 	if marks.get_child_count() == before_t09 + 1:
 		last_id = str((marks.get_child(marks.get_child_count() - 1) as TextureRect).get_meta("card_id"))
 	_check("アイテム強化も履歴に入る (%s)" % last_id,
-		marks.get_child_count() == before_t09 + 1 and (last_id == "C01" or last_id == "C02"))
+		marks.get_child_count() == before_t09 + 1 and owned.has(last_id))
 
 	for i: int in range(60):
 		main.call("_record_acquired_card", "HEAL")

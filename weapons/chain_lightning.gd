@@ -57,7 +57,8 @@ func fire() -> void:
 	fx.set_script(LightningFxScript)
 	scene.add_child(fx)
 	fx.global_position = Vector2.ZERO
-	fx.call("setup", pts)
+	# D59: 線の太さはLvで増える (Lv1:1.0 → Lv8:2.05。演出のみ、判定は不変)。
+	fx.call("setup", pts, 1.0 + 0.15 * float(weapon_level - 1))
 
 ## D56: 被弾点のバースト (Lvで数・大きさが増える)。演出のみ。
 func _burst(pos: Vector2, idx: int) -> void:

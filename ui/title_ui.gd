@@ -142,10 +142,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## フォーカス中のボタンを押す (マウスクリックと同じ経路)。
 ## ロック中の難易度では開始しない (D40)。
+## 修正: 「終了」の判定を先に行う。start_btn.disabled を先に見ると、ロック中の難易度を
+## 選んでいる間はパッドのAが「終了」でも握りつぶされ、終われなくなる (キー/マウスは
+## ボタン自身が処理するため、パッドのみで起きる不具合)。
 func confirm_focused() -> void:
-	if start_btn.disabled:
-		return
 	if get_viewport().gui_get_focus_owner() == quit_btn:
 		quit_btn.pressed.emit()
-	else:
-		start_btn.pressed.emit()
+		return
+	if start_btn.disabled:
+		return
+	start_btn.pressed.emit()
