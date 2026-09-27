@@ -9,6 +9,13 @@ var focus_idx: int = 0
 ## クリア時はメニューなし。何か押したら暗転フェードしてスタッフロールへ。
 var is_clear: bool = false
 var _leaving: bool = false
+## 再演デモ (オプションからのスタッフロール再生・D77)。ボタンで開始する。
+var replay_mode: bool = false
+## 再演デモの見本戦績 (§35.13)。
+const REPLAY_TIME := "10:00"
+const REPLAY_LV := 27
+const REPLAY_KILLS := 462
+const REPLAY_SCORE := 18480
 
 @onready var title_label: Label = $Center/VBox/Title
 @onready var stats_label: Label = $Center/VBox/Stats
@@ -16,6 +23,7 @@ var _leaving: bool = false
 @onready var unlock_label: Label = $Center/VBox/UnlockLabel
 @onready var retry_btn: Button = $Center/VBox/RetryBtn
 @onready var title_btn: Button = $Center/VBox/TitleBtn
+@onready var staff_btn: Button = $Center/VBox/StaffBtn
 @onready var dim: ColorRect = $Dim
 
 ## Dim の通常濃度。フェードではここから不透明にする。
@@ -25,6 +33,8 @@ func _ready() -> void:
 	visible = false
 	retry_btn.pressed.connect(func() -> void: retry_pressed.emit())
 	title_btn.pressed.connect(func() -> void: title_pressed.emit())
+	staff_btn.pressed.connect(_on_staff_button)
+	staff_btn.hide()
 	retry_btn.focus_entered.connect(_on_focus.bind(0))
 	title_btn.focus_entered.connect(_on_focus.bind(1))
 
@@ -47,6 +57,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	# クリア時はメニューなし。どれかを押したらスタッフロールへ。
 	if is_clear:
+		if replay_mode:
+			# D77: 再演はボタンを押すまで進まない (キー/マウスはボタン自身が処理・パッドAはここで拾う)。
+			if event is InputEventJoypadButton and event.pressed:
+				if (event as InputEventJoypadButton).button_index == JOY_BUTTON_A:
+					get_viewport().set_input_as_handled()
+					_on_staff_button()
+			return
 		if event.is_action_pressed("ui_accept"):
 			get_viewport().set_input_as_handled()
 			_on_staff_button()
@@ -73,6 +90,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 0, difficulty: String = "", unlock_text: String = "", coins_text: String = "") -> void:
 	is_clear = clear
+	replay_mode = false
+	staff_btn.hide()
 	title_label.text = "CLEAR!" if clear else "GAME OVER"
 	var stats: String = "生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [time_s, lv, kills, score]
 	if difficulty != "":
@@ -94,3 +113,25 @@ func show_result(clear: bool, time_s: String, lv: int, kills: int, score: int = 
 	focus_idx = 0
 	if not clear:
 		retry_btn.grab_focus()
+
+
+## 再演デモ (オプションの「スタッフロール再演」・D77)。
+## 戦績は見本 (§35.13)。ボタンは「スタッフロールを見る」だけ。何も保存しない。
+func show_replay(difficulty: String = "") -> void:
+	is_clear = true
+	replay_mode = true
+	title_label.text = "CLEAR!"
+	var diff: String = difficulty if difficulty != "" else "ノーマル"
+	stats_label.text = "難易度: %s\n生存時間 %s / Lv %d / 撃破 %d / スコア %d" % [diff, REPLAY_TIME, REPLAY_LV, REPLAY_KILLS, REPLAY_SCORE]
+	coin_label.text = ""
+	coin_label.visible = false
+	unlock_label.text = "※ 再演のため戦績は見本です"
+	unlock_label.visible = true
+	retry_btn.hide()
+	title_btn.hide()
+	staff_btn.show()
+	_leaving = false
+	dim.color.a = DIM_ALPHA
+	visible = true
+	focus_idx = 0
+	staff_btn.grab_focus()

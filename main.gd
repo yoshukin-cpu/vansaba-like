@@ -39,6 +39,7 @@ static var quick_start: bool = false
 @onready var bgm: Node = $BGM
 @onready var options_ui: CanvasLayer = $OptionsUI
 @onready var upgrade_ui: CanvasLayer = $UpgradeUI
+@onready var replay_countdown: CanvasLayer = $ReplayCountdownUI
 
 var kills: int = 0
 var score: int = 0
@@ -52,6 +53,8 @@ var result_shown: bool = false
 ## B02撃破後のクリアカウントダウン (D25)。-1.0で非動作。
 var clear_countdown: float = -1.0
 var _last_count: int = -1
+## スタッフロール再演の進行中 (カウントダウン〜ロール・D77)。ポーズを無効にする。
+var replay_active: bool = false
 ## CLI の --difficulty (テスト・計測用)。
 var _cli_difficulty: String = ""
 
@@ -98,6 +101,7 @@ func _ready() -> void:
 	options_ui.connect("closed", _on_options_closed)
 	options_ui.connect("staff_replay_pressed", _on_staff_replay)
 	upgrade_ui.connect("closed", _on_upgrade_closed)
+	replay_countdown.connect("finished", _on_replay_countdown_done)
 	pause_ui.connect("resume_pressed", _on_resume)
 	pause_ui.connect("quit_pressed", _on_quit_to_title)
 	result_ui.connect("retry_pressed", _on_retry)
@@ -369,45 +373,63 @@ func _on_retry() -> void:
 
 ## リザルト (クリア時のみ) → スタッフロール。リザルトは表示したまま渡し、
 ## その CLEAR!/戦績ノードをスタッフロール側がそのままスクロールさせる。
+## 再演デモ (D77) も同じボタンから入る (replay = true で何も保存しない)。
 func _on_staff_roll() -> void:
 	audio.call("play", "ui")
-	staff_roll.call("start_roll", result_ui)
+	var replay: bool = bool(result_ui.get("replay_mode"))
+	staff_roll.call("start_roll", result_ui, replay)
+
 
 ## タイトル「強化」(v1.8・D68)。
 func _on_upgrade() -> void:
 	audio.call("play", "ui")
 	upgrade_ui.call("open")
 
+
 func _on_upgrade_closed() -> void:
-	# 購入の反映 (所持コイン表示)。
+	# 購入の反映 (所持コイン表示) とフォーカス戻し (D74)。
 	title_ui.call("refresh_coins")
+	title_ui.call("focus_start")
 
 ## タイトル「オプション」(v1.8・D63)。
 func _on_options() -> void:
 	audio.call("play", "ui")
 	options_ui.call("open")
 
-func _on_options_closed() -> void:
-	title_ui.call("refresh_coins")
 
-## オプションの「スタッフロール再演」(v1.8・D64)。何も保存せず再生するだけ。
+func _on_options_closed() -> void:
+	# 初期化 (D76) で解放状況が変わることがあるため、難易度表示ごと作り直す。
+	title_ui.call("refresh_difficulty")
+	title_ui.call("focus_start")
+
+## オプションの「スタッフロール再演」(v1.8・D64/D77)。何も保存せず再生するだけ。
+## カウントダウン → リザルト (再演デモ) → ボタン → フェード → ロール、の順に進む。
 func _on_staff_replay() -> void:
 	audio.call("play", "ui")
 	options_ui.call("close")
 	title_ui.hide()
 	bgm.call("set_state", "silent")
-	staff_roll.call("start_roll", null)
+	replay_active = true
+	replay_countdown.call("start", 3.0)
+
+
+## カウントダウン終了 → リザルト (再演デモ) を出す (D77)。
+func _on_replay_countdown_done() -> void:
+	if not replay_active:
+		return
+	result_ui.call("show_replay", DiffDB.display_name(DiffDB.current_key))
 
 func _on_quit_to_title() -> void:
 	quick_start = false
+	replay_active = false
 	get_tree().paused = false
 	get_tree().reload_current_scene()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause_game"):
-		if title_ui.visible or levelup_ui.visible or result_ui.visible or staff_roll.visible:
+		if replay_active or title_ui.visible or levelup_ui.visible or result_ui.visible or staff_roll.visible:
 			return
-		if options_ui.visible or upgrade_ui.visible:
+		if options_ui.visible or upgrade_ui.visible or replay_countdown.visible:
 			return
 		if get_tree().paused:
 			pause_ui.call("close")

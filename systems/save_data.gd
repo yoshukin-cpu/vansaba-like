@@ -44,6 +44,16 @@ static func reset() -> void:
 	options = default_options()
 
 
+## 進行状況だけを初期化して保存する (v1.8・D76)。オプション設定 (表示・音量) は保持する。
+static func reset_progress() -> void:
+	cleared = []
+	insane_cleared = 0
+	last = "normal"
+	coins = 0
+	upgrades = {}
+	save_now()
+
+
 ## 起動時の読み込み。壊れていれば初期状態 (ノーマルのみ) に戻す。
 static func load_save() -> void:
 	reset()

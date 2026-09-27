@@ -51,12 +51,19 @@ func _ready() -> void:
 	refresh_difficulty()
 	start_btn.grab_focus()
 
-## 開いているモーダル (オプション/強化) があれば入力を譲る (v1.8)。
+## 開いているモーダル (オプション/強化) があれば入力を譲る (v1.8・D74)。
 func _modal_open() -> bool:
 	for n: Node in get_tree().get_nodes_in_group("modal_ui"):
 		if n is CanvasLayer and (n as CanvasLayer).visible:
 			return true
 	return false
+
+## モーダル (オプション/強化) を閉じた後にフォーカスを戻す (v1.8・D74)。
+func focus_start() -> void:
+	if not visible:
+		return
+	if not start_btn.disabled:
+		start_btn.grab_focus()
 
 ## 所持コインの表示 (v1.8・D65)。強化で購入した後に main から呼ばれる。
 func refresh_coins() -> void:

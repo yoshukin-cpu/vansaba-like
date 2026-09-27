@@ -55,6 +55,15 @@ func _init() -> void:
 	for i: int in range(6):
 		await process_frame
 	await _shot("v18_options.png")
+	# 2b) セーブデータ初期化の確認 (はい/いいえ) — D76
+	var opts: CanvasLayer = main.get_node("OptionsUI")
+	var ids: Array = opts.call("row_ids")
+	opts.set("idx", ids.find("reset"))
+	opts.call("_activate")
+	for i: int in range(4):
+		await process_frame
+	await _shot("v18_options_reset_confirm.png")
+	opts.call("_confirm_answer", false)
 	main.call("_on_options_closed")
 	# 3) 強化画面 (--coins 500 で所持コインを入れてある)
 	main.call("_on_upgrade")

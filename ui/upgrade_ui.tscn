@@ -42,5 +42,5 @@ theme_override_constants/separation = 8
 [node name="Hint" type="Label" parent="Panel"]
 theme_override_colors/font_color = Color(0.62, 0.62, 0.68, 1)
 theme_override_font_sizes/font_size = 16
-text = "↑↓ / スティック: 項目　Enter / A: 購入　Esc / B: 戻る　(少しずつ強くなり、次に必要なコインが増えます)"
+text = "↑↓ / スティック: 項目　Enter / A / クリック: 購入　Esc / B: 戻る　(少しずつ強くなり、次に必要なコインが増えます)"
 horizontal_alignment = 1

@@ -8,6 +8,7 @@ const MetaDB := preload("res://data/meta_upgrades.gd")
 const OptDB := preload("res://data/options_db.gd")
 const OptionsScene: PackedScene = preload("res://ui/options_ui.tscn")
 const UpgradeScene: PackedScene = preload("res://ui/upgrade_ui.tscn")
+const MainScene: PackedScene = preload("res://main.tscn")
 
 const TEST_SAVE := "user://test_options_save.json"
 
@@ -46,6 +47,8 @@ func _init() -> void:
 	_t_save_v2()
 	await _t_options_ui()
 	await _t_upgrade_ui()
+	await _t_modal_isolation()
+	await _t_reset_save()
 	# 後始末
 	OptDB.apply_volume(OptDB.DEFAULT_BGM, OptDB.DEFAULT_SE)
 	SaveData.path = SaveData.DEFAULT_PATH
@@ -165,11 +168,11 @@ func _t_options_ui() -> void:
 	opts.call("rebuild")
 	var ids0: Array = opts.call("row_ids")
 	_check("未解放では再演の行が無い (秘密項目)", not ids0.has("replay"))
-	_check("行は 表示/解像度/BGM/SE/戻る", ids0 == ["mode", "resolution", "bgm", "se", "back"])
+	_check("行は 表示/解像度/BGM/SE/初期化/戻る", ids0 == ["mode", "resolution", "bgm", "se", "reset", "back"])
 	SaveData.cleared = ["normal"]
 	opts.call("rebuild")
 	var ids1: Array = opts.call("row_ids")
-	_check("解放後は再演の行が現れる (戻るの上)", ids1.has("replay") and str(ids1[ids1.size() - 2]) == "replay" and str(ids1[ids1.size() - 1]) == "back")
+	_check("解放後は再演の行が現れる (初期化の上)", ids1.has("replay") and str(ids1[ids1.size() - 3]) == "replay" and str(ids1[ids1.size() - 2]) == "reset" and str(ids1[ids1.size() - 1]) == "back")
 	var rows: Array = opts.get("rows")
 	var res_row: Dictionary = {}
 	for r: Dictionary in rows:
@@ -229,4 +232,189 @@ func _t_upgrade_ui() -> void:
 	up.call("refresh")
 	_check("MAX は「—」表示", str((rows[0] as Dictionary)["cost_label"].text) == "—")
 	_check("MAX は購入不可", not MetaDB.is_max(SaveData.upgrades, "M02") and MetaDB.is_max(SaveData.upgrades, "M01"))
+	_check("MAX の行は購入ボタンが無効", bool((rows[0] as Dictionary)["buy_btn"].disabled))
+	_check("コイン不足の行は購入ボタンが無効", bool((rows[1] as Dictionary)["buy_btn"].disabled))
+	SaveData.coins = 100
+	up.call("refresh")
+	_check("コインが足りれば購入ボタンが有効 (クリックで購入)", not bool((rows[1] as Dictionary)["buy_btn"].disabled))
+	(rows[1] as Dictionary)["buy_btn"].pressed.emit()
+	_check("購入ボタンで M02 が買える (D75)", int(SaveData.upgrades["M02"]) == 1 and int(SaveData.coins) == 100 - MetaDB.cost("M02", 0))
+	(rows[8] as Dictionary)["back_btn"].pressed.emit()
+	await process_frame
+	_check("戻るボタンで閉じる (D75)", not bool(up.visible))
 	up.free()
+
+
+# === 7) モーダルの入力隔離とマウス操作 (D74/D75) ===
+
+func _key_ev(code: Key, pressed: bool) -> InputEventKey:
+	var ev := InputEventKey.new()
+	ev.keycode = code
+	ev.pressed = pressed
+	return ev
+
+
+func _action_ev(name: String, pressed: bool) -> InputEventAction:
+	var ev := InputEventAction.new()
+	ev.action = name
+	ev.pressed = pressed
+	return ev
+
+
+func _inject(ev: InputEvent) -> void:
+	Input.parse_input_event(ev)
+	await process_frame
+	await process_frame
+
+
+func _click_at(pos: Vector2) -> void:
+	var down := InputEventMouseButton.new()
+	down.button_index = MOUSE_BUTTON_LEFT
+	down.pressed = true
+	down.position = pos
+	down.global_position = pos
+	await _inject(down)
+	var up := InputEventMouseButton.new()
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.pressed = false
+	up.position = pos
+	up.global_position = pos
+	await _inject(up)
+
+
+func _t_modal_isolation() -> void:
+	print("\n=== 7) モーダルの入力隔離とマウス操作 (D74/D75) ===")
+	SaveData.reset()
+	SaveData.cleared = ["normal"]
+	SaveData.coins = 40
+	SaveData.save_now()
+	var main: Node = MainScene.instantiate()
+	root.add_child(main)
+	current_scene = main
+	for i: int in range(6):
+		await process_frame
+	var title: CanvasLayer = main.get_node("TitleUI")
+	var opts: CanvasLayer = main.get_node("OptionsUI")
+	var start_btn: Button = title.get_node("Center/VBox/StartBtn")
+	start_btn.grab_focus()
+	await process_frame
+	_check("前提: タイトルの「はじめる」にフォーカス", root.gui_get_focus_owner() == start_btn)
+	main.call("_on_options")
+	for i: int in range(4):
+		await process_frame
+	_check("オプションを開くとフォーカスが解放される (D74)", root.gui_get_focus_owner() == null)
+	_check("オプションが表示されている", bool(opts.visible))
+	# --- キーボード (D74: フォーカスが残っているとタイトルに食われて動かない) ---
+	opts.set("idx", 0)
+	await _inject(_action_ev("ui_down", true))
+	await _inject(_action_ev("ui_down", false))
+	_check("キーボード ↓ で項目が動く (idx=1)", int(opts.get("idx")) == 1)
+	var mode_before: String = str(SaveData.options["mode"])
+	opts.set("idx", 0)
+	await _inject(_key_ev(KEY_ENTER, true))
+	await _inject(_key_ev(KEY_ENTER, false))
+	await process_frame
+	_check("Enter がオプションに効く (表示モードが切替)", str(SaveData.options["mode"]) != mode_before)
+	_check("タイトルは開始しない (操作リークなし)", bool(title.visible) and not bool(main.get("result_shown")))
+	# --- マウス: ◀▶ ボタン (D75) ---
+	# 注意: headless ではマウスイベントが GUI に届かないため、ここでは配線 (pressed → 変更) を確認し、
+	# 実際のクリック (ヒットテスト) は窓ありの tools/verify_options_mouse.gd で確認する。
+	SaveData.set_option("mode", OptDB.MODE_WINDOW)
+	opts.call("rebuild")
+	for i: int in range(3):
+		await process_frame
+	var rows: Array = opts.get("rows")
+	var res_i: int = 1
+	opts.set("idx", res_i)
+	var res_before: String = str(SaveData.options["resolution"])
+	var rb: Button = (rows[res_i] as Dictionary)["right_btn"]
+	var lb: Button = (rows[res_i] as Dictionary)["left_btn"]
+	_check("値の行に ◀ / ▶ ボタンがある (D75)", rb != null and lb != null)
+	_check("◀ / ▶ は画面のフォーカスを奪わない (D74)", rb.focus_mode == Control.FOCUS_NONE and lb.focus_mode == Control.FOCUS_NONE)
+	rb.pressed.emit()
+	_check("▶ で値が進む (D75: %s → %s)" % [res_before, str(SaveData.options["resolution"])], str(SaveData.options["resolution"]) != res_before)
+	lb.pressed.emit()
+	_check("◀ で戻る (D75)", str(SaveData.options["resolution"]) == res_before)
+	var exec_btn: Button = (rows[rows.size() - 1] as Dictionary)["exec_btn"]
+	_check("戻る行に実行ボタンがある (D75)", exec_btn != null and str(exec_btn.text) == "戻る")
+	_check("実行ボタンもフォーカスを奪わない", exec_btn.focus_mode == Control.FOCUS_NONE)
+	# --- モーダルの Dim がクリックを遮る (D74) ---
+	var dim: ColorRect = opts.get_node("Dim")
+	var vp: Vector2 = root.get_visible_rect().size
+	_check("Dim は全画面 + STOP でクリックを遮る (D74)",
+		dim.mouse_filter == Control.MOUSE_FILTER_STOP
+		and is_equal_approx(dim.size.x, vp.x) and is_equal_approx(dim.size.y, vp.y))
+	var starts := 0
+	var quits := 0
+	title.connect("start_pressed", func() -> void: starts += 1)
+	title.connect("quit_pressed", func() -> void: quits += 1)
+	_check("前提: モーダル表示中はタイトルが動いていない", starts == 0 and quits == 0 and bool(title.visible))
+	# --- 閉じたらフォーカスが戻る (D74) ---
+	opts.call("close")
+	for i: int in range(3):
+		await process_frame
+	_check("閉じるとタイトルへフォーカスが戻る (D74)", root.gui_get_focus_owner() == start_btn)
+	main.free()
+
+
+# === 8) セーブデータ初期化 (D76) ===
+
+func _t_reset_save() -> void:
+	print("\n=== 8) セーブデータ初期化 (D76) ===")
+	SaveData.reset()
+	SaveData.cleared = ["normal", "hard"]
+	SaveData.insane_cleared = 2
+	SaveData.last = "hard"
+	SaveData.coins = 123
+	SaveData.upgrades = {"M01": 3}
+	SaveData.options = {"mode": OptDB.MODE_WINDOW, "resolution": "1600x900", "bgm": 0.6, "se": 0.9}
+	SaveData.save_now()
+	var opts: CanvasLayer = OptionsScene.instantiate() as CanvasLayer
+	root.add_child(opts)
+	await process_frame
+	opts.call("open")
+	for i: int in range(2):
+		await process_frame
+	var ids: Array = opts.call("row_ids")
+	_check("初期化の行がある (戻るの上)", ids.has("reset") and str(ids[ids.size() - 2]) == "reset" and str(ids[ids.size() - 1]) == "back")
+	opts.set("idx", ids.find("reset"))
+	opts.call("_activate")
+	await process_frame
+	_check("決定で確認 (はい/いいえ) に移る (D76)", bool(opts.get("confirming")))
+	_check("既定は「いいえ」(破壊的操作のため)", int(opts.get("confirm_idx")) == 1)
+	var rows_box: Control = opts.get_node("Panel/Rows")
+	var confirm_box: Control = opts.get_node("Panel/Confirm")
+	_check("確認中は行一覧を隠して確認を出す", not rows_box.visible and confirm_box.visible)
+	_check("確認の説明にオプション保持を明記", "オプション設定は保存されます" in str((opts.get_node("Panel/Confirm/ConfirmNote") as Label).text))
+	opts.call("_confirm_answer", false)
+	await process_frame
+	_check("「いいえ」では消えない", SaveData.cleared.size() == 2 and SaveData.coins == 123 and int(SaveData.upgrades.get("M01", 0)) == 3)
+	_check("「いいえ」で行一覧へ戻る", rows_box.visible and not confirm_box.visible)
+	# はい (マウスクリック) → 進行状況のみ消える
+	opts.set("idx", (opts.call("row_ids") as Array).find("reset"))
+	opts.call("_activate")
+	await process_frame
+	var yes: Button = opts.get_node("Panel/Confirm/ConfirmRow/YesBtn")
+	var no: Button = opts.get_node("Panel/Confirm/ConfirmRow/NoBtn")
+	_check("確認のボタンはフォーカスを奪わない (D74)", yes.focus_mode == Control.FOCUS_NONE and no.focus_mode == Control.FOCUS_NONE)
+	yes.pressed.emit()
+	await process_frame
+	_check("「はい」で進行状況が消える", SaveData.cleared.is_empty() and SaveData.insane_cleared == 0 and int(SaveData.coins) == 0 and SaveData.upgrades.is_empty())
+	_check("オプション設定は保持される (D76)",
+		str(SaveData.options["resolution"]) == "1600x900" and _near(float(SaveData.options["bgm"]), 0.6)
+		and _near(float(SaveData.options["se"]), 0.9) and str(SaveData.options["mode"]) == OptDB.MODE_WINDOW)
+	_check("確認は閉じて行一覧へ戻る", bool(rows_box.visible) and not bool(confirm_box.visible) and not bool(opts.get("confirming")))
+	_check("初期化後は再演の行が消える (秘密項目)", not (opts.call("row_ids") as Array).has("replay"))
+	_check("初期化したことを知らせる", "初期化しました" in str((opts.get_node("Panel/Hint") as Label).text))
+	var txt: String = ""
+	var f: FileAccess = FileAccess.open(TEST_SAVE, FileAccess.READ)
+	if f != null:
+		txt = f.get_as_text()
+		f.close()
+	var parsed: Variant = JSON.parse_string(txt)
+	var pd: Dictionary = parsed as Dictionary if parsed is Dictionary else {}
+	var op: Dictionary = pd.get("options", {}) as Dictionary
+	_check("保存ファイルも初期化済み (cleared 空・コイン0)",
+		not pd.is_empty() and (pd.get("cleared", []) as Array).is_empty() and int(pd.get("coins", -1)) == 0)
+	_check("保存ファイルにオプションが残る (D76)", str(op.get("resolution", "")) == "1600x900" and _near(float(op.get("bgm", 0.0)), 0.6))
+	opts.free()

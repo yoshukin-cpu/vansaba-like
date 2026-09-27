@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="2"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://systems/bgm_manager.gd" id="15"]
 [ext_resource type="PackedScene" path="res://ui/options_ui.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://ui/upgrade_ui.tscn" id="17"]
+[ext_resource type="PackedScene" path="res://ui/replay_countdown_ui.tscn" id="18"]
 
 [node name="Main" type="Node2D"]
 y_sort_enabled = true
@@ -99,6 +100,8 @@ bus = "BGM"
 [node name="OptionsUI" parent="." instance=ExtResource("16")]
 
 [node name="UpgradeUI" parent="." instance=ExtResource("17")]
+
+[node name="ReplayCountdownUI" parent="." instance=ExtResource("18")]
 
 [node name="HUD" type="CanvasLayer" parent="."]
 

@@ -211,9 +211,10 @@ func _ready() -> void:
 
 ## res: リザルト UI。その CLEAR!/戦績ノードをそのままスクロールさせる
 ## (位置・大きさ・色が完全に一致する)。背景はリザルトの Dim が黒くする。
-## res == null は再演モード (オプションの「スタッフロール再演」・D64)。
-## 実ノードが無いため内蔵ヘッダーを使い、最初から黒背景で流す。何も保存しない。
-func start_roll(res: CanvasLayer) -> void:
+## replay = true は再演 (オプションの「スタッフロール再演」・D64/D77)。実クリアと同じ見え方で流すが、
+## 何も保存しない (呼び出し側も record_clear を呼ばない)。res == null の再演 (実ノード無し) では
+## 内蔵ヘッダーを使い、最初から黒背景で流す。
+func start_roll(res: CanvasLayer, replay: bool = false) -> void:
 	song_len = FALLBACK_LEN
 	if player.stream != null:
 		var l: float = player.stream.get_length()
@@ -223,7 +224,7 @@ func start_roll(res: CanvasLayer) -> void:
 	scroll_time = song_len - THANKS_LEAD
 	_res = res
 	_rc = null
-	replay_mode = res == null
+	replay_mode = replay or res == null
 	if res != null:
 		# 解放通知行もそのまま残して一緒にスクロールさせる (D44)。
 		# 実ノードをそのまま流用するため、位置・大きさ・色は完全一致のまま流れる。

@@ -1,6 +1,8 @@
 extends CanvasLayer
-## 強化画面 (SPEC §35.8、v1.8/案6)。コインを使って恒久パワーアップを購入する。
+## 強化画面 (SPEC §35.8・§35.13、v1.8/案6)。コインを使って恒久パワーアップを購入する。
 ## ランの開始時 (main.start_game) に反映される。未強化 (Lv0) は完全 no-op。
+## 操作 (D74/D75): ↑↓ (項目) Enter/A (購入) Esc/B (戻る) パッド + マウス (行クリックで選択・購入ボタン・戻る)。
+## 画面内ではフォーカスを使わない (タイトルへキーを漏らさないため)。
 
 signal closed
 
@@ -10,7 +12,7 @@ const MetaDB := preload("res://data/meta_upgrades.gd")
 @onready var coin_label: Label = $Panel/CoinLabel
 @onready var rows_box: VBoxContainer = $Panel/Rows
 
-## 行 [{id, name_label, lv_label, desc_label, cost_label}] + 最後に「戻る」行 (id == "back")。
+## 行 [{id, name_label, lv_label, desc_label, cost_label, buy_btn, back_btn}] + 最後に「戻る」行 (id == "back")。
 var rows: Array = []
 var idx: int = 0
 var _axis_armed_v: bool = true
@@ -34,6 +36,7 @@ func _build() -> void:
 		name_l.custom_minimum_size = Vector2(170, 34)
 		name_l.add_theme_font_size_override("font_size", 22)
 		name_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_l.mouse_filter = Control.MOUSE_FILTER_STOP
 		hb.add_child(name_l)
 		var lv_l := Label.new()
 		lv_l.custom_minimum_size = Vector2(110, 34)
@@ -44,18 +47,29 @@ func _build() -> void:
 		desc_l.add_theme_font_size_override("font_size", 20)
 		desc_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		desc_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		desc_l.mouse_filter = Control.MOUSE_FILTER_STOP
 		hb.add_child(desc_l)
 		var cost_l := Label.new()
-		cost_l.custom_minimum_size = Vector2(160, 34)
+		cost_l.custom_minimum_size = Vector2(150, 34)
 		cost_l.add_theme_font_size_override("font_size", 20)
 		cost_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		cost_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hb.add_child(cost_l)
+		# D75: 購入ボタン (マウス用)。MAX・コイン不足では無効。
+		var buy := Button.new()
+		buy.text = "購入"
+		buy.custom_minimum_size = Vector2(110, 36)
+		buy.focus_mode = Control.FOCUS_NONE
+		hb.add_child(buy)
+		var row_i: int = rows.size()
+		name_l.gui_input.connect(func(ev: InputEvent) -> void: _on_row_click(ev, row_i))
+		desc_l.gui_input.connect(func(ev: InputEvent) -> void: _on_row_click(ev, row_i))
+		buy.pressed.connect(func() -> void: _on_buy(row_i))
 		rows.append({
 			"id": str(it["id"]), "name_label": name_l, "lv_label": lv_l,
-			"desc_label": desc_l, "cost_label": cost_l,
+			"desc_label": desc_l, "cost_label": cost_l, "buy_btn": buy, "back_btn": null,
 		})
-	# 最後に「戻る」行 (Enter/A で閉じる)。
+	# 最後に「戻る」行 (Enter/A・クリックで閉じる)。
 	var hb_back := HBoxContainer.new()
 	hb_back.add_theme_constant_override("separation", 14)
 	rows_box.add_child(hb_back)
@@ -63,14 +77,26 @@ func _build() -> void:
 	back_l.custom_minimum_size = Vector2(170, 34)
 	back_l.add_theme_font_size_override("font_size", 22)
 	back_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	back_l.mouse_filter = Control.MOUSE_FILTER_STOP
 	hb_back.add_child(back_l)
-	rows.append({"id": "back", "name_label": back_l, "lv_label": null, "desc_label": null, "cost_label": null})
+	var back_btn := Button.new()
+	back_btn.text = "戻る"
+	back_btn.custom_minimum_size = Vector2(0, 36)
+	back_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back_btn.focus_mode = Control.FOCUS_NONE
+	back_btn.pressed.connect(close)
+	hb_back.add_child(back_btn)
+	var back_i: int = rows.size()
+	back_l.gui_input.connect(func(ev: InputEvent) -> void: _on_row_click(ev, back_i))
+	rows.append({"id": "back", "name_label": back_l, "lv_label": null, "desc_label": null, "cost_label": null, "buy_btn": null, "back_btn": back_btn})
 
 
 func open() -> void:
 	refresh()
 	visible = true
 	_axis_armed_v = true
+	# D74: タイトルにキーを渡さない (フォーカス解放)。画面内はフォーカスを使わない。
+	get_viewport().gui_release_focus()
 
 
 func close() -> void:
@@ -97,13 +123,18 @@ func _update_row(r: Dictionary) -> void:
 	r["desc_label"].text = str((d as Dictionary)["desc"])
 	r["lv_label"].text = "MAX" if lv >= maxlv else "Lv %d/%d" % [lv, maxlv]
 	var cost_l: Label = r["cost_label"]
+	var buy: Button = r["buy_btn"]
 	if lv >= maxlv:
 		cost_l.text = "—"
 		cost_l.modulate = Color(0.55, 0.55, 0.62, 1)
+		buy.text = "MAX"
+		buy.disabled = true
 	else:
 		var c: int = MetaDB.cost(id, lv)
 		cost_l.text = "%d コイン" % c
 		cost_l.modulate = Color(0.95, 0.4, 0.4, 1) if SaveData.coins < c else Color(1, 1, 1, 1)
+		buy.text = "購入"
+		buy.disabled = SaveData.coins < c
 
 
 func _highlight() -> void:
@@ -176,6 +207,15 @@ func _move(dir: int) -> void:
 	_highlight()
 
 
+func _select(row_i: int) -> void:
+	if row_i < 0 or row_i >= rows.size():
+		return
+	if idx != row_i:
+		idx = row_i
+		_highlight()
+		_play("ui")
+
+
 func _activate() -> void:
 	if rows.is_empty():
 		return
@@ -195,6 +235,18 @@ func _activate() -> void:
 	SaveData.purchase(id)
 	_play("coin")
 	refresh()
+
+
+# --- マウス (D75) ---
+
+func _on_row_click(ev: InputEvent, row_i: int) -> void:
+	if ev is InputEventMouseButton and ev.pressed and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		_select(row_i)
+
+
+func _on_buy(row_i: int) -> void:
+	_select(row_i)
+	_activate()
 
 
 func _play(sname: String) -> void:

@@ -341,6 +341,21 @@ res://
   回帰更新は `verify_v16` (エリート比 2.4/HP ×2・B02 15000)・`verify_chests`・`verify_v12` (コイン+1/+10)・`verify_staff_roll` (再演モード)・
   `verify_v13`/`test_title_input` (D73)。残りは通し計測 (コイン回収量・ボスTTK・撃破数) と BGM の耳確認。
 
+### P23 オプションの操作改善・セーブ初期化・再演フロー [M20-3] (v1.8 追補2・D74〜D78)
+
+- 実装: `ui/options_ui.*` (◀▶ ボタン・行クリック・フォーカス解放・初期化+確認・ヒント) /
+  `ui/upgrade_ui.*` (フォーカス解放・購入ボタン・戻るクリック) / `systems/save_data.gd` (`reset_progress()`) /
+  `ui/replay_countdown_ui.*` 新規 (3→2→1) / `ui/result_ui.*` (再演デモ + 「スタッフロールを見る」) /
+  `ui/staff_roll_ui.gd` (`start_roll(res, replay)`) / `ui/title_ui.gd` (`focus_start()`) / `main.gd` (再演フローの組み立てと入力ガード)
+- 検証: `tools/verify_options.gd` 拡張 (入力隔離・◀▶ のクリック・キーボード操作・初期化と確認・オプション保持) +
+  `tools/verify_replay_flow.gd` 新規 (カウントダウン→リザルト→ボタン→ロール・保存なし) + 全回帰
+- **完了条件**: オプション/強化を開いている間タイトルが動かない。マウスだけで全項目を操作できる。初期化で進行状況だけが消えて
+  オプション設定は残る。再演がカウントダウン→リザルト→ボタン→フェード→ロールで進む。
+- 実測 (P23 完了): `verify_options.gd` (§7/§8 追加)・`verify_replay_flow.gd` (新規)・`verify_options_mouse.gd` (窓あり実クリック) ALL PASS + 全回帰 ALL PASS。
+  途中で見つけた不具合を修正: 「戻る」実行ボタンの文言が空 (`match` を action ではなく id="back" で引いていなかった)。
+  環境の注意: headless はマウス入力が GUI に届かず、ルート viewport も 100×100 のため、クリック系は窓ありで検証する
+  (stretch keep の座標変換 = キャンバス座標×等比+中央寄せが必要)。
+
 ## 3. 並行可能タスク
 
 - P10 (素材生成) は P8/P9 と並行可 (仮タイルで先にロジックを通すため)

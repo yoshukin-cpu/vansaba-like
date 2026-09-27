@@ -64,3 +64,10 @@ custom_minimum_size = Vector2(280, 64)
 theme_override_font_sizes/font_size = 26
 text = "タイトルへ"
 size_flags_horizontal = 4
+
+[node name="StaffBtn" type="Button" parent="Center/VBox"]
+visible = false
+custom_minimum_size = Vector2(420, 64)
+theme_override_font_sizes/font_size = 26
+text = "スタッフロールを見る"
+size_flags_horizontal = 4
