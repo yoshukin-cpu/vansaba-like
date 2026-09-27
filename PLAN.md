@@ -269,7 +269,7 @@ res://
   `verify_v16.gd` 107件 ALL PASS + 全回帰 ALL PASS。実機キャプチャ (`capture_title_diff`・`capture_finale`) で
   解放/未解放の2状態とエンディング (月が見える・ボタンはタイトルへのみ) を目視確認
 
-### P20 バージョンアップ案5 [M19] (実装中)
+### P20 バージョンアップ案5 [M19] (検証中: headless 完了・窓あり目視が残り)
 
 - 実装: `ui/staff_roll_ui.gd` (D44 解放通知を残す) + `ui/result_ui.gd` (`hide_unlock_notice` 削除) /
   `ui/title_ui.gd` (D45 DiffLock 固定・D46 スティックラッチ) /
@@ -283,6 +283,8 @@ res://
   `verify_v16.gd` 更新 (範囲 assert・閾値4/8・MAX表記・DiffLock 空行・解放通知残存) +
   `verify_staff_roll.gd` 更新 (解放通知残存) + 通しプレイ + 全回帰
 - **完了条件**: 案5の11項目がすべて動き、verify 全PASS。見た目変更は判定・数値に影響しない
+- 実測: `verify_v17.gd` 新規29件 ALL PASS + 全回帰 (headless: world/chests/v12/v13/card_marks/staff_roll/audio/gem_magnet/v16) ALL PASS。
+  通しプレイ (3倍速・通常) 9:43 死亡 (Lv9・312kill・score 5620) エラーなし。残りは窓ありキャプチャ (見た目系) の目視。
 
 ## 3. 並行可能タスク
 
