@@ -187,6 +187,11 @@ https://elevenlabs.io/docs/eleven-agents/best-practices/prompting-guide
 * 難易度選択自体がロックされているとき(初期状態)は「ノーマル」の文字も暗くしてください。
   * 「ノーマル」が選べないという意味ではなく、難易度選択自体が無効となっているという意味です。
 * オプションもタイトルの時と同様にゲームパッドのスティックの傾きを変えると左右が連続して入力されます。
+* タイトルの「強化」「オプション」も左側にし、強化、オプション、終了が左側に縦に並ぶようにしてください。また、メニューの移動は上下入力のみとしてください。(左右でもメニュー移動できると、難易度まで変わってしまうため。)
+
+修正3
+
+* パッド操作バグ：(クリア後)タイトル画面で、選択できない難易度に変更し、スタートが灰色になっている状態で、強化画面に入り、Bボタンで戻るか戻るメニューを選択すると、タイトル画面のメニューカーソル(囲み)がなくなり、上下を押しても選択できなくなる。
 
 # GitHub等、パブリック公開するときの注意点
 
@@ -195,3 +200,31 @@ https://elevenlabs.io/docs/eleven-agents/best-practices/prompting-guide
   * ただし、addons部分はMITライセンスで公開されている
     * https://github.com/youichi-uda/godot-mcp-pro
   * サブモジュール化？(ただし、addonsだけ取り込むことはできない？)
+* 著作権・ライセンス関係
+  * font/NotoSansMonoCJKjp-VF.otf
+    * Noto Sans JP
+    * SIL Open Font License 1.1
+    * 著作権表示の必要あり
+    * https://github.com/notofonts/noto-cjk/tree/main/Sans#downloading-noto-sans-cjk
+  * Godot
+    * COPYRIGHT.txtの同梱
+    * クレジットとMITライセンスの表記
+    * https://docs.godotengine.org/ja/4.x/about/complying_with_licenses.html
+  * オプション画面に著作権表示の欄を作る
+
+# ライセンス表示について
+
+* 以下のファイルを格納しました。
+  * GODOT_COPYRIGHT.txt
+  * addons/godot_mcp/LICENSE
+  * font/LICENSE.txt
+  * font/OFL.txt
+* 本ゲームのライセンスMITライセンスとします。ライセンスファイルを作成してください。
+* 本ゲームは無料公開します。(プレイ動画を秀英帰化していないyoutubeアカウントにアップロード予定。)
+* ElevenLabsは1min.aiの有料プランで作成しています。1min.aiおよび参照されるElvenLabsのライセンス条項だと商用可能のはずです。
+* THIRD_PARTY_NOTICES.mdを作成してください。
+* 1min-imageはMCPサーバの名前なので、呼び出し先である「1min.ai」に変更してください。
+* icon.svg/godot logoを独自のものに置き換えてください。図案はお任せします。
+* ゲームのオプションに、ライセンス、商標表示を表示する項目を追加してください。
+* gpt-image, suno, elvenlabsの商用/非商用離農のまとめは、セッション「imin.aiの非商用および商用の…」(ID 20260928_170646_d45e81)を参照してください。
+* 足りない部分があれば、質問してください。

@@ -486,6 +486,7 @@ res://
 - [ ] `GODOT_COPYRIGHT.txt` — Godot 公式から取得 (配布物にも同梱)
 - [ ] `addons/godot_mcp/LICENSE` — 上流の MIT 文をそのまま
 - [ ] `font/LICENSE.txt` — noto-cjk `Sans/LICENSE` (OFL 本文)
+- [ ] `font/OFL.txt` - NotoColorEmojiの配布物(Noto_Color_Emoji.zip)同梱のライセンス文
 - [ ] `LICENSE` — プロジェクト本体のライセンスを決定
 - [ ] `font/` をコミットするか決定 (30MB。コミットした時点で OFL 同梱義務が発生)
 
