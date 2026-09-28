@@ -19,6 +19,8 @@ const FADE_IN := 0.8
 const FADE_OUT := 1.0
 const FADE_OUT_SILENT := 1.2
 const BOSS_FADE_IN := 0.5
+## 再開位置が曲尾からこの秒数以内なら頭 (= 0) に回す (web の再ループが offset 起点のため)。
+const TAIL_GUARD := 0.5
 
 enum State { SILENT, TITLE, GAME, BOSS }
 
@@ -155,12 +157,17 @@ func _game_len() -> float:
 ## 再開位置を 0 <= 戻り値 < 曲長 に畳む。
 ## web (WebAudio) では曲長以上の offset を渡すと無音になり、さらに
 ## 「鳴らない→ended→再start」の空ループが走るため、範囲外は絶対に渡さない。
+## 曲尾の直前 (最後の 0.5s) も頭に回す: web のループ再開は「渡した offset」から
+## やり直すため、尾の余韻に居座ると実質無音のループになりうる。
 ## 曲長の判定ができなければ頭 (= 0) から鳴らす方を選ぶ。
 func _wrap_pos(t: float) -> float:
 	var l: float = _game_len()
 	if l <= 0.0:
 		return 0.0
-	return fposmod(t, l)
+	var p: float = fposmod(t, l)
+	if p > l - TAIL_GUARD:
+		return 0.0
+	return p
 
 
 func _start(pl: AudioStreamPlayer, fade_in: float) -> void:

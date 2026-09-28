@@ -142,6 +142,10 @@ func _t_states() -> void:
 	_check("再開位置は保存位置と一致 (%.3f)" % rp2, absf(rp2 - gp2) <= 0.001)
 	_check("ゲーム曲が再開している (2回目)", pg.playing)
 
+	# 曲尾の直前 (最後の 0.5s) は頭に回す (web の再ループが offset 起点のため)。
+	_check("曲尾直前は頭に回す (%.3f → 0)" % (glen - 0.2), bgm.call("_wrap_pos", glen - 0.2) == 0.0)
+	_check("曲尾から離れた位置はそのまま (%.3f)" % (glen * 0.5), absf(float(bgm.call("_wrap_pos", glen * 0.5)) - glen * 0.5) <= 0.001)
+
 	# 死亡/クリア確定 → 無音 (フェードアウト)
 	main.call("show_result", false)
 	await _frames(90)
