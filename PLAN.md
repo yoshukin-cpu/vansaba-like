@@ -3,6 +3,7 @@
 > 前提: SPEC.md v1.8 / Godot 4.7.2 / v1.0〜v1.7 実装済み (P0〜P20 完了。P20 は窓ありキャプチャの目視のみ残り)。
 > v1.1 以降は `IDEA.md` の「バージョンアップ案1〜6」を順に実装する計画として積み上げている。v1.7 = 案5、v1.8 = 案6 (設計: 承認待ち)。
 > 方針: データ駆動・仮素材・小さく動くものを反復。Editor toolsで構築、Runtime toolsで検証。
+> 公開前の準備 (ライセンス同梱・クレジット表示) は §7 (2026-09-28 監査)。
 
 ## 0. ゴール・マイルストーン
 
@@ -414,4 +415,74 @@ res://
    コスト・難易度倍率・`ELITE_SCALE`/`FINAL_BOSS_SCALE`・射程を確定して SPEC に書き戻す (P12/P19 と同じ流儀)
 2. BGM の耳確認 (ボス切替の自然さ・ループ継ぎ目・ゲーム中の抑え具合) — ユーザー確認
 3. D47 (最低距離160)・D57 (破片48) の数値確定 (v1.7 分・未消化)
-4. 実装ブロッカー: なし
+4. 公開する場合: **§7 公開前の準備** を消化 (ライセンス文の同梱・ゲーム内ライセンス表示・ロゴ差し替え or 帰属)。実装ブロッカーではない
+5. 実装ブロッカー: なし
+
+---
+
+## 7. 公開前の準備 (ライセンス・クレジット) — 2026-09-28 監査
+
+> IDEA.md「GitHub等、パブリック公開するときの注意点」を実査で確定・拡張したもの。GitHub 公開 / exe・Web 配布の前に消化する。
+> 監査方法: 全資産の列挙・上流との blob SHA 照合・書き出し pck の走査・素材メタデータ・各ライセンスの一次情報 (Godot 公式ドキュメント / 配布元 LICENSE / 各サービスの規約)。
+> ※ 法的助言ではない。公開形態 (無償/有償) で判断が変わるため、最終判断は必要に応じて専門家に確認する。
+
+### 7.1 監査結果サマリ
+
+**ライセンス文はリポジトリにも書き出し物にも存在しない** (LICENSE/COPYRIGHT 系ファイル 0 件、pck 内に MIT/OFL/COPYRIGHT の文字列 0 件)。
+スタッフロールのクレジットは「誰が作ったか」の表示であり、MIT/OFL が要求する「ライセンス文の同梱」の代わりにはならない。
+
+| 対象 | ライセンス | 必要な対応 | 現状 |
+|---|---|---|---|
+| Godot Engine 4.7.2 | MIT | **ライセンス文**を配布物に同梱 or ゲーム内表示 (クレジットに `godotengine.org/license` リンクでも公式が許容)。サードパーティ分は `COPYRIGHT.txt` を同梱 | ❌ 未対応 |
+| Godot ロゴ (icon.svg・起動スプラッシュ・Web favicon) | CC BY 4.0 (© 2017 Andrea Calabró) | 帰属表示 or 自前画像へ差し替え (**差し替え推奨**) | ❌ 未対応 |
+| `font/NotoSansMonoCJKjp-VF.otf` | SIL OFL 1.1 | OFL 本文の同梱。フォント単体の販売は不可 (ゲーム同梱は可) | ❌ 未対応・未コミット |
+| `addons/godot_mcp` | MIT (© 2026 Youichi Uda) | MIT 文の同梱。有料サーバ部分は非同梱で OK | ❌ 未対応 |
+| Suno 4曲 (主題歌+BGM 3) | 1min.ai 経由 | クレジット済み ✅。有償展開するなら商用可否を 1min.ai に確認 | ⚠ 条件付き |
+| ElevenLabs SFX 20音 | 要確認 | 生成経路とプランの確定 (無料プラン = 商用不可・帰属必須) | ⚠ 要確認 |
+| 画像 (スプライト/タイル/タイトル画) | gpt-image-2 (OpenAI) via 1min-image | 低リスク。任意でクレジットを正確化 | ⚠ 軽微 |
+| プロジェクト自身の LICENSE | — | 公開前に決定 (未設定 = 全権利留保) | ❌ なし |
+
+### 7.2 根拠 (一次情報の要約)
+
+- **Godot**: 公式「ライセンスの遵守」— MIT の唯一の要件はライセンス文を配布物のどこかに含めること。方法はクレジット画面 / ライセンス画面 / ログ出力 / `godotengine.org/license` へのリンクのいずれか1つでよい。サードパーティ分は `COPYRIGHT.txt` を配布物に含める (`GODOT_COPYRIGHT.txt` 等へのリネーム可・公式推奨)。
+- **ロゴ**: Godot の `misc/logo` は CC-BY-4.0。`icon.svg` は既定ロゴのまま (exe アイコン・Web favicon 128×128 に使用)。起動スプラッシュも既定の Godot ロゴ (Web 書き出しの 800×600 スプラッシュ画像で確認)。
+- **フォント**: blob SHA `006ca0e8…9f` が notofonts/noto-cjk `Sans/Variable/OTF/Mono/NotoSansMonoCJKjp-VF.otf` と一致 = **無改変** (名称表に「© 2014-2021 Adobe」「OFL 1.1」v2.004)。改変なしのため RFN (Reserved Font Name) の制約なし。
+- **アドオン**: 上流 LICENSE に「本ライセンスは addons/godot_mcp/ に適用。TypeScript サーバはプロプライエタリとして別配布」と明記 → アドオン部の再配布は可。ローカルは v1.16.0 (上流 master は 1.17.1) で独自改変なし。**ただし書き出し pck にアドオンコードが同梱される** (`addons/godot_mcp` の文字列が 150 箇所。autoload 3 つは editor ガードで実行時は無効化される)。
+- **音**: mp3 の ID3 TXXX に `made with suno; created=…; id=…` (主題歌 `5a30aa11…` / title `23f8161c…` / game `83c89abf…` / boss `d7d34175…`) = 全曲 Suno 生成の証跡。1min.ai の料金ページは "Commercial use" を訴求するが、TOS には出力の権利条項が見当たらない。
+- **画像**: raw PNG と `ui/title_art.png` に C2PA (caBX チャンク、中身に OpenAI/gpt の記載) → 実際のモデルは **gpt-image-2**。加工済みスプライトにはメタデータは残らない。
+- **SFX**: 現行 1min-image の音声モデル一覧は google-tts / qwen3-tts / openai-tts / suno のみ (ElevenLabs なし) → 直接 ElevenLabs で生成した可能性が高い。
+- 補足: AI 生成物は人間の著作権が及ばない可能性がある → 自前 LICENSE では画像・音声について独占権を主張しない注記が無難。
+
+### 7.3 対応チェックリスト
+
+**A. リポジトリに追加 (公開する場合)**
+
+- [ ] `THIRD_PARTY_NOTICES.md` — Godot MIT 文 + ロゴ帰属 + Noto OFL + MCP Pro MIT + 生成クレジット (Suno / ElevenLabs / gpt-image-2 via 1min-image)
+- [ ] `GODOT_COPYRIGHT.txt` — Godot 公式から取得 (配布物にも同梱)
+- [ ] `addons/godot_mcp/LICENSE` — 上流の MIT 文をそのまま
+- [ ] `font/LICENSE.txt` — noto-cjk `Sans/LICENSE` (OFL 本文)
+- [ ] `LICENSE` — プロジェクト本体のライセンスを決定
+- [ ] `font/` をコミットするか決定 (30MB。コミットした時点で OFL 同梱義務が発生)
+
+**B. ゲーム内表示**
+
+- [ ] オプションに「ライセンス」欄 (IDEA.md の予定項目) — Godot MIT 文 or `godotengine.org/license` リンク / OFL 文 / (アドオンを書き出しに残すなら) MIT 文 / (ロゴを残すなら) 帰属
+- [ ] スタッフロールは既存クレジットを維持 (任意: 「Google Image」→ gpt-image-2 に正確化)
+
+**C. 配布物・書き出し**
+
+- [ ] 配布物 (zip) にライセンス文を同梱 — ※ `include_filter="*.txt"` + `embed_pck=true` は pck 内に入り**ユーザーから見えない**ため、法的同梱に使わない
+- [ ] 判断: 書き出しに addons を含める (現状入る) か除外するか。含める場合はゲーム内ライセンスにも MIT 文を追加 (除外は autoload 3 つの扱いが絡むため、クレジット追加の方が簡単)
+- [ ] 任意: `icon.svg` 差し替え + ブートスプラッシュ変更 / Windows 書き出しの `application/copyright` 記入 (現在空)
+
+**D. 確認事項 (ユーザー判断)**
+
+- [ ] ElevenLabs の生成経路とプラン (無料プランなら「elevenlabs.io」帰属 + 非商用)
+- [ ] 1min.ai の商用条件 (有償販売・広告付き公開をする場合。サポートに確認して記録を残す)
+- [ ] 歌詞の作者 (人間が書いたならクレジット追記を検討)
+
+### 7.4 完了条件
+
+- リポジトリ / exe / Web の全公開物に必要なライセンス文・帰属が含まれ、ゲーム内から参照できる
+- ロゴは差し替え済み or 帰属表示済み
+- 7.3-D の確認事項 3 件が解消している
