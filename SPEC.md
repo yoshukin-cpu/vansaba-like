@@ -1,9 +1,10 @@
-# ヴァンサバライク 仕様書 v1.8
+# ヴァンサバライク 仕様書 v1.9
 
-> 対象: `IDEA.md` の具体化 (v1.0) + 「バージョンアップ案1」(v1.1) + 「バージョンアップ案2」(v1.2) + 「バージョンアップ案3」(v1.3) + カードマーク表示 (v1.4) + スタッフロール (v1.5) + 「バージョンアップ案4」(v1.6) + 「バージョンアップ案5」(v1.7) + 「バージョンアップ案6」(v1.8)。
+> 対象: `IDEA.md` の具体化 (v1.0) + 「バージョンアップ案1」(v1.1) + 「バージョンアップ案2」(v1.2) + 「バージョンアップ案3」(v1.3) + カードマーク表示 (v1.4) + スタッフロール (v1.5) + 「バージョンアップ案4」(v1.6) + 「バージョンアップ案5」(v1.7) + 「バージョンアップ案6」(v1.8) + ライセンス表示 (v1.9)。
 > 前提回答: 操作=ゲームパッド+PC両対応 / グラフィック=仮素材 / 構成=タイム制サバイブ / 強化=武器追加型。
-> v1.1 で追加・変更した箇所は「**(v1.1)**」、v1.2 は「**(v1.2)**」、v1.3 は「**(v1.3)**」、v1.4 は「**(v1.4)**」、v1.5 は「**(v1.5)**」、v1.6 は「**(v1.6)**」、v1.7 は「**(v1.7)**」、v1.8 は「**(v1.8)**」と明記。
-> 詳細仕様は §17〜§20 (v1.1)、§23 (v1.2)、§25 (v1.3)、§27 (v1.4)、§29 (v1.5)、§31 (v1.6)、§33 (v1.7)、§35 (v1.8)。決定事項は §22 (v1.1)・§24 (v1.2)・§26 (v1.3)・§28 (v1.4)・§30 (v1.5)・§32 (v1.6)・§34 (v1.7)・§36 (v1.8)。
+> v1.1 で追加・変更した箇所は「**(v1.1)**」、v1.2 は「**(v1.2)**」、v1.3 は「**(v1.3)**」、v1.4 は「**(v1.4)**」、v1.5 は「**(v1.5)**」、v1.6 は「**(v1.6)**」、v1.7 は「**(v1.7)**」、v1.8 は「**(v1.8)**」、v1.9 は「**(v1.9)**」と明記。
+> 詳細仕様は §17〜§20 (v1.1)、§23 (v1.2)、§25 (v1.3)、§27 (v1.4)、§29 (v1.5)、§31 (v1.6)、§33 (v1.7)、§35 (v1.8)、§37 (v1.9)。決定事項は §22 (v1.1)・§24 (v1.2)・§26 (v1.3)・§28 (v1.4)・§30 (v1.5)・§32 (v1.6)・§34 (v1.7)・§36 (v1.8)・§38 (v1.9)。
+> v1.9 は `IDEA.md`「ライセンス表示について」(PLAN.md §7 のライセンス監査・未消化項目) を確定する設計。実装は P26。
 
 ## 目次
 
@@ -19,6 +20,7 @@
 - **§31 バージョンアップ案4の設計 (v1.6)** / **§32 決定事項チェックリスト (v1.6)**
 - **§33 バージョンアップ案5の設計 (v1.7)** / **§34 決定事項チェックリスト (v1.7)**
 - **§35 バージョンアップ案6の設計 (v1.8)** / **§36 決定事項チェックリスト (v1.8)**
+- **§37 ライセンス表示・公開前準備の設計 (v1.9)** / **§38 決定事項チェックリスト (v1.9)**
 
 ## 1. 概要
 
@@ -253,6 +255,7 @@ Title → Play (0:00) → ... → LvUp (ポーズして3択, 1枚選択で再開
 - ポーズメニュー: Resume/Quit to Title。v1は最小限。
 - **(v1.6)** タイトルに難易度セレクタ (左右切替・◀▶ボタン・鍵+暗転・右側にパラメータ小表示)。HUD に難易度名、リザルトに難易度行と解放通知 (§31.7・§31.8)。
 - **(v1.8)** タイトルに「強化」「オプション」ボタンと所持コイン表示、HUD に取得コイン (COIN)、リザルトにコイン確定行 (§35.5・§35.6・§35.8)。
+- **(v1.9)** オプションに「ライセンス・商標表示」の行を追加し、全画面のスクロールページ (`ui/license_ui`) で MIT/OFL/帰属/商標を表示する (§37.5)。
 
 ## 14. サウンド・演出 (仮)
 
@@ -811,6 +814,7 @@ res://
   (Thanks + もう一度 / タイトルへ) へ遷移する。
 - 内容: 担当割当 (yoshuki / Hermes Agent / Google Image・ElevenLabs・Suno (1min-image)) +
   架空役職・ユーモア・主人公/敵10種/ボス2種/カード20種/アイテム紹介・歌詞オマージュ。
+  **(v1.9で変更)** クレジットの表記を「gpt-image-2・ElevenLabs・Suno (1min.ai)」に正確化する (§37.6・D88/D89)。
   - 末尾演出: Thanks 文字は即表示し、タイトル背景 (`ui/title_art.png`) だけ約2秒でフェードインする。
     スキップ時は即不透明化する。**(v1.6で変更)** 背景は「画面トップ = 画像トップ」で表示する (画像上部の月を見せるため。D43・§31.10)。タイトル画面の背景は変更しない。
 - スキップ: スクロール中の確定キー/クリック/Aボタンで即座に最終画面 (Thanks + ボタン) を出す。
@@ -1509,6 +1513,179 @@ v1.8 追補2 後のユーザー指摘 (5件) への対応。
 
 ---
 
+## 37. ライセンス表示・公開前準備の設計 (v1.9 追加)
+
+`IDEA.md`「GitHub等、パブリック公開するときの注意点」「ライセンス表示について」と、PLAN.md §7 (2026-09-28 監査) の未消化項目を、実装 (P26) の前に確定する。決定事項は D84〜D92。
+
+**ゴール (監査 §7.4)**: リポジトリ / exe / Web のすべての公開物に必要なライセンス文・帰属が含まれ、ゲーム内から参照できる。ロゴは差し替え済み。§7.3-D の確認事項 3 件が解消している。
+
+### 37.0 差分一覧
+
+| # | 項目 | 現状 (〜v1.8) | v1.9 |
+|---|---|---|---|
+| D84 | 本ゲームの LICENSE | なし (未設定 = 全権利留保扱い) | MIT・`LICENSE` を新規作成 (© 2026 yoshuki) (§37.2) |
+| D85 | 第三者ライセンス文 | なし (クレジットのみ) | `THIRD_PARTY_NOTICES.md` を新規作成 (6節) (§37.3) |
+| D86 | ライセンス同梱 | ユーザー格納済みだが未コミット | リポジトリにコミット (font/ 本体・GODOT_COPYRIGHT.txt 含む) (§37.4) |
+| D87 | ゲーム内表示 | 手段がない | オプション「ライセンス・商標表示」→ 全画面スクロールページ (§37.5) |
+| D88 | 表記 (サービス名) | 「(1min-image)」(MCP サーバ名) | 「(1min.ai)」(呼び出し先のサービス名) (§37.6) |
+| D89 | 表記 (画像生成) | 「Google Image」 | 「GPT Image 2」に正確化 (監査の任意項目。正式名 gpt-image-2 は NOTICES 側) (§37.6) |
+| D90 | ロゴ | Godot 既定ロゴ (icon.svg・起動スプラッシュ・Web favicon) | 自作ピクセルアート + ブートスプラッシュ新設 (§37.7) |
+| D91 | 配布物 | exe 1ファイル・メタデータ空 | ライセンス同梱のリリース構成 + Windows メタデータ記入 (§37.8) |
+| D92 | 公開条件と記録 | 未整理 | 無料公開・非収益 YouTube (非商用)・AI 素材の権利記録 (§37.9) |
+
+### 37.1 前提: 公開条件と AI 生成素材の権利まとめ (D92)
+
+- 公開条件 (`IDEA.md`): **無料公開**。収益化していない YouTube アカウントにプレイ動画をアップロード予定 (= 非商用。原文「秀英帰化していない」は「収益化していない」として扱う)。ソースリポジトリの公開は未定だが、本設計は「リポジトリ単体でライセンスが完結する」形にする。
+- 生成 AI 素材の商用/非商用 (調査: 2026-09-28。メモ `<external-notes>/1min-ai-license-research-2026-09-28.md` (リポジトリ外)・セッション 20260928_170646_d45e81 の結論):
+  - 現行の全生成物 (gpt-image-2 の画像・Suno の曲・ElevenLabs の SE) は **1min.ai の有料プラン (PRO) 経由**。1min.ai は Pricing ページとヘルプセンターで「全プランで商用利用可 (You own all content…Feel free to use it for commercial purposes)」を宣言している (ToS 本体に出力条項はない → 宣言の記録は調査メモ側で保管)。
+  - **gpt-image-2 (OpenAI)**: 商用/非商用の区別なし (出力は利用者に帰属)。低リスク。
+  - **ElevenLabs**: 有料契約者に商用可 (§1(c))。1min.ai 経由の権利は 1min.ai の許諾に依拠する構造 (有料経由のため整合的と推定)。
+  - **Suno**: 上流 ToS は「有料契約 + Suno 公式チャネルからの permitted download」を商用の条件にするため、1min.ai 経由の生成物はこの定義にそのまま当てはまらない (1min.ai の包括許諾に依拠)。**今回の非商用公開 (無料公開・非収益 YouTube) は Suno の無料枠規約とも整合し問題なし**。将来 収益化・販売する場合のみ support@1min.ai への書面確認を再実施する (PLAN §6 に残す)。
+  - **AI 生成物は人間の著作権が及ばない可能性** → 画像・音声について独占権を主張しない注記を THIRD_PARTY_NOTICES に入れる (§37.3-5)。
+  - YouTube 側: AI 生成の写実的コンテンツには「改変・合成コンテンツ」の開示があり得る (ピクセルアートの本作は通常対象外。投稿時に YouTube の基準を確認する)。
+- 歌詞: クレジットどおり **Suno 生成 (作詞含む)** として扱う (§7.3-D の3件目をこれで解消)。
+
+### 37.2 本ゲームのライセンス = MIT・LICENSE の新規作成 (D84)
+
+- `LICENSE` (リポジトリ直下): **MIT の定型文 (原文のまま) + `Copyright (c) 2026 yoshuki`**。著作権者名はスタッフロールの総合プロデューサー表記に合わせる (相違があれば承認時に指定)。
+- 注記は LICENSE に足さない (MIT 本文を改変しない)。AI 生成素材の権利注記・第三者ライセンスは `THIRD_PARTY_NOTICES.md` に分離する。
+- `README.md` に「## ライセンス」節を追加: MIT (LICENSE へのリンク)・`THIRD_PARTY_NOTICES.md` の参照・「本ゲームの画像・音声の一部は生成 AI (gpt-image-2 / Suno / ElevenLabs、いずれも 1min.ai 経由) で生成しています」の1行。
+- 配布物 (zip) のトップにも LICENSE を置く (§37.8)。
+
+### 37.3 THIRD_PARTY_NOTICES.md の新規作成 (D85)
+
+リポジトリ直下。日本語 (ライセンス文は原文のまま英文)。**6節構成**:
+
+1. **本ゲーム** — MIT License, Copyright (c) 2026 yoshuki (全文は `LICENSE`)。
+2. **Godot Engine 4.7.2** — MIT License。Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md) / Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur。MIT 文全文 + `https://godotengine.org/license` + 「サードパーティコンポーネントの一覧は同梱の `GODOT_COPYRIGHT.txt`」。
+3. **フォント (SIL OFL 1.1)** — OFL 1.1 全文 + `https://openfontlicense.org`:
+
+| フォント | 版 | 著作権表示 (名称表の原文) | ライセンス |
+|---|---|---|---|
+| Noto Sans Mono CJK JP (`font/NotoSansMonoCJKjp-VF.otf`) | 2.004 | © 2014-2021 Adobe (http://www.adobe.com/). | SIL OFL 1.1 |
+| Noto Color Emoji (`font/NotoColorEmoji-Regular.ttf`) | 2.057 | Copyright 2022 Google Inc. (同梱の `font/OFL.txt` の頭は 2021 表記) | SIL OFL 1.1 |
+
+  - 無改変のため RFN (Reserved Font Name) 制約なし。フォント単体の販売は行わない (ゲームへの同梱のみ)。ライセンス文は `font/LICENSE.txt`・`font/OFL.txt` を同梱。
+4. **addons/godot_mcp (v1.16.0)** — MIT License。Copyright (c) 2026 Youichi Uda (y1uda)。MIT 文全文。有料の TypeScript サーバ部分は非同梱。**ゲーム内表示にも MIT 文を含める** (書き出し pck にアドオンコードが入るため。§7.3-C の判断「含める」)。
+5. **生成 AI 素材** — 本ゲームの画像・音声の一部は生成 AI で作成: gpt-image-2 (OpenAI) / Suno / ElevenLabs (テキスト読み上げ)。いずれも 1min.ai の有料プラン (PRO) 経由。権利注記: 「AI 生成物には人間の著作権が及ばない可能性があるため、当方はこれらについて独占権を主張しません」。商用展開時は 1min.ai サポートへの確認を再実施 (37.1)。
+6. **商標** — 「Godot Engine」は Godot Foundation の、「Noto」は Google Inc. の、「Suno」「ElevenLabs」「OpenAI」「1min.ai」は各社の商標または登録商標。本文書は帰属・情報提供のための記載であり、本ゲームと各社に提携・推奨関係はない。
+
+- **Godot ロゴの帰属 (CC BY 4.0) は書かない** — D90 でロゴを差し替えるため。
+
+### 37.4 ライセンスファイルの同梱とコミット (D86)
+
+- **コミットする** (すべてユーザー格納済み・未コミット): `GODOT_COPYRIGHT.txt` (Godot 公式 COPYRIGHT.txt・96KB)・`addons/godot_mcp/LICENSE`・`font/LICENSE.txt`・`font/OFL.txt`・**`font/` 本体 2 ファイル** (NotoSansMonoCJKjp-VF.otf 30MB / NotoColorEmoji-Regular.ttf 25MB)・`.import` 2 つ。
+- フォント本体をコミットする判断: 実行時に必須 (クローン直後の起動・書き出し再現)・リポジトリは自前サーバ (容量制約なし)・OFL の「ライセンス文の同梱」義務をこのコミットで満たす。
+- `.gitignore` は変更しない (`export/` は除外のまま)。
+- 現状メモ: フォントの適用設定 (`project.godot` の `[gui] theme/custom_font` = NotoSansMonoCJKjp・フォールバック = NotoColorEmoji) はユーザーの未コミット作業として存在する。v1.9 でまとめてコミットする。
+
+### 37.5 ゲーム内「ライセンス・商標表示」 (D87)
+
+- **導線**: オプション画面の行として追加。行順は **表示モード / 解像度 / BGM音量 / SE音量 / ライセンス・商標表示 / [スタッフロール再演] / セーブデータ初期化 / 戻る** (常設の情報行を設定行の直後に置き、テール3行 [再演/初期化/戻る] を固定する。再演は解放で挿入される既存規則のまま)。
+  - 行データ: `{"id": "license", "name": "ライセンス・商標表示", "values": [], "index": 0, "action": "license"}`・実行ボタン「表示する…」(D75 の実行ボタン方式)。
+  - シグナル `license_pressed` を追加。`main.gd` が「オプションを閉じる → ライセンス画面を開く」→ ライセンス画面を閉じたら「オプションを開き直す」(タイトルへは戻さない)。モーダル方式は D74 の踏襲 (group "modal_ui"・フォーカスを使わず `_unhandled_input` で操作)。
+- **新規 `ui/license_ui.tscn/.gd`** (CanvasLayer・全画面): 暗転背景 + 見出し「ライセンス・商標表示」+ ScrollContainer 内 RichTextLabel (bbcode) + 「戻る」ボタン + ヒント (Esc/B)。
+  - 操作: ↑↓ / ホイール / 左スティック / PageUp・PageDown でスクロール、Esc / B / 戻るボタンで閉じる。開くたびスクロール位置を先頭に戻す。
+- **内容** (テキスト定数として `.gd` に内蔵 = 全プラットフォーム同一・Web でもファイル不要):
+  1. 本ゲーム (MIT 文全文)。
+  2. Godot Engine 4.7.2 (MIT 文全文・`godotengine.org/license` リンク・「全文とサードパーティ一覧は同梱の GODOT_COPYRIGHT.txt」)。
+  3. フォント 2 種の帰属 (37.3-3 の表) + OFL 1.1 全文 + `openfontlicense.org`。
+  4. addons/godot_mcp (MIT 文全文)。
+  5. 生成 AI 素材 (1min.ai 経由・権利注記)。
+  6. 商標表示 (37.3-6)。
+  - リンクは `[url]` のメタクリックで `OS.shell_open` し、**URL 文字列も併記**する (リンクが使えない環境の保険)。
+- 実装: `ui/options_ui.gd` (rebuild・`_activate`・`_refresh_row` に license を追加)・`main.gd` (`_on_options_license` + 接続)・`main.tscn` (LicenseUI ノード)・`ui/license_ui.*` (新規)。オプションのヒント文言は変更不要。
+- 検証: **`tools/verify_license.gd` (新規)** — 必須文字列 (MIT License・SIL OPEN FONT LICENSE Version 1.1・Godot Engine・Noto Sans Mono CJK JP・Noto Color Emoji・godot_mcp・Suno・ElevenLabs・gpt-image-2・1min.ai・商標)・「1min-image」を含まない・スクロール (先頭/末尾クランプ)・開閉 (閉じたらオプションが再表示)。**`tools/verify_options.gd`** — 行構成の期待値を `["mode","resolution","bgm","se","license","reset","back"]` に更新 + 解放後の位置確認 + ライセンス行の実行で `license_pressed`。**窓あり `tools/capture_license.gd` (新規)** — オプション (行あり)・ライセンス画面 (上/中/下) をキャプチャして目視。
+
+### 37.6 クレジット表記の修正 (D88・D89)
+
+- **実施状況 (2026-09-28)**: `ui/staff_roll_ui.gd` の置換は**ユーザーが先行実装済み** (未コミット)。表示名は「GPT Image 2」。
+- 置換 (実装済み): 「**(1min-image)**」→「**(1min.ai)**」6箇所 (57・66・73・76・81・89行)・「**Google Image**」→「**GPT Image 2**」3箇所 (57・62・66行、「ドット監修 (本人)」含む)。ギャグ表記は残す。
+- 表記の使い分け: **ゲーム内の表示名 = 「GPT Image 2」** (実装済み)・**法的文書 (THIRD_PARTY_NOTICES・ライセンス画面) = 正確なモデル名「gpt-image-2 (OpenAI)」** (§37.3-5)。
+- 理由: 1min-image は開発側の MCP サーバ名で、生成を実行したサービスの名前ではない (D88)。画像の実体は OpenAI の gpt-image-2 (監査 §7.2 の C2PA 証跡) で「Google Image」は不正確 (D89)。
+- 残り: `PLAN`/`README` の素材生成メモの「1min-image (gpt-image-2…)」→「1min.ai」化 (P26)。開発手順の記録として MCP 名の併記が必要な箇所のみ「1min-image (MCP)」を許容。
+- 検証 (追随済み・2026-09-28): `tools/verify_staff_roll.gd` の needles を `["yoshuki","Hermes Agent","GPT Image 2","ElevenLabs","Suno","1min.ai","じゅっぷんかん","BGM","コイン","Thank you so much for playing."]` に更新 + 「1min-image」不在 assert を追加。**ALL PASS**。
+
+### 37.7 ロゴ・アイコン・ブートスプラッシュの差し替え (D90)
+
+- **`icon.svg` を自作デザインに全面差し替え** (256×256 viewBox。32×32 のピクセルグリッドを `rect` で描く SVG・`shape-rendering="crispEdges"`)。
+  - 図案 (おまかせ → 確定案): **夜空紺 (#141a2e) の角丸背景 + 右上に満月 (#f4f0dc) + 中央に主人公 (茶髪・青服・赤マフラー) + 光る剣の刃 (#bfeaff) + 右下に赤いスライム**。タイトル画 (§29・月夜に囲まれる主人公) を 32px に要約した最小構成。要素は4つに絞る (16px の favicon でも視認できることを検証)。
+  - 製法: **`tools/make_icon.py` (新規)** — 32×32 の文字グリッド (パレット記号) から SVG を出力する再生成可能なスクリプト (既存の `data/card_marks.gd` と同じ「コードでドット絵」方式)。
+- **ブートスプラッシュ** (現状 = Godot 既定ロゴ): `ui/boot_splash.png` を新設 = `ui/title_art.png` (1024²) の **16:9 クロップ (1024×576)**。主人公と月が両方入る位置 (中心よりやや上) を実装時にプレビューで確定する。
+  - `project.godot`: `application/boot_splash/image="res://ui/boot_splash.png"`・`bg_color` を画像に合わせた濃紺 (既定の灰色 0.14 から変更)・`use_filter` は既定のまま (ピクセルの粗さが目立つ場合のみ false を試す)・`minimum_display_time` は既定 0・`fullsize` も既定。
+- **Web favicon / PWA**: `html/export_icon=true` が project アイコンから favicon を生成する (追加設定なし)。PWA は未使用のまま。
+- **Windows exe アイコン**: `application/icon` は空のまま (project アイコン = 新 icon.svg が使われる。SVG からラスタライズ)。
+- 効果: **Godot ロゴ (CC BY 4.0) の帰属義務が消える** (ビルド由来の画像がすべて自前になる)。
+- 検証: `--headless --import` 後に icon.svg に Godot ロゴの path が無いこと・Web 書き出しの favicon が新デザインであること (画素比較)・窓あり起動でブートスプラッシュを目視 (ベストエフォート)。
+
+### 37.8 配布物の構成 (D91)
+
+- **リリース zip (Windows) の構成** (`tools/make_release.py` で組み立て・版名入り):
+
+```
+VansabaLike_v<版>_win64.zip
+  Vansaba Like!.exe        (embed_pck=true・pck 内蔵)
+  LICENSE
+  THIRD_PARTY_NOTICES.md
+  licenses/
+    GODOT_COPYRIGHT.txt
+    font/LICENSE.txt
+    font/OFL.txt
+    godot_mcp/LICENSE
+```
+
+- **Web 書き出し**: `export/html/` にも同じ `LICENSE`・`THIRD_PARTY_NOTICES.md`・`licenses/` をコピーして同梱する。
+- pck 内のファイル (`include_filter="*.txt"` で入る歌詞・ライセンス txt) は**法的同梱の代わりにしない** (監査の原則: pck 内はユーザーから見えず、ライセンス画面の表示とは別物)。
+- `export_presets.cfg` の Windows メタデータを記入: `application/product_name="Vansaba Like!"`・`file_description`・`company_name="yoshuki"`・`copyright="(c) 2026 yoshuki — MIT License. Third-party notices: THIRD_PARTY_NOTICES.md"`・`product_version` = リリース版 (初回 1.9)。
+- 復元 (作業ツリーの既知の劣化・2026-09-28): Web プリセットの `include_filter="*.txt"` (P25 の修正) と `project.godot` の `[autoload]` 3行が Godot エディタ保存で落ちていた → 復元済み。以後の運用手順は §37.10 の見直しに従う。
+
+### 37.9 公開条件と記録 (D92)
+
+- 37.1 のとおり (無料公開 + 非収益 YouTube = 非商用。1min.ai PRO の生成物は商用条件も確認済み)。
+- 商用化 (YouTube 収益化・販売) を検討する時点で 1min.ai サポート確認を再実施する (Suno を特に。PLAN §6 に残す)。
+- 生成原本 (`world/sprites/raw/` 等の raw PNG・mp3 の ID3 メタデータ) はリポジトリに既存。来歴の証跡として維持する。
+
+### 37.10 変更点・影響一覧 (更新が必要な既存仕様と検証)
+
+| 対象 | 変更 | 更新 |
+|---|---|---|
+| §13 UI | オプションにライセンス行・全画面ページ | v1.9 注記 (済) |
+| §29 スタッフロール | 表記「gpt-image-2・ElevenLabs・Suno (1min.ai)」 | 内容行に v1.9 注記 (済) |
+| `ui/options_ui.gd` | `license` 行・`license_pressed` | 実装 (P26) |
+| `ui/license_ui.*` | 新規 (全画面・スクロール・テキスト定数) | 実装 (P26) |
+| `main.gd`・`main.tscn` | LicenseUI の導線 (オプション ⇔ ライセンス画面) | 実装 (P26) |
+| `ui/staff_roll_ui.gd` | 表記置換 (6箇所 + 3箇所) | ユーザー実装済み (2026-09-28・未コミット) |
+| `icon.svg`・`ui/boot_splash.png`・`project.godot` | ロゴ差し替え・スプラッシュ設定 | 実装 (P26) |
+| `export_presets.cfg` | Windows メタデータ記入 | 実装 (P26) |
+| `tools/verify_options.gd` | 行構成の期待値・ライセンス行の実行 | 更新 (P26) |
+| `tools/verify_staff_roll.gd` | needles 更新 + 「1min-image」不在 | 追随済み (ALL PASS) |
+| `tools/verify_license.gd`・`tools/capture_license.gd` | 新規 | 追加 (P26) |
+| `LICENSE`・`THIRD_PARTY_NOTICES.md`・`GODOT_COPYRIGHT.txt`・`font/`・`addons/godot_mcp/LICENSE` | 新規ファイルのコミット | P26 |
+| `README.md` | ライセンス節の追加 | P26 |
+| `main.tscn` | エディタ正規化差分 (uid 形式) をそのままコミット | P26 |
+| 運用: README/PLAN の「コミット前に `git checkout -- project.godot`」 | **廃止** (ユーザーの未コミット設定 [フォント・stretch] まで消えた実例がある) → 「`[autoload]` 行と `include_filter` を確認して復元」に変更 | 更新 (P26) |
+| `project.godot` の `window/stretch/aspect` | 作業ツリーは `expand` (未コミット・ユーザー設定)、SPEC §35.3 は `keep` | **値を決めて P26 でコミット** (決めるまで据え置き) |
+
+---
+
+## 38. 決定事項チェックリスト (v1.9)
+
+承認待ちの項目。**✅ = 推奨案**。
+
+| # | 項目 | 推奨案 | 状態 |
+|---|---|---|---|
+| D84 | 本ゲームの LICENSE | MIT を新規作成 (`LICENSE`・© 2026 yoshuki)。AI 素材の注記は NOTICES 側 (§37.2) | ✅ 推奨 |
+| D85 | THIRD_PARTY_NOTICES.md | 6節 (本ゲーム/Godot/フォント/MCP/生成AI/商標)。ロゴ帰属は書かない (§37.3) | ✅ 推奨 |
+| D86 | ライセンスファイルの同梱 | GODOT_COPYRIGHT.txt・font/ (本体含む)・addons LICENSE をコミット (§37.4) | ✅ 推奨 |
+| D87 | ゲーム内「ライセンス・商標表示」 | オプションに行 + 全画面スクロールページ `ui/license_ui`。テキスト定数内蔵 (§37.5) | ✅ 推奨 |
+| D88 | 表記「1min-image」→「1min.ai」 | スタッフロール 6箇所 (ユーザー実装済み 2026-09-28) + ドキュメントの素材メモ (P26) (§37.6) | ✅ 推奨 |
+| D89 | 「Google Image」→「GPT Image 2」 | スタッフロール 3箇所 (ユーザー実装済み・表示名。正式名 gpt-image-2 は NOTICES 側) (§37.6) | ✅ 推奨 |
+| D90 | ロゴ・スプラッシュ差し替え | icon.svg = 自作ピクセルアート (月・主人公・剣・スライム)、スプラッシュ = title_art の 16:9 クロップ (§37.7) | ✅ 推奨 |
+| D91 | 配布物構成 | zip/Web にライセンス同梱 + Windows メタデータ記入。pck 内包は法的同梱に使わない (§37.8) | ✅ 推奨 |
+| D92 | 公開条件と記録 | 非商用公開として記録。AI 素材の商用条件は調査メモ・収益化時に再確認 (§37.1・§37.9) | ✅ 推奨 |
+
+---
+
 ## 更新履歴
 
 - v1.0 — `IDEA.md` の具体化。カード20種・敵10種・ボス2種・10分フロー・操作両対応・データ駆動方針。
@@ -1597,3 +1774,8 @@ v1.8 追補2 後のユーザー指摘 (5件) への対応。
 - v1.8 実装 (P24・追補3) — アプリ名「Vansaba Like!」(旧名セーブの引継ぎつき・`SaveData._migrate_legacy_save()`)・ゲーム中 BGM −10dB・
   難易度ロック中の「ノーマル」を暗く + ◀▶ 無効表示・オプションの左右にスティックラッチ (`_axis_armed_h`)・タイトルのメニューを左側に縦並び (`LeftMenu`)。
   検証: `test_title_input` (左カラムのフォーカス移動)・`verify_v13` (アプリ名/縦並び/難易度ロック表示)・`verify_options` (スティックラッチ)・`verify_bgm` (−10dB)・全回帰。
+- v1.9 設計 — `IDEA.md`「ライセンス表示について」(PLAN §7 監査の未消化項目) を反映。§37 (D84〜D92)・§38 を追加 (全て推奨案・承認待ち)。
+  本ゲームの LICENSE (MIT・© 2026 yoshuki)、THIRD_PARTY_NOTICES.md (6節・ロゴ帰属なし)、ライセンスファイルの同梱コミット (GODOT_COPYRIGHT.txt・font/ 本体・addons LICENSE)、
+  オプション「ライセンス・商標表示」(全画面スクロールページ・テキスト定数内蔵)、クレジットの「1min.ai」「GPT Image 2」化 (スタッフロールはユーザー先行実装・検証追随済み ALL PASS)、ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート)、
+  配布物構成 (zip/Web にライセンス同梱 + Windows メタデータ)、公開条件 (無料・非収益 YouTube = 非商用) と AI 素材の権利記録 (§37.1)。
+  併せて作業ツリーの劣化を復元 (Web `include_filter="*.txt"`・`[autoload]` 行 — Godot エディタ保存で落ちていたもの)。
