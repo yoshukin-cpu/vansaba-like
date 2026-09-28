@@ -69,9 +69,10 @@ func _initialize() -> void:
 		await process_frame
 	_check("pages fill the song (>=15)", (s.get("PAGES") as Array).size() >= 15)
 	var body: String = _full_text(s)
-	for needle: String in ["yoshuki", "Hermes Agent", "Google Image", "ElevenLabs", "Suno",
+	for needle: String in ["yoshuki", "Hermes Agent", "GPT Image 2", "ElevenLabs", "Suno", "1min.ai",
 			"じゅっぷんかん", "BGM", "コイン", "Thank you so much for playing."]:
 		_check("credit mentions " + needle, needle in body)
+	_check("no stale 1min-image (v1.9)", not ("1min-image" in body))
 	r2.call("show_result", true, "10:00", 20, 300, 1000)
 	for i: int in range(3):
 		await process_frame

@@ -54,31 +54,31 @@ const PAGES: Array[String] = [
 [color=#ffd75e]深夜テンション[/color]: Hermes Agent (常時)[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]キャラクターデザイン[/color][/font_size]
 
-[font_size=30]Google Image (1min-image)[/font_size]
+[font_size=30]GPT Image 2 (1min.ai)[/font_size]
 
 [font_size=24]主人公4方向・歩くたび2フレームのドット絵職人。
 足の速さ 230px/s を「速そう」に見せるのが仕事です。
 
-[color=#ffd75e]タイトル画[/color]: Google Image (ピクセルアート)
-[color=#ffd75e]ドット監修[/color]: Google Image (本人)[/font_size][/center]""",
+[color=#ffd75e]タイトル画[/color]: GPT Image 2 (ピクセルアート)
+[color=#ffd75e]ドット監修[/color]: GPT Image 2 (本人)[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]敵デザイン[/color][/font_size]
 
-[font_size=30]Google Image (1min-image)[/font_size]
+[font_size=30]GPT Image 2 (1min.ai)[/font_size]
 
 [font_size=24]スライムのつぶらな瞳、コウモリの羽ばたき、ゴーレムのカタさ。
 「倒されるために生まれた」哀しみを瞳に込めました。
 敵なのに、ちょっとだけ愛着が湧くのは仕様です。[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]サウンド・効果音[/color][/font_size]
 
-[font_size=30]ElevenLabs (1min-image)[/font_size]
+[font_size=30]ElevenLabs (1min.ai)[/font_size]
 
 [font_size=24]宝石のキラーン / 爆発のドーン / レベルアップのジャーン
-[color=#ffd75e]BGM[/color]: Suno (1min-image) — タイトル/道中/ボスの3曲 (インスト)
+[color=#ffd75e]BGM[/color]: Suno (1min.ai) — タイトル/道中/ボスの3曲 (インスト)
 [color=#ffd75e]声の出演[/color]: スライム役・スライム (本人)
 [color=#ffd75e]断末魔の演技指導[/color]: ElevenLabs (スパルタ)[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]テーマソング[/color][/font_size]
 
-[font_size=30]Suno (1min-image)[/font_size]
+[font_size=30]Suno (1min.ai)[/font_size]
 
 [font_size=24]「じゅっぷんかんの王国」4分10秒
 作詞・作曲・編曲・ギターソロ (架空): Suno
@@ -86,7 +86,7 @@ const PAGES: Array[String] = [
 このロールはこの曲の長さに合わせて引き延ばされています。[/font_size][/center]""",
 """[center][font_size=40][color=#ffd75e]BGM[/color][/font_size]
 
-[font_size=30]Suno (1min-image)[/font_size]
+[font_size=30]Suno (1min.ai)[/font_size]
 
 [font_size=24]タイトル「静かなピアノ」/ 道中「控えめの行進曲」/ ボス「巨大な存在」
 3曲ともインスト・ループ前提。ボスで曲が切り替わるのがこだわりです。
