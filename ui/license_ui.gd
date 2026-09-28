@@ -2,8 +2,10 @@ extends CanvasLayer
 ## ライセンス・商標表示 (v1.9・P26・SPEC §37.5)。
 ## オプションの「ライセンス・商標表示」から開く全画面ページ。
 ## 本文はテキスト定数として内蔵する (全プラットフォーム同一。Web でもファイル不要)。
-## 操作: ↑↓ / ホイール / 左スティック: スクロール　Esc / B / 戻るボタン: 閉じる。
+## 操作: ↑↓ / ホイール / 左スティック: スクロール　Esc / A・B / 戻るボタン: 閉じる。
 ## モーダル方式は D74 を踏襲 (group "modal_ui"・フォーカスを使わず _unhandled_input で操作)。
+## process_mode は tscn 側で ALWAYS (3)。タイトルは paused = true のため、これが無いと
+## 描画はされても入力が一切届かない (v1.9 修正)。
 
 signal closed
 
@@ -282,8 +284,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		close()
 		return
+	if event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+		close()
+		return
 	if event is InputEventJoypadButton and (event as InputEventJoypadButton).pressed:
 		var bi: int = (event as InputEventJoypadButton).button_index
-		if bi == JOY_BUTTON_B:
+		if bi == JOY_BUTTON_A or bi == JOY_BUTTON_B:
 			get_viewport().set_input_as_handled()
 			close()

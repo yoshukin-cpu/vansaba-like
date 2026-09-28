@@ -393,6 +393,10 @@ res://
   Web 実測: favicon 256×256・apple-touch-icon 180×180 = 新アイコン、`vansaba-like.png` 1024×576 = 新スプラッシュ (既定の Godot ロゴ 800×600 が消滅)。
   リリース: `export/release/VansabaLike_v1.9_win64.zip` (122.2MB) = exe + LICENSE + THIRD_PARTY_NOTICES.md + licenses/ (GODOT_COPYRIGHT・font×2・godot_mcp)。Web フォルダにも同梱済み。
   窓あり: `capture_license.gd` 7 枚でライセンス画面 (MIT/OFL 全文・リンク・商標) を目視。残りはユーザーの最終目視と公開判断。
+- 修正 (2026-09-28・ユーザー報告): ライセンス画面が操作不能 (キー/パッド/マウス・戻るボタンも無反応)。
+  原因 = `ui/license_ui.tscn` の `process_mode = 3` 未設定 (タイトルは paused = true のため描画のみで入力が届かない。既存モーダルは全て tscn で設定済みの規約)。
+  `process_mode = 3` 追加 + A/Enter でも閉じる追補。`verify_license.gd` に実入力経路 7 件を追加 (修正前 FAIL 4 件の再現 → 修正後 40件 ALL PASS)。
+  窓あり `capture_license.gd` 8 枚 (実マウスクリックで戻るボタン → オプション復帰)。exe/Web 再書き出し・リリース zip 再生成 (124.1MB) 済み。
 
 ## 3. 並行可能タスク
 

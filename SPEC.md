@@ -1586,7 +1586,8 @@ v1.8 追補2 後のユーザー指摘 (5件) への対応。
   - 行データ: `{"id": "license", "name": "ライセンス・商標表示", "values": [], "index": 0, "action": "license"}`・実行ボタン「表示する…」(D75 の実行ボタン方式)。
   - シグナル `license_pressed` を追加。`main.gd` が「オプションを閉じる → ライセンス画面を開く」→ ライセンス画面を閉じたら「オプションを開き直す」(タイトルへは戻さない)。モーダル方式は D74 の踏襲 (group "modal_ui"・フォーカスを使わず `_unhandled_input` で操作)。
 - **新規 `ui/license_ui.tscn/.gd`** (CanvasLayer・全画面): 暗転背景 + 見出し「ライセンス・商標表示」+ ScrollContainer 内 RichTextLabel (bbcode) + 「戻る」ボタン + ヒント (Esc/B)。
-  - 操作: ↑↓ / ホイール / 左スティック / PageUp・PageDown でスクロール、Esc / B / 戻るボタンで閉じる。開くたびスクロール位置を先頭に戻す。
+  - 操作: ↑↓ / ホイール / 左スティックでスクロール、Esc / A・B / 戻るボタンで閉じる。開くたびスクロール位置を先頭に戻す。
+  - **(v1.9 修正・2026-09-28)**: tscn 側で `process_mode = 3` (ALWAYS) を**必ず設定する** — タイトルは `paused = true` (main.gd:121) のため、これが無いと描画はされるが入力 (キー/パッド/マウス) が一切届かない (既存モーダル全部が同じ設定をしている前提だった)。A/Enter (`ui_accept`) でも閉じられるように追補。
 - **内容** (テキスト定数として `.gd` に内蔵 = 全プラットフォーム同一・Web でもファイル不要):
   1. 本ゲーム (MIT 文全文)。
   2. Godot Engine 4.7.2 (MIT 文全文・`godotengine.org/license` リンク・「全文とサードパーティ一覧は同梱の GODOT_COPYRIGHT.txt」)。
@@ -1786,3 +1787,7 @@ VansabaLike_v<版>_win64.zip
   検証: `verify_license.gd` 新規 33件 ALL PASS・`verify_options.gd`/`verify_staff_roll.gd` 追随 ALL PASS・回帰 19 本 ALL PASS + 観測 9 本 例外なし。窓あり `capture_license.gd` 7 枚 (オプション行・ライセンス上/中/下・閉じてオプションへ戻る) で目視確認。
   書き出し実測: exe = ProductName「Vansaba Like!」/CompanyName「yoshuki」/LegalCopyright 記入済み (PowerShell VersionInfo)、Web = favicon 256/180px・スプラッシュ 1024×576 が新アート (既定ロゴ消滅)。
   `tools/make_release.py` で リリース zip (122.2MB・ライセンス4点同梱) と Web フォルダへのライセンス同梱を生成。残りはユーザーの最終目視と公開判断。
+- v1.9 修正 (ユーザー報告 2026-09-28) — ライセンス・商標表示が操作不能 (キー・パッド・マウスすべて。戻るボタンも無反応)。
+  原因: `ui/license_ui.tscn` に `process_mode = 3` (ALWAYS) が無く、タイトル (paused = true) 中は描画のみで入力が届かなかった (既存モーダルは全て設定済み)。
+  修正: `process_mode = 3` を追加 + A/Enter でも閉じる追補 (ヒント「Esc / A・B」)。`verify_license.gd` に実入力経路 (paused 中の ↓/B/Esc/A・オプション復帰) 7 件を追加 —
+  **修正前に FAIL 4 件を再現 → 修正後 40件 ALL PASS**。窓あり `capture_license.gd` 8 枚 (実マウスクリックで戻る → オプションへ復帰を確認)。exe/Web を再書き出し・リリース zip 再生成 (124.1MB)。

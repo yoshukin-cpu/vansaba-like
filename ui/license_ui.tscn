@@ -4,6 +4,7 @@
 
 [node name="LicenseUI" type="CanvasLayer"]
 layer = 40
+process_mode = 3
 script = ExtResource("1")
 
 [node name="Dim" type="ColorRect" parent="."]
@@ -48,7 +49,7 @@ theme_override_font_sizes/normal_font_size = 20
 [node name="Hint" type="Label" parent="Panel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "↑↓ / ホイール / スティック: スクロール　Esc / B / 戻るボタン: 閉じる"
+text = "↑↓ / ホイール / スティック: スクロール　Esc / A・B / 戻るボタン: 閉じる"
 horizontal_alignment = 1
 
 [node name="BackRow" type="HBoxContainer" parent="Panel"]

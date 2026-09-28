@@ -61,8 +61,9 @@
   本ゲームの LICENSE (MIT)・`THIRD_PARTY_NOTICES.md` の内容確定・ライセンスファイルの同梱コミット (font/ 本体含む)・
   オプションの「ライセンス・商標表示」(全画面スクロールページ)・クレジットの「1min.ai」「gpt-image-2」化・
   ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート)・配布物構成 (zip/Web にライセンス同梱)。
-  **実装完了 (P26)**: `verify_license.gd` 33件 + 回帰 19 本 ALL PASS。exe/Web 再書き出し済み (favicon/スプラッシュ/メタデータ反映)。
+  **実装完了 (P26)**: `verify_license.gd` 40件 + 回帰 19 本 ALL PASS。exe/Web 再書き出し済み (favicon/スプラッシュ/メタデータ反映)。
   リリース zip は `tools/make_release.py` で生成 (ライセンス同梱・122.2MB)。ライセンス画面の目視キャプチャは `tmp_shots/v19_license_*.png`。
+  (2026-09-28 修正: ライセンス画面が操作不能だった問題 (paused 中の `process_mode` 未設定) を修正 — 実入力経路の検証 7 件と窓あり実マウスクリックで再確認済み)
 
 ### 実装済みの検証値 (P8〜P12)
 

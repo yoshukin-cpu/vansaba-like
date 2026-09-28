@@ -67,5 +67,41 @@ func _init() -> void:
 	for i7: int in range(6):
 		await process_frame
 	await _shot("v19_license_closed_back_to_options.png")
+	# 4) 戻るボタンの実マウスクリック (窓あり・入力の実経路確認)。
+	opts.set("idx", rows.find(_license_row(rows)))
+	opts.call("_activate")
+	for i8: int in range(6):
+		await process_frame
+	var btn: Button = lic.get_node("Panel/BackRow/BackBtn")
+	var p: Vector2 = btn.get_global_rect().get_center()
+	var mm := InputEventMouseMotion.new()
+	mm.position = p
+	mm.global_position = p
+	Input.parse_input_event(mm)
+	await process_frame
+	var md := InputEventMouseButton.new()
+	md.button_index = MOUSE_BUTTON_LEFT
+	md.pressed = true
+	md.position = p
+	md.global_position = p
+	Input.parse_input_event(md)
+	await process_frame
+	var mu := InputEventMouseButton.new()
+	mu.button_index = MOUSE_BUTTON_LEFT
+	mu.pressed = false
+	mu.position = p
+	mu.global_position = p
+	Input.parse_input_event(mu)
+	for i9: int in range(6):
+		await process_frame
+	await _shot("v19_license_mouse_back.png")
+	print("mouse-back: license_visible=", lic.visible, " options_visible=", opts.visible)
 	print("shots=", shots)
 	quit()
+
+
+func _license_row(rows_arr: Array) -> Dictionary:
+	for r: Dictionary in rows_arr:
+		if str(r["id"]) == "license":
+			return r
+	return {}
