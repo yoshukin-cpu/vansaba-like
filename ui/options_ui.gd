@@ -1,12 +1,13 @@
 extends CanvasLayer
 ## オプション画面 (SPEC §35.2〜§35.4・§35.13、v1.8/案6)。
-## 表示モード / 解像度16件 (4Kまで) / BGM・SE 音量 / スタッフロール再演 (1回クリアで解放・秘密項目) /
+## 表示モード / 解像度16件 (4Kまで) / BGM・SE 音量 / ライセンス・商標表示 (v1.9・D87) / スタッフロール再演 (1回クリアで解放・秘密項目) /
 ## セーブデータ初期化 (確認付き) / 戻る。変更は即時適用 + 即保存する。導線はタイトル画面のみ。
 ## 操作 (D74/D75): ↑↓ (項目) ←→ (変更) Enter (実行) Esc (戻る) パッド +
 ## マウス (行クリックで選択・◀▶ / 実行ボタン)。画面内ではフォーカスを使わない (タイトルへキーを漏らさないため)。
 
 signal closed
 signal staff_replay_pressed
+signal license_pressed
 
 const SaveData := preload("res://systems/save_data.gd")
 const OptDB := preload("res://data/options_db.gd")
@@ -91,6 +92,8 @@ func rebuild() -> void:
 		"id": "se", "name": "SE音量", "values": vol_vals,
 		"index": int(round(float(SaveData.options.get("se", OptDB.DEFAULT_SE)) / OptDB.VOL_STEP)),
 	})
+	# v1.9 (D87): ライセンス・商標表示 (常設の情報行。設定行の直後・テール [再演/初期化/戻る] の前)。
+	rows.append({"id": "license", "name": "ライセンス・商標表示", "values": [], "index": 0, "action": "license"})
 	# D64: 1回クリアで解放。解放までは行ごと表示しない (秘密項目)。
 	if not SaveData.cleared.is_empty():
 		rows.append({"id": "replay", "name": "スタッフロール再演", "values": [], "index": 0, "action": "replay"})
@@ -198,6 +201,8 @@ func _refresh_row(r: Dictionary) -> void:
 	match str(r["id"]):
 		"replay":
 			(r["exec_btn"] as Button).text = "▶ 再生 (スタッフロール)"
+		"license":
+			(r["exec_btn"] as Button).text = "表示する…"
 		"reset":
 			(r["exec_btn"] as Button).text = "初期化する…"
 		"back":
@@ -373,6 +378,10 @@ func _activate() -> void:
 	if action == "replay":
 		_play_ui()
 		staff_replay_pressed.emit()
+		return
+	if action == "license":
+		_play_ui()
+		license_pressed.emit()
 		return
 	if action == "reset":
 		_begin_reset()

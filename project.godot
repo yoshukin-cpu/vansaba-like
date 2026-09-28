@@ -13,6 +13,8 @@ config_version=5
 config/name="Vansaba Like!"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.063, 0.11, 0.255, 1)
+boot_splash/image="res://ui/boot_splash.png"
 config/icon="res://icon.svg"
 
 [audio]
@@ -28,10 +30,15 @@ MCPGameInspector="*res://addons/godot_mcp/mcp_game_inspector_service.gd"
 [display]
 
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+
+[gui]
+
+theme/custom_font="uid://l8tevcbgqlrl"
 
 [input]
 

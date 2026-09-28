@@ -170,7 +170,7 @@ func _t_options_ui() -> void:
 	opts.call("rebuild")
 	var ids0: Array = opts.call("row_ids")
 	_check("未解放では再演の行が無い (秘密項目)", not ids0.has("replay"))
-	_check("行は 表示/解像度/BGM/SE/初期化/戻る", ids0 == ["mode", "resolution", "bgm", "se", "reset", "back"])
+	_check("行は 表示/解像度/BGM/SE/ライセンス/初期化/戻る (v1.9)", ids0 == ["mode", "resolution", "bgm", "se", "license", "reset", "back"])
 	SaveData.cleared = ["normal"]
 	opts.call("rebuild")
 	var ids1: Array = opts.call("row_ids")
@@ -200,6 +200,22 @@ func _t_options_ui() -> void:
 			opts.set("idx", (opts.get("rows") as Array).find(r3))
 	opts.call("_change", -1)
 	_check("BGM 音量が 5% 下がる (0.75)", _near(float(SaveData.options["bgm"]), 0.75))
+	# v1.9 (D87): ライセンス行の実行で license_pressed が出る。
+	var lic_fired := [false]
+	opts.connect("license_pressed", func() -> void: lic_fired[0] = true)
+	var lic_rows: Array = opts.get("rows")
+	var lic_i: int = -1
+	var se_i: int = -1
+	for i2: int in range(lic_rows.size()):
+		var rid: String = str((lic_rows[i2] as Dictionary)["id"])
+		if rid == "license":
+			lic_i = i2
+		if rid == "se":
+			se_i = i2
+	_check("ライセンス行が SE の直後にある (v1.9)", lic_i >= 0 and lic_i == se_i + 1)
+	opts.set("idx", lic_i)
+	opts.call("_activate")
+	_check("ライセンス行で license_pressed が出る", lic_fired[0])
 	opts.free()
 
 

@@ -60,7 +60,9 @@
 - **v1.9 設計 (ライセンス表示・公開前準備)**: `IDEA.md`「ライセンス表示について」(PLAN §7 監査の未消化項目) を反映。SPEC §37・§38 (D84〜D92)。
   本ゲームの LICENSE (MIT)・`THIRD_PARTY_NOTICES.md` の内容確定・ライセンスファイルの同梱コミット (font/ 本体含む)・
   オプションの「ライセンス・商標表示」(全画面スクロールページ)・クレジットの「1min.ai」「gpt-image-2」化・
-  ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート)・配布物構成 (zip/Web にライセンス同梱)。**実装は P26 (承認後)**。
+  ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート)・配布物構成 (zip/Web にライセンス同梱)。
+  **実装完了 (P26)**: `verify_license.gd` 33件 + 回帰 19 本 ALL PASS。exe/Web 再書き出し済み (favicon/スプラッシュ/メタデータ反映)。
+  リリース zip は `tools/make_release.py` で生成 (ライセンス同梱・122.2MB)。ライセンス画面の目視キャプチャは `tmp_shots/v19_license_*.png`。
 
 ### 実装済みの検証値 (P8〜P12)
 
@@ -186,17 +188,25 @@
 | D81 | 難易度ロック中の「ノーマル」を暗く + ◀▶ 無効表示 | ✅ 承認 |
 | D82 | オプションの左右にスティックラッチ (倒しっぱなしで連続しない) | ✅ 承認 |
 | D83 | タイトルのメニューを左側に縦並び (移動は上下のみ) | ✅ 承認 |
-| D84 | 本ゲームの LICENSE (MIT・© 2026 yoshuki) | ✅ 推奨 |
-| D85 | THIRD_PARTY_NOTICES.md (Godot/フォント/MCP/生成AI/商標の6節) | ✅ 推奨 |
-| D86 | ライセンスファイルの同梱コミット (font/ 本体・GODOT_COPYRIGHT.txt 含む) | ✅ 推奨 |
-| D87 | オプション「ライセンス・商標表示」 (全画面スクロールページ) | ✅ 推奨 |
-| D88 | クレジット「1min-image」→「1min.ai」 (6箇所・実装済み) | ✅ 推奨 |
-| D89 | 「Google Image」→「GPT Image 2」に正確化 (3箇所・実装済み) | ✅ 推奨 |
-| D90 | ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート) | ✅ 推奨 |
-| D91 | 配布物構成 (zip/Web にライセンス同梱 + Windows メタデータ) | ✅ 推奨 |
-| D92 | 公開条件 (無料・非収益 YouTube = 非商用) と AI 素材の権利記録 | ✅ 推奨 |
+| D84 | 本ゲームの LICENSE (MIT・© 2026 yoshuki) | ✅ 承認 |
+| D85 | THIRD_PARTY_NOTICES.md (Godot/フォント/MCP/生成AI/商標の6節) | ✅ 承認 |
+| D86 | ライセンスファイルの同梱コミット (font/ 本体・GODOT_COPYRIGHT.txt 含む) | ✅ 承認 |
+| D87 | オプション「ライセンス・商標表示」 (全画面スクロールページ) | ✅ 承認 |
+| D88 | クレジット「1min-image」→「1min.ai」 (6箇所・実装済み) | ✅ 承認 |
+| D89 | 「Google Image」→「GPT Image 2」に正確化 (3箇所・実装済み) | ✅ 承認 |
+| D90 | ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート) | ✅ 承認 |
+| D91 | 配布物構成 (zip/Web にライセンス同梱 + Windows メタデータ) | ✅ 承認 |
+| D92 | 公開条件 (無料・非収益 YouTube = 非商用) と AI 素材の権利記録 | ✅ 承認 |
 
 ## リポジトリ
 
 - remote: `(internal remote address removed before publication)` (master)
 - 素材生成・再生成の手順は skill `game-sprite-generation` を参照。
+
+## ライセンス
+
+本ゲームは **MIT License** で公開されています (© 2026 yoshuki — [`LICENSE`](LICENSE))。
+同梱する第三者ソフトウェア・フォント・生成 AI 素材のライセンスと帰属は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) を参照してください
+(ゲーム内では オプション →「ライセンス・商標表示」でも確認できます)。
+
+本ゲームの画像・音声の一部は生成 AI (gpt-image-2 / Suno / ElevenLabs、いずれも 1min.ai 経由) で生成しています。

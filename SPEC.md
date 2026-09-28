@@ -1244,6 +1244,7 @@ res://
 - **内部解像度は 1152×648 のまま** (描画内容は変えない)。ウィンドウ/画面に等比で拡大表示し、**縦 (または横) が余る場合は黒帯**にする。
   - 実装: project.godot の `window/stretch/aspect` を `expand` → **`keep`** に変更する (`canvas_items` は据え置き)。viewport サイズ 1152×648 を project.godot に明文化する。
   - 16:9 のウィンドウでは見え方は従来と同一。16:10・4:3 では上下に黒帯が出る (従来の expand は「余りが見える」挙動だったため、ここが変わる点)。
+- **(v1.9)** 実設定はユーザー側で `expand` にされており、v1.9/P26 でそのまま採用した (黒帯なしで余りも見える)。本項の `keep` 前提の記述 (16:10・4:3 の黒帯実測) は当時の記録として残す。
 - モード: **ウィンドウ** / **フルスクリーン (ボーダレス)** の2択。
   - フルスクリーン = `DisplayServer.window_set_mode(WINDOW_MODE_FULLSCREEN)` (Windows ではボーダレス全画面)。フルスクリーン中は解像度の行をグレー表示にする (選択しても効かないため)。
 - 解像度 (ウィンドウ時のサイズ・16件・4Kまで。縦長は考慮しない):
@@ -1651,38 +1652,38 @@ VansabaLike_v<版>_win64.zip
 |---|---|---|
 | §13 UI | オプションにライセンス行・全画面ページ | v1.9 注記 (済) |
 | §29 スタッフロール | 表記「gpt-image-2・ElevenLabs・Suno (1min.ai)」 | 内容行に v1.9 注記 (済) |
-| `ui/options_ui.gd` | `license` 行・`license_pressed` | 実装 (P26) |
-| `ui/license_ui.*` | 新規 (全画面・スクロール・テキスト定数) | 実装 (P26) |
-| `main.gd`・`main.tscn` | LicenseUI の導線 (オプション ⇔ ライセンス画面) | 実装 (P26) |
+| `ui/options_ui.gd` | `license` 行・`license_pressed` | ✅ 実装済 (P26) |
+| `ui/license_ui.*` | 新規 (全画面・スクロール・テキスト定数) | ✅ 実装済 (P26) |
+| `main.gd`・`main.tscn` | LicenseUI の導線 (オプション ⇔ ライセンス画面) | ✅ 実装済 (P26) |
 | `ui/staff_roll_ui.gd` | 表記置換 (6箇所 + 3箇所) | ユーザー実装済み (2026-09-28・未コミット) |
-| `icon.svg`・`ui/boot_splash.png`・`project.godot` | ロゴ差し替え・スプラッシュ設定 | 実装 (P26) |
-| `export_presets.cfg` | Windows メタデータ記入 | 実装 (P26) |
-| `tools/verify_options.gd` | 行構成の期待値・ライセンス行の実行 | 更新 (P26) |
+| `icon.svg`・`ui/boot_splash.png`・`project.godot` | ロゴ差し替え・スプラッシュ設定 | ✅ 実装済 (P26) |
+| `export_presets.cfg` | Windows メタデータ記入 | ✅ 実装済 (P26) |
+| `tools/verify_options.gd` | 行構成の期待値・ライセンス行の実行 | ✅ 更新済 (P26) |
 | `tools/verify_staff_roll.gd` | needles 更新 + 「1min-image」不在 | 追随済み (ALL PASS) |
-| `tools/verify_license.gd`・`tools/capture_license.gd` | 新規 | 追加 (P26) |
-| `LICENSE`・`THIRD_PARTY_NOTICES.md`・`GODOT_COPYRIGHT.txt`・`font/`・`addons/godot_mcp/LICENSE` | 新規ファイルのコミット | P26 |
-| `README.md` | ライセンス節の追加 | P26 |
-| `main.tscn` | エディタ正規化差分 (uid 形式) をそのままコミット | P26 |
-| 運用: README/PLAN の「コミット前に `git checkout -- project.godot`」 | **廃止** (ユーザーの未コミット設定 [フォント・stretch] まで消えた実例がある) → 「`[autoload]` 行と `include_filter` を確認して復元」に変更 | 更新 (P26) |
-| `project.godot` の `window/stretch/aspect` | 作業ツリーは `expand` (未コミット・ユーザー設定)、SPEC §35.3 は `keep` | **値を決めて P26 でコミット** (決めるまで据え置き) |
+| `tools/verify_license.gd`・`tools/capture_license.gd` | 新規 | ✅ 追加済 (P26) |
+| `LICENSE`・`THIRD_PARTY_NOTICES.md`・`GODOT_COPYRIGHT.txt`・`font/`・`addons/godot_mcp/LICENSE` | 新規ファイルのコミット | ✅ 実施済 (P26) |
+| `README.md` | ライセンス節の追加 | ✅ 実施済 (P26) |
+| `main.tscn` | エディタ正規化差分 (uid 形式) をそのままコミット | ✅ 実施済 (P26) |
+| 運用: README/PLAN の「コミット前に `git checkout -- project.godot`」 | **廃止** (ユーザーの未コミット設定 [フォント・stretch] まで消えた実例がある) → 「`[autoload]` 行と `include_filter` を確認して復元」に変更 | ✅ 更新済 (P26) |
+| `project.godot` の `window/stretch/aspect` | 作業ツリーは `expand` (未コミット・ユーザー設定)、SPEC §35.3 は `keep` | ✅ `expand` (ユーザー設定) をそのまま採用してコミット (§35.3 に v1.9 注記) |
 
 ---
 
 ## 38. 決定事項チェックリスト (v1.9)
 
-承認待ちの項目。**✅ = 推奨案**。
+承認済みの項目 (全て推奨案で承認)。**✅ = 承認**。
 
 | # | 項目 | 推奨案 | 状態 |
 |---|---|---|---|
-| D84 | 本ゲームの LICENSE | MIT を新規作成 (`LICENSE`・© 2026 yoshuki)。AI 素材の注記は NOTICES 側 (§37.2) | ✅ 推奨 |
-| D85 | THIRD_PARTY_NOTICES.md | 6節 (本ゲーム/Godot/フォント/MCP/生成AI/商標)。ロゴ帰属は書かない (§37.3) | ✅ 推奨 |
-| D86 | ライセンスファイルの同梱 | GODOT_COPYRIGHT.txt・font/ (本体含む)・addons LICENSE をコミット (§37.4) | ✅ 推奨 |
-| D87 | ゲーム内「ライセンス・商標表示」 | オプションに行 + 全画面スクロールページ `ui/license_ui`。テキスト定数内蔵 (§37.5) | ✅ 推奨 |
-| D88 | 表記「1min-image」→「1min.ai」 | スタッフロール 6箇所 (ユーザー実装済み 2026-09-28) + ドキュメントの素材メモ (P26) (§37.6) | ✅ 推奨 |
-| D89 | 「Google Image」→「GPT Image 2」 | スタッフロール 3箇所 (ユーザー実装済み・表示名。正式名 gpt-image-2 は NOTICES 側) (§37.6) | ✅ 推奨 |
-| D90 | ロゴ・スプラッシュ差し替え | icon.svg = 自作ピクセルアート (月・主人公・剣・スライム)、スプラッシュ = title_art の 16:9 クロップ (§37.7) | ✅ 推奨 |
-| D91 | 配布物構成 | zip/Web にライセンス同梱 + Windows メタデータ記入。pck 内包は法的同梱に使わない (§37.8) | ✅ 推奨 |
-| D92 | 公開条件と記録 | 非商用公開として記録。AI 素材の商用条件は調査メモ・収益化時に再確認 (§37.1・§37.9) | ✅ 推奨 |
+| D84 | 本ゲームの LICENSE | MIT を新規作成 (`LICENSE`・© 2026 yoshuki)。AI 素材の注記は NOTICES 側 (§37.2) | ✅ 承認 |
+| D85 | THIRD_PARTY_NOTICES.md | 6節 (本ゲーム/Godot/フォント/MCP/生成AI/商標)。ロゴ帰属は書かない (§37.3) | ✅ 承認 |
+| D86 | ライセンスファイルの同梱 | GODOT_COPYRIGHT.txt・font/ (本体含む)・addons LICENSE をコミット (§37.4) | ✅ 承認 |
+| D87 | ゲーム内「ライセンス・商標表示」 | オプションに行 + 全画面スクロールページ `ui/license_ui`。テキスト定数内蔵 (§37.5) | ✅ 承認 |
+| D88 | 表記「1min-image」→「1min.ai」 | スタッフロール 6箇所 (ユーザー実装済み 2026-09-28) + ドキュメントの素材メモ (P26) (§37.6) | ✅ 承認 |
+| D89 | 「Google Image」→「GPT Image 2」 | スタッフロール 3箇所 (ユーザー実装済み・表示名。正式名 gpt-image-2 は NOTICES 側) (§37.6) | ✅ 承認 |
+| D90 | ロゴ・スプラッシュ差し替え | icon.svg = 自作ピクセルアート (月・主人公・剣・スライム)、スプラッシュ = title_art の 16:9 クロップ (§37.7) | ✅ 承認 |
+| D91 | 配布物構成 | zip/Web にライセンス同梱 + Windows メタデータ記入。pck 内包は法的同梱に使わない (§37.8) | ✅ 承認 |
+| D92 | 公開条件と記録 | 非商用公開として記録。AI 素材の商用条件は調査メモ・収益化時に再確認 (§37.1・§37.9) | ✅ 承認 |
 
 ---
 
@@ -1779,3 +1780,9 @@ VansabaLike_v<版>_win64.zip
   オプション「ライセンス・商標表示」(全画面スクロールページ・テキスト定数内蔵)、クレジットの「1min.ai」「GPT Image 2」化 (スタッフロールはユーザー先行実装・検証追随済み ALL PASS)、ロゴ/ブートスプラッシュ差し替え (自作ピクセルアート)、
   配布物構成 (zip/Web にライセンス同梱 + Windows メタデータ)、公開条件 (無料・非収益 YouTube = 非商用) と AI 素材の権利記録 (§37.1)。
   併せて作業ツリーの劣化を復元 (Web `include_filter="*.txt"`・`[autoload]` 行 — Godot エディタ保存で落ちていたもの)。
+- v1.9 実装 (P26 完了) — `LICENSE` (MIT・© 2026 yoshuki)・`THIRD_PARTY_NOTICES.md` (6節)・`GODOT_COPYRIGHT.txt`・`font/` 本体・`addons/godot_mcp/LICENSE` をコミット。
+  `ui/license_ui.*` (全画面スクロール・テキスト定数内蔵・リンク) と オプションの「ライセンス・商標表示」行・main の導線 (オプション ⇔ ライセンス画面) を実装。
+  `icon.svg` を自作ピクセルアート (満月・主人公・剣・スライム) に差し替え (`tools/make_icon.py`)、ブートスプラッシュ `ui/boot_splash.png` (title_art の 16:9 クロップ) と project.godot 設定、Windows メタデータ記入。
+  検証: `verify_license.gd` 新規 33件 ALL PASS・`verify_options.gd`/`verify_staff_roll.gd` 追随 ALL PASS・回帰 19 本 ALL PASS + 観測 9 本 例外なし。窓あり `capture_license.gd` 7 枚 (オプション行・ライセンス上/中/下・閉じてオプションへ戻る) で目視確認。
+  書き出し実測: exe = ProductName「Vansaba Like!」/CompanyName「yoshuki」/LegalCopyright 記入済み (PowerShell VersionInfo)、Web = favicon 256/180px・スプラッシュ 1024×576 が新アート (既定ロゴ消滅)。
+  `tools/make_release.py` で リリース zip (122.2MB・ライセンス4点同梱) と Web フォルダへのライセンス同梱を生成。残りはユーザーの最終目視と公開判断。

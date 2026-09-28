@@ -40,6 +40,7 @@ static var quick_start: bool = false
 @onready var options_ui: CanvasLayer = $OptionsUI
 @onready var upgrade_ui: CanvasLayer = $UpgradeUI
 @onready var replay_countdown: CanvasLayer = $ReplayCountdownUI
+@onready var license_ui: CanvasLayer = $LicenseUI
 
 var kills: int = 0
 var score: int = 0
@@ -100,6 +101,8 @@ func _ready() -> void:
 	title_ui.connect("options_pressed", _on_options)
 	options_ui.connect("closed", _on_options_closed)
 	options_ui.connect("staff_replay_pressed", _on_staff_replay)
+	options_ui.connect("license_pressed", _on_options_license)
+	license_ui.connect("closed", _on_license_closed)
 	upgrade_ui.connect("closed", _on_upgrade_closed)
 	replay_countdown.connect("finished", _on_replay_countdown_done)
 	pause_ui.connect("resume_pressed", _on_resume)
@@ -413,6 +416,18 @@ func _on_staff_replay() -> void:
 	replay_countdown.call("start", 3.0)
 
 
+## オプションの「ライセンス・商標表示」(v1.9・D87)。オプションを閉じてライセンス画面を開く。
+func _on_options_license() -> void:
+	audio.call("play", "ui")
+	options_ui.call("close")
+	license_ui.call("open")
+
+
+## ライセンス画面を閉じたらオプションへ戻す (タイトルへは戻さない・v1.9・D87)。
+func _on_license_closed() -> void:
+	options_ui.call("open")
+
+
 ## カウントダウン終了 → リザルト (再演デモ) を出す (D77)。
 func _on_replay_countdown_done() -> void:
 	if not replay_active:
@@ -429,7 +444,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause_game"):
 		if replay_active or title_ui.visible or levelup_ui.visible or result_ui.visible or staff_roll.visible:
 			return
-		if options_ui.visible or upgrade_ui.visible or replay_countdown.visible:
+		if options_ui.visible or upgrade_ui.visible or replay_countdown.visible or license_ui.visible:
 			return
 		if get_tree().paused:
 			pause_ui.call("close")

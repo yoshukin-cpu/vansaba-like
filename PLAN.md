@@ -51,9 +51,9 @@
 
 - **M20 案6 (BGM 3曲と切替・オプション・コイン/恒久強化・射程・エリート/最終ボス×2) が入り、回帰が通る (P21〜P22)**
 
-### v1.9 (設計・承認待ち)
+### v1.9 (実装完了)
 
-- **M21 全公開物 (リポジトリ/exe/Web) にライセンス文・帰属が同梱され、ゲーム内から参照できる (P26)**
+- **M21 全公開物 (リポジトリ/exe/Web) にライセンス文・帰属が同梱され、ゲーム内から参照できる (P26)** ✅
 
 ## 1. ファイル構成 (v1.1)
 
@@ -377,7 +377,7 @@ res://
   「開く直前にフォーカスしていた有効なボタン (無ければ左メニュー先頭)」へ戻す + フォーカスが空でも ↑↓ で復帰する保険を追加。
   検証: `test_title_input.gd` ケース11 (強化)・12 (オプション) 追加で 65件 ALL PASS。修正前コードでは2件 FAIL を確認。
 
-### P26 ライセンス・クレジット整備 [M21] (v1.9・D84〜D92・設計: SPEC §37)
+### P26 ライセンス・クレジット整備 [M21] (v1.9・D84〜D92) (実装完了: verify_license 33件 + 回帰 19本 ALL PASS・窓あり7枚確認)
 
 - 文書 (設計 §37.2/§37.3 の確定案をそのまま実体化): `LICENSE` (MIT・© 2026 yoshuki)・`THIRD_PARTY_NOTICES.md` (6節)・`README.md` にライセンス節
 - コミット (ユーザー格納済みの未コミット分): `GODOT_COPYRIGHT.txt`・`addons/godot_mcp/LICENSE`・`font/` (本体2 + LICENSE.txt + OFL.txt + .import 2)
@@ -385,9 +385,14 @@ res://
 - クレジット: `ui/staff_roll_ui.gd` は**ユーザー先行実装済み** (「1min.ai」「GPT Image 2」・2026-09-28)。`verify_staff_roll.gd` は追随済み (ALL PASS)。残りはドキュメントの素材メモ更新
 - ロゴ: `icon.svg` 差し替え (`tools/make_icon.py` で生成) + `ui/boot_splash.png` 新設 + `project.godot` (`application/boot_splash/*`)
 - 配布: `tools/make_release.py` (zip 組み立て)・`export_presets.cfg` の Windows メタデータ記入・Web フォルダへのライセンス同梱
-- 未コミット設定の扱い: `project.godot` の `[gui]` フォント行はコミットに含める。`window/stretch/aspect` (`expand`) は §35.3 の `keep` との相違を解消してからコミットする (採用値を決めて SPEC を追随)
+- 未コミット設定の扱い: `project.godot` の `[gui]` フォント行・`window/stretch/aspect="expand"` (ユーザー設定) をそのままコミット (SPEC §35.3 に v1.9 注記)
 - 検証: `verify_license.gd` (新規)・`verify_options.gd` (行構成/`license_pressed`)・`verify_staff_roll.gd` (追随済み)・窓あり `capture_license.gd` とブートスプラッシュ目視・`--headless --import`・**全回帰 ALL PASS**。実測件数を SPEC 更新履歴/README に書き戻す
 - **完了条件**: §7.4 のとおり (全公開物にライセンス文・ゲーム内から参照できる・ロゴ差し替え済み・§7.3-D の確認事項 3 件の解消)
+- 実測 (P26 完了): `verify_license.gd` 33件 ALL PASS。回帰 19 本 (`verify_options`/`verify_staff_roll`/`verify_replay_flow`/`test_title_input`/`verify_v12/v13/v16/v17/v18`/`verify_bgm`/`verify_audio`/`verify_card_marks`/`verify_chests`/`verify_seed`/`verify_title_load`/`test_gem_magnet`/`test_projectile_hit`/`verify_world`) ALL PASS + 旧観測スクリプト 9 本 例外0。
+  exe 実測 (PowerShell VersionInfo): ProductName「Vansaba Like!」・CompanyName「yoshuki」・LegalCopyright「(c) 2026 yoshuki — MIT License. Third-party notices: THIRD_PARTY_NOTICES.md」。
+  Web 実測: favicon 256×256・apple-touch-icon 180×180 = 新アイコン、`vansaba-like.png` 1024×576 = 新スプラッシュ (既定の Godot ロゴ 800×600 が消滅)。
+  リリース: `export/release/VansabaLike_v1.9_win64.zip` (122.2MB) = exe + LICENSE + THIRD_PARTY_NOTICES.md + licenses/ (GODOT_COPYRIGHT・font×2・godot_mcp)。Web フォルダにも同梱済み。
+  窓あり: `capture_license.gd` 7 枚でライセンス画面 (MIT/OFL 全文・リンク・商標) を目視。残りはユーザーの最終目視と公開判断。
 
 ## 3. 並行可能タスク
 
@@ -461,9 +466,8 @@ res://
 5. 商用化 (YouTube 収益化・販売) を検討する時点で 1min.ai サポート確認を再実施 (Suno を特に。SPEC §37.1)
 6. 実装ブロッカー: なし
 
-- 補足 (2026-09-28・作業ツリー): Godot エディタ保存で落ちていた Web プリセットの `include_filter="*.txt"` と `project.godot` の `[autoload]` 行は**復元済み**。
-  `project.godot` には未コミットのユーザー設定 (フォント行・`stretch/aspect="expand"`) と `main.tscn` のエディタ正規化差分が残っている → P26 でまとめて扱う
-  (stretch の値は SPEC §35.3 の `keep` と相違。採用を決めてからコミットする)。
+- 補足 (2026-09-28): Godot エディタ保存で落ちていた Web `include_filter="*.txt"`・`[autoload]` 行は復元し、ユーザー設定 (フォント行・`stretch/aspect="expand"`) と `main.tscn` の正規化差分は P26 でコミット済み (stretch はユーザー設定の `expand` を採用・SPEC §35.3 に注記)。
+  以後のヘッドレス実行でも `[autoload]` 行が落ちることがある → コミット前に確認して復元 (`git checkout -- project.godot` は使わない)。
 
 ---
 
