@@ -397,6 +397,8 @@ res://
   原因 = `ui/license_ui.tscn` の `process_mode = 3` 未設定 (タイトルは paused = true のため描画のみで入力が届かない。既存モーダルは全て tscn で設定済みの規約)。
   `process_mode = 3` 追加 + A/Enter でも閉じる追補。`verify_license.gd` に実入力経路 7 件を追加 (修正前 FAIL 4 件の再現 → 修正後 40件 ALL PASS)。
   窓あり `capture_license.gd` 8 枚 (実マウスクリックで戻るボタン → オプション復帰)。exe/Web 再書き出し・リリース zip 再生成 (124.1MB) 済み。
+- 追補 (チャット要望 D94): ライセンス画面 — ↑↓/スティックは **0.5s 押しっぱなしで連続スクロール** (REPEAT_STEP 0.06s・`Input.is_action_pressed` ポーリング = キー/スティック共通)、**←→ = 1 ページ送り** (ビューポート − 1 段・スティック左右はラッチ)。
+  `verify_license.gd` に 10 件追加し **50件 ALL PASS**。窓ありでヒント行の収まりを確認。exe/Web/zip 再生成 (18:51)。
 
 ## 3. 並行可能タスク
 

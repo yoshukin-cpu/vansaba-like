@@ -2,7 +2,8 @@ extends CanvasLayer
 ## ライセンス・商標表示 (v1.9・P26・SPEC §37.5)。
 ## オプションの「ライセンス・商標表示」から開く全画面ページ。
 ## 本文はテキスト定数として内蔵する (全プラットフォーム同一。Web でもファイル不要)。
-## 操作: ↑↓ / ホイール / 左スティック: スクロール　Esc / A・B / 戻るボタン: 閉じる。
+## 操作: ↑↓ / スティック: スクロール (0.5s 押しっぱなしで連続)　←→: 1 ページ　
+## 　　　ホイール: スクロール　Esc / A・B / 戻るボタン: 閉じる。
 ## モーダル方式は D74 を踏襲 (group "modal_ui"・フォーカスを使わず _unhandled_input で操作)。
 ## process_mode は tscn 側で ALWAYS (3)。タイトルは paused = true のため、これが無いと
 ## 描画はされても入力が一切届かない (v1.9 修正)。
@@ -10,6 +11,9 @@ extends CanvasLayer
 signal closed
 
 const SCROLL_STEP := 48
+## 押しっぱなしで連続スクロールに移るまでの時間 / 連続スクロールの間隔 (秒。v1.9 追補・D94)。
+const HOLD_DELAY := 0.5
+const REPEAT_STEP := 0.06
 
 const LICENSES := """[font_size=17][color=#8892a8]「Vansaba Like!」に同梱のライセンス・商標表示です。[/color][/font_size]
 
@@ -204,6 +208,12 @@ AI 生成物には人間の著作権が及ばない可能性があるため、�
 
 ## スティックの上下ラッチ (倒しっぱなしで連続スクロールしない。D82 と同じ方式)。
 var _axis_armed_v: bool = true
+## 左右 (ページ送り) のスティックラッチ (倒しっぱなしでページが連射されない)。
+var _axis_armed_h: bool = true
+## 押しっぱなし連続スクロール: -1 = 上 / +1 = 下 / 0 = なし (D94)。
+var _hold_dir: int = 0
+var _hold_t: float = 0.0
+var _repeat_t: float = 0.0
 
 
 func _ready() -> void:
@@ -218,6 +228,10 @@ func _ready() -> void:
 func open() -> void:
 	visible = true
 	_axis_armed_v = true
+	_axis_armed_h = true
+	_hold_dir = 0
+	_hold_t = 0.0
+	_repeat_t = 0.0
 	scroll.scroll_vertical = 0
 	get_viewport().gui_release_focus()
 
@@ -241,11 +255,49 @@ func scroll_by(dy: int) -> void:
 	scroll.scroll_vertical = clampi(scroll.scroll_vertical + dy, 0, max_scroll())
 
 
-func _process(_delta: float) -> void:
+## ←→ の 1 ページぶんの量 (ビューポート高 − 1 段。読み位置を見失わないよう 1 段重ねる。D94)。
+func page_amount() -> int:
+	return maxi(SCROLL_STEP, int(scroll.size.y) - SCROLL_STEP)
+
+
+func page_by(dir: int) -> void:
+	scroll_by(dir * page_amount())
+
+
+## ↑↓ の押下: まず 1 段動かし、押しっぱなし (HOLD_DELAY) で連続スクロールへ (D94)。
+func start_hold(dir: int) -> void:
+	_hold_dir = dir
+	_hold_t = 0.0
+	_repeat_t = 0.0
+	scroll_by(dir * SCROLL_STEP)
+
+
+func _dir_pressed(dir: int) -> bool:
+	if dir < 0:
+		return Input.is_action_pressed("ui_up") or Input.is_action_pressed("move_up")
+	return Input.is_action_pressed("ui_down") or Input.is_action_pressed("move_down")
+
+
+func _process(delta: float) -> void:
 	if not visible:
 		return
 	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)) < 0.2:
 		_axis_armed_v = true
+	if absf(Input.get_joy_axis(0, JOY_AXIS_LEFT_X)) < 0.2:
+		_axis_armed_h = true
+	# 押しっぱなしの連続スクロール (離したら即停止。D94)。
+	if _hold_dir == 0:
+		return
+	if not _dir_pressed(_hold_dir):
+		_hold_dir = 0
+		return
+	_hold_t += delta
+	if _hold_t < HOLD_DELAY:
+		return
+	_repeat_t += delta
+	while _repeat_t >= REPEAT_STEP:
+		_repeat_t -= REPEAT_STEP
+		scroll_by(_hold_dir * SCROLL_STEP)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -260,7 +312,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if motion:
 			_axis_armed_v = false
 		get_viewport().set_input_as_handled()
-		scroll_by(-SCROLL_STEP)
+		start_hold(-1)
 		return
 	if event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
 		if motion and not _axis_armed_v:
@@ -268,7 +320,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		if motion:
 			_axis_armed_v = false
 		get_viewport().set_input_as_handled()
-		scroll_by(SCROLL_STEP)
+		start_hold(1)
+		return
+	if event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
+		if motion and not _axis_armed_h:
+			return
+		if motion:
+			_axis_armed_h = false
+		get_viewport().set_input_as_handled()
+		page_by(1)
+		return
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
+		if motion and not _axis_armed_h:
+			return
+		if motion:
+			_axis_armed_h = false
+		get_viewport().set_input_as_handled()
+		page_by(-1)
 		return
 	if event is InputEventMouseButton and event.pressed:
 		var mb: InputEventMouseButton = event as InputEventMouseButton

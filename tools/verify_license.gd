@@ -154,5 +154,48 @@ func _initialize() -> void:
 	await _joy(JOY_BUTTON_A)
 	_check("パッド A でも閉じる (v1.9 追補)", not lic2.visible and opts.visible)
 
+	print("\n=== 7) 長押し連続スクロールと ←→ ページ送り (v1.9 追補・D94) ===")
+	opts.call("_activate")
+	for i7a: int in range(6):
+		await process_frame
+	_check("開き直し (前提)", lic2.visible)
+	var sc: ScrollContainer = lic2.get_node("Panel/Scroll")
+	_check("先頭から開始", sc.scroll_vertical == 0)
+	await _event(_key_ev(KEY_DOWN, true))
+	_check("↓ 押下で 1 段スクロール", sc.scroll_vertical == 48)
+	Input.action_press("move_down")
+	for i7b: int in range(45):
+		await process_frame
+	var held_pos: int = sc.scroll_vertical
+	_check("長押し (0.5s〜) で連続スクロールする (4段以上)", held_pos >= 48 * 4)
+	Input.action_release("move_down")
+	await _event(_key_ev(KEY_DOWN, false))
+	for i7c: int in range(15):
+		await process_frame
+	var stopped: int = sc.scroll_vertical
+	for i7d: int in range(30):
+		await process_frame
+	_check("離すと停止する", sc.scroll_vertical == stopped)
+	lic2.call("open")
+	for i7e: int in range(3):
+		await process_frame
+	var page: int = int(lic2.call("page_amount"))
+	var mx: int = int(lic2.call("max_scroll"))
+	_check("ページ量 = ビューポート高 − 1 段 (> 48)", page > 48 and page == maxi(48, int(sc.size.y) - 48))
+	_check("ページ < 最大スクロール (前提)", page <= mx)
+	await _event(_key_ev(KEY_RIGHT, true))
+	await _event(_key_ev(KEY_RIGHT, false))
+	_check("→ で 1 ページ進む", sc.scroll_vertical == page)
+	await _event(_key_ev(KEY_LEFT, true))
+	await _event(_key_ev(KEY_LEFT, false))
+	_check("← で 1 ページ戻る", sc.scroll_vertical == 0)
+	lic2.call("scroll_by", 999999)
+	for i7f: int in range(3):
+		await process_frame
+	var mx2: int = int(lic2.call("max_scroll"))
+	await _event(_key_ev(KEY_RIGHT, true))
+	await _event(_key_ev(KEY_RIGHT, false))
+	_check("末尾で → はクランプ", sc.scroll_vertical == mx2)
+
 	print("\nRESULT: " + ("ALL PASS" if fails == 0 else "%d FAILURE(S)" % fails))
 	quit()

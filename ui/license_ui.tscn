@@ -49,7 +49,7 @@ theme_override_font_sizes/normal_font_size = 20
 [node name="Hint" type="Label" parent="Panel"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "↑↓ / ホイール / スティック: スクロール　Esc / A・B / 戻るボタン: 閉じる"
+text = "↑↓ / スティック: スクロール (長押しで連続)　←→: 1ページ　Esc / A・B / 戻るボタン: 閉じる"
 horizontal_alignment = 1
 
 [node name="BackRow" type="HBoxContainer" parent="Panel"]
