@@ -41,6 +41,7 @@ func _initialize() -> void:
 	await _case10_locked_start()
 	await _case11_locked_upgrade_back()
 	await _case12_locked_options_back()
+	await _case13_up_chain()
 	SaveData.path = SaveData.DEFAULT_PATH
 	SaveData.reset()
 	if FileAccess.file_exists(TEST_SAVE):
@@ -286,3 +287,41 @@ func _case12_locked_options_back() -> void:
 	await _action("ui_down")
 	var f3: Control = root.gui_get_focus_owner()
 	_check("12: 戻った後に ↓ で移動できる", f3 != null and f3 != f2)
+
+
+## 13) 左メニューの ↑ チェーン: 終了 → オプション → 強化 → はじめる → (循環) 終了。
+##     (チャット要望の回帰: オプションで ↑ が「強化」を飛ばして「はじめる」へ行っていた)
+func _case13_up_chain() -> void:
+	print("\n=== 13) 左メニューの ↑ チェーン ===")
+	if cur != null and is_instance_valid(cur):
+		cur.queue_free()
+		await process_frame
+	SaveData.reset()
+	var m: Node = MainScene.instantiate()
+	root.add_child(m)
+	current_scene = m
+	for i: int in range(20):
+		await process_frame
+	cur = m
+	var title: CanvasLayer = m.get_node("TitleUI")
+	var sbtn: Button = title.get_node("Center/VBox/StartBtn")
+	var ubtn: Button = title.get_node("LeftMenu/UpgradeBtn")
+	var obtn: Button = title.get_node("LeftMenu/OptionsBtn")
+	var qbtn: Button = title.get_node("LeftMenu/QuitBtn")
+	_check("13: はじめる が有効 (前提)", not sbtn.disabled)
+	qbtn.grab_focus()
+	await process_frame
+	await process_frame
+	_check("13: 前提フォーカス = 終了", root.gui_get_focus_owner() == qbtn)
+	await _action("ui_up")
+	var f1: Control = root.gui_get_focus_owner()
+	_check("13: 終了 ↑ → オプション (%s)" % str(f1 != null and f1.name), f1 == obtn)
+	await _action("ui_up")
+	var f2: Control = root.gui_get_focus_owner()
+	_check("13: オプション ↑ → 強化 (%s)" % str(f2 != null and f2.name), f2 == ubtn)
+	await _action("ui_up")
+	var f3: Control = root.gui_get_focus_owner()
+	_check("13: 強化 ↑ → はじめる (%s)" % str(f3 != null and f3.name), f3 == sbtn)
+	await _action("ui_up")
+	var f4: Control = root.gui_get_focus_owner()
+	_check("13: はじめる ↑ → 終了 (循環) (%s)" % str(f4 != null and f4.name), f4 == qbtn)

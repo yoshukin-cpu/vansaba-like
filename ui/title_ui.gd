@@ -44,7 +44,7 @@ func _ready() -> void:
 	upgrade_btn.focus_neighbor_bottom = upgrade_btn.get_path_to(options_btn)
 	upgrade_btn.focus_neighbor_top = upgrade_btn.get_path_to(start_btn)
 	options_btn.focus_neighbor_bottom = options_btn.get_path_to(quit_btn)
-	options_btn.focus_neighbor_top = options_btn.get_path_to(start_btn)
+	options_btn.focus_neighbor_top = options_btn.get_path_to(upgrade_btn)
 	quit_btn.focus_neighbor_top = quit_btn.get_path_to(options_btn)
 	quit_btn.focus_neighbor_bottom = quit_btn.get_path_to(start_btn)
 	# D45: 解放条件の有無でレイアウトが動かないよう、行の高さを固定して常時表示する。
