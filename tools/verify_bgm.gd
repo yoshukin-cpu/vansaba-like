@@ -121,6 +121,27 @@ func _t_states() -> void:
 	_check("paused 中もフェードが進む (%.2f → %.2f)" % [v0, pg.volume_db], pg.volume_db > v0)
 	paused = false
 
+	# 長時間ループ後 (web の get_playback_position() は曲長を超える値を返す) でも
+	# 範囲内の位置で再開する (P25・Web 不具合修正)。
+	var glen: float = pg.stream.get_length()
+	_check("game 曲長が取れる (%.1fs)" % glen, glen > 30.0)
+	var forced: float = glen * 3.0 + 12.5
+	bgm.set("game_elapsed", forced)
+	var boss2: Node2D = B01Scene.instantiate()
+	main.add_child(boss2)
+	await _frames(6)
+	_check("再出現で boss 状態", int(bgm.get("state")) == BgmScript.State.BOSS)
+	var wrapped: float = fposmod(forced, glen)
+	var gp2: float = float(bgm.get("game_pos"))
+	_check("保存位置が曲長未満に畳まれる (%.3f < %.3f)" % [gp2, glen], gp2 < glen)
+	_check("保存位置は曲長で折り返した値 ≈ %.3f (%.3f)" % [wrapped, gp2], absf(gp2 - wrapped) <= 0.6)
+	boss2.queue_free()
+	await _frames(6)
+	var rp2: float = float(bgm.get("last_resume_pos"))
+	_check("再開位置も曲長未満 (%.3f < %.3f)" % [rp2, glen], rp2 < glen)
+	_check("再開位置は保存位置と一致 (%.3f)" % rp2, absf(rp2 - gp2) <= 0.001)
+	_check("ゲーム曲が再開している (2回目)", pg.playing)
+
 	# 死亡/クリア確定 → 無音 (フェードアウト)
 	main.call("show_result", false)
 	await _frames(90)

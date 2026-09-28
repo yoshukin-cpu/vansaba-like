@@ -23,8 +23,14 @@ const BOSS_FADE_IN := 0.5
 enum State { SILENT, TITLE, GAME, BOSS }
 
 var state: int = State.SILENT
-## game 曲の再開位置 (フェードアウト開始時に保存)。
+## game 曲の再開位置 (フェードアウト開始時に保存)。常に 0 <= game_pos < 曲長。
 var game_pos: float = 0.0
+## game 曲の経過時間の自前計測 (秒・ループしても巻き戻さない生の値)。
+## web の get_playback_position() はループで 0 に戻らず累積し (実測: 5分走ると
+## 94.8秒の曲で 300 近くを返す)、実時間とも大きくずれる (位置 Worklet が
+## 毎クオンタム処理されない) ため再開位置の根拠に使えない。
+## 曲長以上の位置を play() に渡すと web では無音になる (WebAudio の仕様)。
+var game_elapsed: float = 0.0
 ## 直近の boss→game 再開で使った位置 (検証用の観測値)。
 var last_resume_pos: float = -1.0
 ## 進行中のフェード: player名 -> {"from", "to", "t", "dur", "stop"}。
@@ -97,6 +103,8 @@ func _to_game() -> void:
 		# ボス撃破: boss をフェードアウトし、game を保存位置からフェードインで再開する。
 		_fade(p_boss, SILENT_DB, FADE_OUT, true)
 		last_resume_pos = game_pos
+		# 自前計測も再開位置に合わせて継続する (以後の経過が保存位置と連続になる)。
+		game_elapsed = game_pos
 		p_game.play(game_pos)
 		p_game.volume_db = SILENT_DB
 		_fade(p_game, float(TRACK_DB["game"]), BOSS_FADE_IN)
@@ -105,6 +113,7 @@ func _to_game() -> void:
 	# 新規ラン (タイトル/無音から): 頭から。
 	_save_game_pos()
 	_fade_all_out(FADE_IN)
+	game_elapsed = 0.0
 	p_game.play(0.0)
 	p_game.volume_db = SILENT_DB
 	_fade(p_game, float(TRACK_DB["game"]), FADE_IN)
@@ -133,7 +142,25 @@ func _to_silent() -> void:
 
 func _save_game_pos() -> void:
 	if p_game != null and p_game.playing:
-		game_pos = p_game.get_playback_position()
+		game_pos = _wrap_pos(game_elapsed)
+
+
+## game 曲の長さ (秒)。読めなければ 0。
+func _game_len() -> float:
+	if p_game != null and p_game.stream != null:
+		return p_game.stream.get_length()
+	return 0.0
+
+
+## 再開位置を 0 <= 戻り値 < 曲長 に畳む。
+## web (WebAudio) では曲長以上の offset を渡すと無音になり、さらに
+## 「鳴らない→ended→再start」の空ループが走るため、範囲外は絶対に渡さない。
+## 曲長の判定ができなければ頭 (= 0) から鳴らす方を選ぶ。
+func _wrap_pos(t: float) -> float:
+	var l: float = _game_len()
+	if l <= 0.0:
+		return 0.0
+	return fposmod(t, l)
 
 
 func _start(pl: AudioStreamPlayer, fade_in: float) -> void:
@@ -165,6 +192,10 @@ func _fade(pl: AudioStreamPlayer, to_db: float, dur: float, stop_after: bool = f
 
 
 func _process(delta: float) -> void:
+	# game 曲の経過を自前計測する (get_playback_position() は web で信用できない)。
+	# paused 中も鳴り続けるため、ここ (PROCESS_MODE_ALWAYS) で毎フレーム進める。
+	if p_game != null and p_game.playing:
+		game_elapsed += delta
 	_advance_fades(delta)
 	if state == State.GAME and _boss_alive():
 		_to_boss()

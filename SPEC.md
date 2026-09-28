@@ -1212,12 +1212,19 @@ res://
   - 状態: `title` / `game` / `boss` / `silent`。main が `set_state("title"|"game"|"result"|"staff")` を呼び、`game` の間だけ `bosses` グループの生存を見て boss と自動で入れ替える (B01/B02 の判定はこれ1箇所)。
   - 遷移 (要件のフェード切替):
     - title→game: title を 0.8s フェードアウト、game を頭から 0.8s フェードイン。
-    - game→boss (ボス出現): game を 1.0s フェードアウト。**停止時に再生位置を保存** (`_game_pos`)。boss を 0.5s フェードイン。
+    - game→boss (ボス出現): game を 1.0s フェードアウト。**停止時に再開位置を保存** (`_game_pos`)。boss を 0.5s フェードイン。
     - boss→game (ボス撃破): boss を 1.0s フェードアウト。game を `play(_game_pos)` で**フェードアウトしたところから**再開し、0.5s フェードイン。
+      - 再開位置は**自前計測の経過時間**から作る (`game_elapsed`。`process_mode = ALWAYS` の `_process` で毎フレーム加算し、
+        保存時に曲長で `fposmod` して `0 <= 位置 < 曲長` に畳む)。`get_playback_position()` は Web でループしても
+        0 に戻らず**累積**し (5分走ると 94.8s の曲で 300 近く)、実時間とも大きくずれる (位置報告 Worklet が
+        毎クオンタム処理されない) ため使わない。曲長以上の位置を渡すと WebAudio は無音になり、
+        「無音→ended→再start」の空ループが走る (**Web 書き出しの不具合修正・P25**)。曲長が読めないときは頭 (= 0) から鳴らす。
     - game/boss→silent (死亡・クリア確定): 1.2s フェードアウト。リザルト中は無音 (スタッフロールは既存の主題歌)。
     - リトライ (もう一度): game を頭から 0.8s フェードイン。
   - B01 を倒して B02 が出現した場合も同じ規則 (game 再開位置 → また game→boss)。B01 を放置して 10:00 を迎えた場合も boss のまま自然に継続する。
-- 検証: `tools/verify_bgm.gd` (状態遷移・フェード中の音量・`_game_pos` 再開・paused 中も `playing`) + 窓ありで耳確認 (切替の自然さ・ループ継ぎ目・ゲーム中の抑え具合)。
+- 検証: `tools/verify_bgm.gd` (状態遷移・フェード中の音量・`_game_pos` 再開・曲長超えの経過時間でも範囲内に畳まれる・paused 中も `playing`) + 窓ありで耳確認 (切替の自然さ・ループ継ぎ目・ゲーム中の抑え具合)。
+- 歌詞: スタッフロールの歌詞は `audio/music/vansaba_theme_lyrics_timing.txt` (非リソース) を実行時に読む。
+  書き出しの pck に入れるため、**各プリセットの `include_filter` に `*.txt` が要る** (Windows/Web とも。Web で抜けていて歌詞が出ない不具合を修正 = P25)。
 
 ### 35.2 BGM/SE バスとオプション音量 (D62)
 
