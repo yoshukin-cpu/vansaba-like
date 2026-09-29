@@ -3,6 +3,13 @@
 ヴァンサバライク (見下ろし2Dサバイバル)。Godot 4.7.2 / gl_compatibility。
 10分生存クリア・レベルアップ3択・武器6種/カード20種/敵10種/ボス2種。
 
+## プレイ・ダウンロード
+
+https://yoshuki.itch.io/vabsaba-like
+
+* HTML版
+* Windows版
+
 ## ドキュメント構成
 
 | ファイル | 役割 |
