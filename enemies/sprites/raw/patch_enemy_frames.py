@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """敵シーン(.tscn)の sprite_path を frames_path + anim_fps に置き換える"""
 import os
+from pathlib import Path
 
-DIR = "<repo-root>/enemies"
+ROOT = Path(__file__).resolve().parents[3]
+DIR = str(ROOT / "enemies")
 
 # (フレームのリソース名, アニメ速度fps) — 敵の種類ごとに変える
 CFG = {

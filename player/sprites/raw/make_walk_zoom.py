@@ -1,8 +1,10 @@
 """歩行フレームの拡大比較画像を作る (方向ごとに4フレーム横並び、8倍拡大)"""
 import os
+from pathlib import Path
 from PIL import Image, ImageDraw
 
-SP = "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+SP = str(ROOT / "player" / "sprites")
 OUT = os.path.join(SP, "raw", "preview")
 os.makedirs(OUT, exist_ok=True)
 DIRS = ["down", "left", "right", "up"]

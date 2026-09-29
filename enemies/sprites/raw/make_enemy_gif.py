@@ -1,8 +1,10 @@
 """敵の2フレームアニメ(前後)をまとめた確認GIFを作る"""
 import os
+from pathlib import Path
 from PIL import Image
 
-BASE = "<repo-root>/enemies/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "enemies" / "sprites")
 OUT = os.path.join(BASE, "raw", "preview")
 os.makedirs(OUT, exist_ok=True)
 NAMES = ["slime", "bat", "goblin", "archer", "wolf", "golem", "splitter", "sniper", "swarm", "knight"]

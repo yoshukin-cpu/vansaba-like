@@ -1,8 +1,10 @@
 """新候補フレームの拡大比較と、既存idleとの整合チェック画像を作る"""
 import os
+from pathlib import Path
 from PIL import Image, ImageDraw
 
-BASE = "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "player" / "sprites")
 CAND = os.path.join(BASE, "raw", "candidate")
 OUT = os.path.join(BASE, "raw", "preview")
 os.makedirs(OUT, exist_ok=True)

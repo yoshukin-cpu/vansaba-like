@@ -2,10 +2,12 @@
 左向きキャラなら: マフラーは後方=画像右寄り / 顔は左寄り
 """
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "player" / "sprites")
 OLD = os.path.join(BASE, "raw", "old_v1")
 
 

@@ -4,11 +4,13 @@
 - 比較用ストリップ画像とGIFを作る
 """
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SHOTS = "<repo-root>/tmp_shots"
-OUT = "<repo-root>/player/sprites/raw/preview"
+ROOT = Path(__file__).resolve().parents[3]
+SHOTS = str(ROOT / "tmp_shots")
+OUT = str(ROOT / "player" / "sprites" / "raw" / "preview")
 DIRS = ["down", "left", "right", "up"]
 S = 6
 

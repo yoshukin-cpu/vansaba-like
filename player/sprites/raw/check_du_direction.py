@@ -2,10 +2,12 @@
 正面なら顔が見える(肌画素が多い) / 背面なら髪で覆われる(肌画素が少ない)
 """
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "player" / "sprites")
 OLD = os.path.join(BASE, "raw", "old_v1")
 
 

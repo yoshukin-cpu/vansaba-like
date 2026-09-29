@@ -2,11 +2,13 @@
 使い方: python analyze_walk.py [スプライトのディレクトリ]
 """
 import os
+from pathlib import Path
 import sys
 import numpy as np
 from PIL import Image
 
-SP = sys.argv[1] if len(sys.argv) > 1 else "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+SP = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "player" / "sprites")
 DIRS = ["down", "left", "right", "up"]
 
 

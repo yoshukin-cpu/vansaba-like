@@ -1,9 +1,11 @@
 """剣スプライトの傾きを水平に補正する (回転武器用)"""
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT)
 SP = os.path.join(BASE, "weapons", "sprites")
 
 

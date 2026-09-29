@@ -3,11 +3,13 @@
 期待: 「左移動」のキャプチャは player_walk_left_* に近く、right_* とは遠い
 """
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>/player/sprites"
-SHOTS = "<repo-root>/tmp_shots"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "player" / "sprites")
+SHOTS = str(ROOT / "tmp_shots")
 
 
 def char_mask(a):

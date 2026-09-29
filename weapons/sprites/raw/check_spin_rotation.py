@@ -1,10 +1,12 @@
 """スピンソードの回転検証: 剣(シアン系)の重心角度を測り、4枚の比較画像を作る"""
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SHOTS = "<repo-root>/tmp_shots"
-OUT = "<repo-root>/weapons/sprites/raw"
+ROOT = Path(__file__).resolve().parents[3]
+SHOTS = str(ROOT / "tmp_shots")
+OUT = str(ROOT / "weapons" / "sprites" / "raw")
 CX, CY = 576, 324   # プレイヤーは画面中央 (静止)
 
 

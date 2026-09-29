@@ -3,11 +3,13 @@
   diff(新, 旧) と diff(新, 旧の左右反転) のどちらが小さいかで判定する。
 """
 import os
+from pathlib import Path
 import subprocess
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>/player/sprites"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT / "player" / "sprites")
 OLD = os.path.join(BASE, "raw", "old_v1")
 os.makedirs(OLD, exist_ok=True)
 
@@ -17,7 +19,7 @@ for d in ["left", "right"]:
         name = f"player_walk_{d}_{i}.png"
         blob = subprocess.run(
             ["git", "show", f"HEAD~1:player/sprites/{name}"],
-            cwd="<repo-root>", capture_output=True).stdout
+            cwd=str(ROOT), capture_output=True).stdout
         with open(os.path.join(OLD, name), "wb") as f:
             f.write(blob)
 print("旧v1フレームを展開:", len(os.listdir(OLD)), "件")

@@ -1,8 +1,10 @@
 """フレイムスロワーの実機GIFを作る"""
 import os
+from pathlib import Path
 from PIL import Image
 
-BASE = "<repo-root>"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT)
 SHOTS = os.path.join(BASE, "tmp_shots")
 OUT = os.path.join(BASE, "weapons", "sprites", "raw")
 os.makedirs(OUT, exist_ok=True)

@@ -1,9 +1,11 @@
 """剣スプライトの軸の傾きを測り、実機4枚から回転GIFを作る"""
 import os
+from pathlib import Path
 import numpy as np
 from PIL import Image
 
-BASE = "<repo-root>"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT)
 SP = os.path.join(BASE, "weapons", "sprites")
 SHOTS = os.path.join(BASE, "tmp_shots")
 

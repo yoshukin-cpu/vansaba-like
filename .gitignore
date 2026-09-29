@@ -2,6 +2,8 @@
 .godot/
 /android/
 /export/
+*.pyc
+__pycache__/
 
 # 検証用の一時出力 (tools/verify_*.gd が生成)
 tmp_shots/

@@ -3,9 +3,11 @@
 ルートノードのプロパティブロック内の該当行を置換/追加する。
 """
 import os
+from pathlib import Path
 import re
 
-DIR = "<repo-root>/enemies"
+ROOT = Path(__file__).resolve().parents[3]
+DIR = str(ROOT / "enemies")
 
 CFG = {
     "slime": ("res://enemies/sprites/enemy_slime.png", 0.8),

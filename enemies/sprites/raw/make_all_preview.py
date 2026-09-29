@@ -1,8 +1,10 @@
 """敵・ボス・弾の全スプライトを1枚のプレビュー画像にまとめる"""
 import os
+from pathlib import Path
 from PIL import Image, ImageDraw
 
-BASE = "<repo-root>"
+ROOT = Path(__file__).resolve().parents[3]
+BASE = str(ROOT)
 SP = os.path.join(BASE, "enemies", "sprites")
 OUT = os.path.join(SP, "raw", "preview")
 os.makedirs(OUT, exist_ok=True)

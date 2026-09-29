@@ -88,12 +88,12 @@
 
 ## 実行・検証
 
-- 実行ファイル: `<godot-install-dir>/Godot_v4.7.2-stable_win64.exe`
-- 起動 (タイトルから): `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --path <repo-root>`
+- 実行ファイル: `Godot_v4.7.2-stable_win64.exe`（[Godot公式サイト](https://godotengine.org/download)から取得）
+- 起動 (タイトルから): `"Godot_v4.7.2-stable_win64.exe" --path <リポジトリのクローン先>`
 - 即ゲーム開始 (タイトルスキップ): 末尾に `-- --autostart` を付ける
 - 難易度の指定 (テスト・計測用): `-- --difficulty hard`・`-- --difficulty insane3` (v1.6)。
   `-- --unlock-all` でタイトルの全難易度を解放表示 (保存はしない)。`-- --coins 500` で所持コインを与える (v1.8・保存はしない)
-- ヘッドレス検証: `"<godot-install-dir>/Godot_v4.7.2-stable_win64.exe" --headless --fixed-fps 60 --path <repo-root> --script res://tools/verify_*.gd`
+- ヘッドレス検証: `"Godot_v4.7.2-stable_win64.exe" --headless --fixed-fps 60 --path <リポジトリのクローン先> --script res://tools/verify_*.gd`
   (`--fixed-fps 60` 必須。固定フレーム待ちが高速headlessで短時間化して誤失敗するため)
   - 素材を差し替えた後は `--headless --import` を忘れると古い絵が描画され続ける
   - `verify_obstacles` / `verify_terrain` / `verify_walk` などの**実機キャプチャ系は headless 不可**
@@ -204,7 +204,6 @@
 
 ## リポジトリ
 
-- remote: `(internal remote address removed before publication)` (master)
 - 素材生成・再生成の手順は skill `game-sprite-generation` を参照。
 
 ## ライセンス
